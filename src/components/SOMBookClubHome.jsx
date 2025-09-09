@@ -7,6 +7,6 @@ import { color, motion } from 'framer-motion'
 export default function SOMBookClubHome() {
   return (
 
-        <p style={{color:"white", fontWeight:"bold", WebkitTextStroke: "0.2px black", fontSize: "100px"}}>SOM Book Club</p>
+        <p style={{color:"white", margin:"50px", fontWeight:"bold", WebkitTextStroke: "0.2px black", fontSize: "100px"}}>SOM Book Club</p>
   )
 }
