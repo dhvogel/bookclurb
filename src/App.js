@@ -34,7 +34,7 @@ function Home() {
             letterSpacing: "0.05em",
             boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
             position: "absolute",
-            bottom: "10%", // distance from bottom of container
+            bottom: "3%", // distance from bottom of container
             left: "50%",
             transform: "translateX(-50%)",
           }}
