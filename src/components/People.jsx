@@ -2,15 +2,15 @@ import React from 'react';
 
 const About = () => {
     const members = [
-        { name: "Dan", img: "https://api.dicebear.com/7.x/bottts/png?seed=Dan&backgroundColor=ffffff" },
-        { name: "Grant", img: "https://api.dicebear.com/7.x/bottts/png?seed=Grant&backgroundColor=ffffff" },
-        { name: "Dhru", img: "https://api.dicebear.com/7.x/bottts/png?seed=Dhru&backgroundColor=ffffff" },
         { name: "Alden", img: "https://api.dicebear.com/7.x/bottts/png?seed=Alden&backgroundColor=ffffff" },
-        { name: "David", img: "https://api.dicebear.com/7.x/bottts/png?seed=David&backgroundColor=ffffff" },
         { name: "Charles", img: "https://api.dicebear.com/7.x/bottts/png?seed=Charles&backgroundColor=ffffff" },
+        { name: "David", img: "https://api.dicebear.com/7.x/bottts/png?seed=David&backgroundColor=ffffff" },
+        { name: "Dhru", img: "https://api.dicebear.com/7.x/bottts/png?seed=Dhru&backgroundColor=ffffff" },
+        { name: "Grant", img: "https://api.dicebear.com/7.x/bottts/png?seed=Grant&backgroundColor=ffffff" },
         { name: "Margaret", img: "https://api.dicebear.com/7.x/bottts/png?seed=Margaret&backgroundColor=ffffff" },
-        { name: "Paul", img: "https://api.dicebear.com/7.x/bottts/png?seed=Paul&backgroundColor=ffffff" },
         { name: "Sam", img: "https://api.dicebear.com/7.x/bottts/png?seed=Sam&backgroundColor=ffffff" },
+        { name: "Paul", img: "https://api.dicebear.com/7.x/bottts/png?seed=Paul&backgroundColor=ffffff" },
+        { name: "Dan", img: "https://api.dicebear.com/7.x/bottts/png?seed=Dan&backgroundColor=ffffff" },
     ];
 
     return (
@@ -70,8 +70,7 @@ const About = () => {
                                                 padding: '6px 8px',
                                                 border: 'none',
                                                 borderRadius: '8px 0 0 8px',
-                                                fontFamily: 'cursive',
-                                                fontSize: '0.98em'
+                                                fontSize: '0.8em'
                                             }}>
                                                 {book.title}
                                             </td>
@@ -95,7 +94,7 @@ const About = () => {
                                             borderRadius: '8px 0 0 8px',
                                             background: '#facc15',
                                             color: '#3b3b3b',
-                                            fontFamily: 'cursive'
+                                            fontSize: '0.8em'
                                         }}>Participation</td>
                                         <td style={{
                                             padding: '6px 8px',

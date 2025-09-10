@@ -24,7 +24,7 @@ function Home() {
         justifyContent: "flex-start",
       }}
     >
-      <div style={{ marginTop: "160px", width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
         <SOMBookClubHome />
         <button
           onClick={() => navigate("/about")}
@@ -33,6 +33,10 @@ function Home() {
             fontSize: "1.25rem",
             letterSpacing: "0.05em",
             boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+            position: "absolute",
+            bottom: "10%", // distance from bottom of container
+            left: "50%",
+            transform: "translateX(-50%)",
           }}
         >
           Enter
