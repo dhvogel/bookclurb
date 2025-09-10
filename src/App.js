@@ -2,7 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import SOMBookClubHome from './components/SOMBookClubHome';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
-import About from './components/About';
+import People from './components/People';
 
 function Home() {
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
+        <Route path="/about" element={<People />} />
       </Routes>
     </BrowserRouter>
   );
