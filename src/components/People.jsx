@@ -1,5 +1,6 @@
 import { b } from 'framer-motion/client';
 import React from 'react';
+import HeaderBar from './HeaderBar';
 
 const About = () => {
     const members = [
@@ -16,6 +17,7 @@ const About = () => {
 
     return (
         <div>
+            <HeaderBar />
             <h1>People</h1>
             <div style={{
                 display: 'grid',

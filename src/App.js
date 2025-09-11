@@ -3,6 +3,8 @@ import './App.css';
 import SOMBookClubHome from './components/SOMBookClubHome';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import People from './components/People';
+import Login from './components/Login';
+import "./firebaseConfig"; // make sure this runs before using any Firebase services
 
 function Home() {
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ function Home() {
       <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
         <SOMBookClubHome />
         <button
-          onClick={() => navigate("/about")}
+          onClick={() => navigate("/people")}
           className="mt-6 px-8 py-3 bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 text-white font-bold rounded-full shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-white/30 backdrop-blur"
           style={{
             fontSize: "1.25rem",
@@ -47,11 +49,13 @@ function Home() {
 }
 
 function App() {
+            
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/about" element={<People />} />
+        <Route path="/people" element={<People />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </BrowserRouter>
   );
