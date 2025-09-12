@@ -2,11 +2,10 @@ import React, { useState } from "react";
 import HeaderBar from "./HeaderBar";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
-const Login = () => {
+const Login = ({setUser, user}) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [user, setUser] = useState(null); // ✅ track logged-in user
 
   const handleSubmit = async (e) => {
     e.preventDefault();

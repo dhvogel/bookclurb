@@ -5,6 +5,22 @@ const HeaderBar = ({ user }) => {
     const location = useLocation();
     const isPeople = location.pathname === '/people';
 
+    // Map emails to member info
+    const emailToMember = {
+        'dhvogel2468@gmail.com': { name: 'Dan', img: 'https://api.dicebear.com/7.x/bottts/png?seed=Dan&backgroundColor=ffffff' },
+        'alden@sombookclub.com': { name: 'Alden', img: 'https://api.dicebear.com/7.x/bottts/png?seed=Alden&backgroundColor=ffffff' },
+        'charles@sombookclub.com': { name: 'Charles', img: 'https://api.dicebear.com/7.x/bottts/png?seed=Charles&backgroundColor=ffffff' },
+        'david@sombookclub.com': { name: 'David', img: 'https://api.dicebear.com/7.x/bottts/png?seed=David&backgroundColor=ffffff' },
+        'dhru@sombookclub.com': { name: 'Dhru', img: 'https://api.dicebear.com/7.x/bottts/png?seed=Dhru&backgroundColor=ffffff' },
+        'grant@sombookclub.com': { name: 'Grant', img: 'https://api.dicebear.com/7.x/bottts/png?seed=Grant&backgroundColor=ffffff' },
+        'margaret@sombookclub.com': { name: 'Margaret', img: 'https://api.dicebear.com/7.x/bottts/png?seed=Margaret&backgroundColor=ffffff' },
+        'sam@sombookclub.com': { name: 'Sam', img: 'https://api.dicebear.com/7.x/bottts/png?seed=Sam&backgroundColor=ffffff' },
+        'paul@sombookclub.com': { name: 'Paul', img: 'https://api.dicebear.com/7.x/bottts/png?seed=Paul&backgroundColor=ffffff' },
+        'dan@sombookclub.com': { name: 'Dan', img: 'https://api.dicebear.com/7.x/bottts/png?seed=Dan&backgroundColor=ffffff' }
+    };
+    // Determine member info based on user email
+    const member = user && emailToMember[user.email];
+
     return (
         <div style={{
             position: 'fixed',
@@ -55,7 +71,7 @@ const HeaderBar = ({ user }) => {
                         title={user.displayName || user.email}
                     >
                         <img
-                            src={user.photoURL}
+                            src={member ? member.img : user.photoURL || 'https://via.placeholder.com/40'}
                             alt="Profile"
                             style={{
                                 width: '40px',

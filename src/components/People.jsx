@@ -2,7 +2,8 @@ import { b } from 'framer-motion/client';
 import React from 'react';
 import HeaderBar from './HeaderBar';
 
-const About = () => {
+const About = ({ user }) => {
+    
     const members = [
         { name: "Alden", img: "https://api.dicebear.com/7.x/bottts/png?seed=Alden&backgroundColor=ffffff" },
         { name: "Charles", img: "https://api.dicebear.com/7.x/bottts/png?seed=Charles&backgroundColor=ffffff" },
@@ -17,7 +18,7 @@ const About = () => {
 
     return (
         <div>
-            <HeaderBar />
+            <HeaderBar user={user} />
             <h1>People</h1>
             <div style={{
                 display: 'grid',

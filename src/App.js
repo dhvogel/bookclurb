@@ -5,6 +5,9 @@ import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import People from './components/People';
 import Login from './components/Login';
 import "./firebaseConfig"; // make sure this runs before using any Firebase services
+import { useEffect, useState } from 'react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import Profile from './components/Profile';
 
 function Home() {
   const navigate = useNavigate();
@@ -49,13 +52,25 @@ function Home() {
 }
 
 function App() {
+  const [user, setUser] = useState(null); // Parent holds the state
+
+  useEffect(() => {
+    const auth = getAuth();
+    // Subscribe to auth state changes (runs once on mount)
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser); // null if signed out
+    });
+
+    return () => unsubscribe(); // cleanup
+  }, []);
             
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/people" element={<People />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/people" element={<People user={user} />} />
+        <Route path="/profile" element={<Profile user={user} />} />
+        <Route path="/login" element={<Login setUser={setUser} user={user} />} />
       </Routes>
     </BrowserRouter>
   );
