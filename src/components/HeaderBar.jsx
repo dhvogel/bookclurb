@@ -56,6 +56,24 @@ const HeaderBar = ({ user }) => {
                 >
                     People
                 </a>
+                {user && (
+                    <a
+                        href="/meetings"
+                        style={{
+                            color: location.pathname === '/meetings' ? '#FFD700' : 'white',
+                            background: location.pathname === '/meetings' ? 'rgba(255,255,255,0.08)' : 'transparent',
+                            padding: '0.5rem 1.2rem',
+                            borderRadius: '8px',
+                            textDecoration: 'none',
+                            fontWeight: location.pathname === '/meetings' ? 'bold' : 'normal',
+                            fontSize: '1.1rem',
+                            letterSpacing: '1px',
+                            transition: 'background 0.2s, color 0.2s'
+                        }}
+                    >
+                        Meetings
+                    </a>
+                )}
                 {user ? (
                     <a
                         href="/profile"

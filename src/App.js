@@ -8,6 +8,7 @@ import "./firebaseConfig"; // make sure this runs before using any Firebase serv
 import { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import Profile from './components/Profile';
+import Meetings from './components/Meetings';
 
 function Home() {
   const navigate = useNavigate();
@@ -71,6 +72,7 @@ function App() {
         <Route path="/people" element={<People user={user} />} />
         <Route path="/profile" element={<Profile user={user} />} />
         <Route path="/login" element={<Login setUser={setUser} user={user} />} />
+        <Route path="/meetings" element={<Meetings user={user} />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import HeaderBar from "./HeaderBar";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 const Login = ({setUser, user}) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,6 +16,7 @@ const Login = ({setUser, user}) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, username, password);
       setUser(userCredential.user); // ✅ update state
+      navigate("/profile"); // ✅ redirect to profile
     } catch (err) {
       setError("Login failed. Please check your credentials.");
     }
