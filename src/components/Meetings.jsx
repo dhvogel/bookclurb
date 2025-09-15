@@ -1,7 +1,20 @@
 import React from 'react';
 import HeaderBar from './HeaderBar';
+import { ref, set, onValue } from 'firebase/database';
 
-const Meetings = ({ user }) => {
+const Meetings = ({ user, db }) => {
+
+    const [reflection, setReflection] = React.useState("");
+
+    // Save reflection to Firebase
+    const handleSave = () => {
+        // Replace "user.uid" and meeting id with actual values as needed
+        set(ref(db, `reflections/${user.uid}/meeting-2024-09-18`), {
+            reflection,
+            timestamp: Date.now()
+        });
+    };
+
     return (
         <div>
             <HeaderBar user={user} />
@@ -59,7 +72,19 @@ const Meetings = ({ user }) => {
                                     style={{ width: '100%', minWidth: '400px' }}
                                     rows={6}
                                     placeholder="Enter your reflection..."
+                                    value={reflection}
+                                    onChange={e => setReflection(e.target.value)}
                                 />
+                                <div className="mt-4 flex justify-end">
+                                    {/* Save reflection to Firebase */}
+                                    <button
+                                        type="button"
+                                        className="bg-gray-200 text-gray-700 px-4 py-2 rounded mr-2 hover:bg-gray-300 transition"
+                                        onClick={handleSave}
+                                    >
+                                        Save
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>

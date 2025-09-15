@@ -4,11 +4,12 @@ import SOMBookClubHome from './components/SOMBookClubHome';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import People from './components/People';
 import Login from './components/Login';
-import "./firebaseConfig"; // make sure this runs before using any Firebase services
+import { db } from "./firebaseConfig"; // make sure this runs before using any Firebase services
 import { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import Profile from './components/Profile';
 import Meetings from './components/Meetings';
+import { ref, set, onValue } from "firebase/database";
 
 function Home() {
   const navigate = useNavigate();
@@ -54,25 +55,23 @@ function Home() {
 
 function App() {
   const [user, setUser] = useState(null); // Parent holds the state
+  const auth = getAuth();
 
   useEffect(() => {
-    const auth = getAuth();
-    // Subscribe to auth state changes (runs once on mount)
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser); // null if signed out
+      setUser(firebaseUser); // null if not logged in
     });
-
-    return () => unsubscribe(); // cleanup
-  }, []);
+    return () => unsubscribe();
+  }, [auth]);
             
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/people" element={<People user={user} />} />
-        <Route path="/profile" element={<Profile user={user} />} />
-        <Route path="/login" element={<Login setUser={setUser} user={user} />} />
-        <Route path="/meetings" element={<Meetings user={user} />} />
+        <Route path="/people" element={<People user={user} db={db} />} />
+        <Route path="/profile" element={<Profile user={user} db={db} />} />
+        <Route path="/login" element={<Login setUser={setUser} user={user} db={db} auth={auth} />} />
+        <Route path="/meetings" element={<Meetings user={user} db={db} />} />
       </Routes>
     </BrowserRouter>
   );

@@ -3,7 +3,7 @@ import HeaderBar from "./HeaderBar";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
-const Login = ({setUser, user}) => {
+const Login = ({setUser, user, auth}) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -12,7 +12,6 @@ const Login = ({setUser, user}) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    const auth = getAuth();
     try {
       const userCredential = await signInWithEmailAndPassword(auth, username, password);
       setUser(userCredential.user); // ✅ update state
