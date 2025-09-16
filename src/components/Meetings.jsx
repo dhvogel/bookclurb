@@ -2,9 +2,12 @@ import React from 'react';
 import HeaderBar from './HeaderBar';
 import { ref, set, onValue } from 'firebase/database';
 
+
 const Meetings = ({ user, db }) => {
 
     const [reflection, setReflection] = React.useState("");
+    const [allReflections, setAllReflections] = React.useState({});
+    const [showModal, setShowModal] = React.useState(false);
 
     React.useEffect(() => {
         if (user) {
@@ -29,6 +32,41 @@ const Meetings = ({ user, db }) => {
             setSaved(true);
             setTimeout(() => setSaved(false), 1500);
         });
+    };
+
+    // Helper function to fetch and log all user reflections for the meeting
+    const fetchAllReflections = () => {
+        const reflectionsRef = ref(db, 'reflections');
+        onValue(reflectionsRef, (snapshot) => {
+            const allReflections = snapshot.val();
+            const meetingReflections = {};
+            if (allReflections) {
+                Object.entries(allReflections).forEach(([uid, meetings]) => {
+                    if (
+                        meetings &&
+                        meetings['meeting-2024-09-18'] &&
+                        meetings['meeting-2024-09-18'].reflection
+                    ) {
+                        // Fetch user's first_name and last_name from users/${uid}
+                        const userRef = ref(db, `users/${uid}`);
+                        onValue(userRef, (userSnapshot) => {
+                            const userData = userSnapshot.val();
+                            const name = userData
+                                ? `${userData.first_name || ''} ${userData.last_name || ''}`.trim()
+                                : uid;
+                            meetingReflections[uid] = {
+                                name,
+                                reflection: meetings['meeting-2024-09-18'].reflection
+                            };
+                            // Update state after each user fetch
+                            setAllReflections(prev => ({ ...prev, ...meetingReflections }));
+                        }, { onlyOnce: true });
+                    }
+                });
+            }
+            setAllReflections(meetingReflections);
+            setShowModal(true);
+        }, { onlyOnce: true });
     };
 
     return (
@@ -76,6 +114,60 @@ const Meetings = ({ user, db }) => {
                             margin-left: 8px;
                             font-size: 1rem;
                         }
+                        .center-cell {
+                            text-align: center;
+                        }
+                        .modal-overlay {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            width: 100vw;
+                            height: 100vh;
+                            background: rgba(0,0,0,0.3);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            z-index: 1000;
+                        }
+                        .modal-content {
+                            background: #fff;
+                            border-radius: 12px;
+                            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+                            padding: 32px 24px;
+                            min-width: 340px;
+                            max-width: 90vw;
+                        }
+                        .modal-close-btn {
+                            background: #f3f4f6;
+                            color: #374151;
+                            border: none;
+                            border-radius: 6px;
+                            padding: 8px 16px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            margin-top: 24px;
+                        }
+                        .modal-close-btn:hover {
+                            background: #e5e7eb;
+                        }
+                        .reflection-list {
+                            margin-top: 12px;
+                        }
+                        .reflection-item {
+                            margin-bottom: 16px;
+                            padding-bottom: 12px;
+                            border-bottom: 1px solid #f3f4f6;
+                        }
+                        .reflection-uid {
+                            font-size: 0.95rem;
+                            color: #6366f1;
+                            font-weight: 500;
+                        }
+                        .reflection-text {
+                            margin-top: 4px;
+                            font-size: 1rem;
+                            color: #374151;
+                        }
                     `}
                 </style>
                 <table className="meetings-table w-full border-collapse border border-gray-300">
@@ -84,6 +176,7 @@ const Meetings = ({ user, db }) => {
                             <th className="border border-gray-300 p-2 text-left">Meeting Time</th>
                             <th className="border border-gray-300 p-2 text-left">Reading</th>
                             <th className="border border-gray-300 p-2 text-left">Reflection</th>
+                            <th className="border border-gray-300 p-2 text-left">Other Members' Reflections</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -118,10 +211,45 @@ const Meetings = ({ user, db }) => {
                                     )}
                                 </div>
                             </td>
+                            <td className="border border-gray-300 p-2 center-cell">
+                                <button
+                                    type="button"
+                                    className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded hover:bg-indigo-200 transition"
+                                    onClick={fetchAllReflections}
+                                >
+                                    Show Reflections
+                                </button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+            {showModal && (
+                <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold mb-2">Other Members' Reflections</h3>
+                        <div className="reflection-list">
+                            {Object.keys(allReflections).length === 0 ? (
+                                <p className="text-gray-500">No reflections yet.</p>
+                            ) : (
+                                Object.entries(allReflections).map(([uid, { name, reflection }]) => (
+                                    <div key={uid} className="reflection-item">
+                                        <span className="reflection-uid">User: {name}</span>
+                                        <div className="reflection-text">{reflection}</div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        <button
+                            className="modal-close-btn"
+                            type="button"
+                            onClick={() => setShowModal(false)}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
