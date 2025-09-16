@@ -39,10 +39,12 @@ const HeaderBar = ({ user }) => {
             <h1 style={{ margin: 0, fontSize: '2rem', letterSpacing: '2px' }}>
                 <a href="/" style={{ color: 'inherit', textDecoration: 'none' }}>SOM Book Club</a>
             </h1>
-            <nav style={{ display: 'flex', gap: '1rem' }}>
+            <nav style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <a
                     href="/people"
                     style={{
+                        display: 'flex',
+                        alignItems: 'center',
                         color: isPeople ? '#FFD700' : 'white',
                         background: isPeople ? 'rgba(255,255,255,0.08)' : 'transparent',
                         padding: '0.5rem 1.2rem',
@@ -80,7 +82,7 @@ const HeaderBar = ({ user }) => {
                         style={{
                             display: 'flex',
                             alignItems: 'center',
-                            padding: '0.2rem 0.5rem',
+                            padding: '0.2rem',
                             borderRadius: '50%',
                             background: location.pathname === '/profile' ? 'rgba(255,255,255,0.08)' : 'transparent',
                             border: '2px solid #FFD700',
