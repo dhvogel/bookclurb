@@ -234,7 +234,7 @@ const Meetings = ({ user, db }) => {
                             ) : (
                                 Object.entries(allReflections).map(([uid, { name, reflection }]) => (
                                     <div key={uid} className="reflection-item">
-                                        <span className="reflection-uid">User: {name}</span>
+                                        <span className="reflection-uid">{name}</span>
                                         <div className="reflection-text">{reflection}</div>
                                     </div>
                                 ))
