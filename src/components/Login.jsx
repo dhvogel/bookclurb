@@ -24,7 +24,7 @@ const Login = ({setUser, user, auth}) => {
   return (
     <>
       <HeaderBar user={user} /> {/* pass the state */}
-      <form onSubmit={handleSubmit} style={{marginTop: '100px'}}>
+      <form onSubmit={handleSubmit} style={{marginTop: '8rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem'}}>
         <input
           type="email"
           placeholder="Email"

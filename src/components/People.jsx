@@ -19,12 +19,11 @@ const About = ({ user }) => {
     return (
         <div>
             <HeaderBar user={user} />
-            <h1>People</h1>
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
                 gap: '20px',
-                marginTop: '3rem'
+                marginTop: '8rem'
             }}>
                 {members.map(member => {
                     const checkMembers = ["Charles", "Grant", "Dan", "Alden"];
