@@ -6,12 +6,28 @@ const Meetings = ({ user, db }) => {
 
     const [reflection, setReflection] = React.useState("");
 
-    // Save reflection to Firebase
+    React.useEffect(() => {
+        if (user) {
+            const reflectionRef = ref(db, `reflections/${user.uid}/meeting-2024-09-18`);
+            onValue(reflectionRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.reflection) {
+                    setReflection(data.reflection);
+                }
+            });
+        }
+    }, [user, db]);
+
+    const [saved, setSaved] = React.useState(false);
+
+    // Modified handleSave to show "Saved" indicator
     const handleSave = () => {
-        // Replace "user.uid" and meeting id with actual values as needed
         set(ref(db, `reflections/${user.uid}/meeting-2024-09-18`), {
             reflection,
             timestamp: Date.now()
+        }).then(() => {
+            setSaved(true);
+            setTimeout(() => setSaved(false), 1500);
         });
     };
 
@@ -52,6 +68,14 @@ const Meetings = ({ user, db }) => {
                             outline: none;
                             background: #fff;
                         }
+                        .saved-indicator {
+                            display: inline-flex;
+                            align-items: center;
+                            color: #22c55e;
+                            font-weight: 500;
+                            margin-left: 8px;
+                            font-size: 1rem;
+                        }
                     `}
                 </style>
                 <table className="meetings-table w-full border-collapse border border-gray-300">
@@ -75,8 +99,7 @@ const Meetings = ({ user, db }) => {
                                     value={reflection}
                                     onChange={e => setReflection(e.target.value)}
                                 />
-                                <div className="mt-4 flex justify-end">
-                                    {/* Save reflection to Firebase */}
+                                <div className="mt-4 flex items-center justify-end">
                                     <button
                                         type="button"
                                         className="bg-gray-200 text-gray-700 px-4 py-2 rounded mr-2 hover:bg-gray-300 transition"
@@ -84,6 +107,15 @@ const Meetings = ({ user, db }) => {
                                     >
                                         Save
                                     </button>
+                                    {saved && (
+                                        <span className="saved-indicator">
+                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">       
+                                                <circle cx="10" cy="10" r="10" fill="#22c55e"/>
+                                                <path d="M6 10.5l2.5 2.5 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                            <p style={{ marginLeft: '6px' }}>Reflection Saved</p>
+                                        </span>
+                                    )}
                                 </div>
                             </td>
                         </tr>
