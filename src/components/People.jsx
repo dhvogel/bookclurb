@@ -24,7 +24,7 @@ const About = ({ user }) => {
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
                 gap: '20px',
-                marginTop: '2rem'
+                marginTop: '3rem'
             }}>
                 {members.map(member => {
                     const checkMembers = ["Charles", "Grant", "Dan", "Alden"];
