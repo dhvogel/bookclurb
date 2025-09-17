@@ -16,6 +16,19 @@ function ReflectionModal({ allReflections, setShowModal }) {
                             <div key={uid} className="reflection-item">
                                 <span className="reflection-uid">{name}</span>
                                 <div className="reflection-text">{reflection}</div>
+                                {/* Comment icon below reflection */}
+                                <div className="reflection-comment-icon" style={{ marginTop: '8px' }}>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8L3 21l1.8-4A7.96 7.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                </div>
                             </div>
                         ))
                     )}
