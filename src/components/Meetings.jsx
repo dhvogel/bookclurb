@@ -1,6 +1,7 @@
 import React from 'react';
 import HeaderBar from './HeaderBar';
 import { ref, set, onValue } from 'firebase/database';
+import ReflectionModal from './ReflectionModal';
 
 
 const Meetings = ({ user, db }) => {
@@ -225,30 +226,7 @@ const Meetings = ({ user, db }) => {
                 </table>
             </div>
             {showModal && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-xl font-bold mb-2">Other Members' Reflections</h3>
-                        <div className="reflection-list">
-                            {Object.keys(allReflections).length === 0 ? (
-                                <p className="text-gray-500">No reflections yet.</p>
-                            ) : (
-                                Object.entries(allReflections).map(([uid, { name, reflection }]) => (
-                                    <div key={uid} className="reflection-item">
-                                        <span className="reflection-uid">{name}</span>
-                                        <div className="reflection-text">{reflection}</div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                        <button
-                            className="modal-close-btn"
-                            type="button"
-                            onClick={() => setShowModal(false)}
-                        >
-                            Close
-                        </button>
-                    </div>
-                </div>
+               <ReflectionModal allReflections={allReflections} setShowModal={setShowModal} />
             )}
         </div>
     );
