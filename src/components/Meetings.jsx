@@ -70,6 +70,21 @@ const Meetings = ({ user, db }) => {
         }, { onlyOnce: true });
     };
 
+    // Array of meetings
+    const meetings = [
+        {
+            id: 'meeting-2024-09-18',
+            time: 'Thu, 9/18, 6:00 PM EDT',
+            reading: 'Empire of Pain, Ch 1-3'
+        },
+        // Add more meetings here as needed
+        {
+            id: 'meeting-2024-10-02',
+            time: 'Wed, 10/2, 6:00 PM EDT',
+            reading: 'Empire of Pain, Ch 4-7'
+        }
+    ];
+
     return (
         <div>
             <HeaderBar user={user} />
@@ -181,47 +196,57 @@ const Meetings = ({ user, db }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td className="border border-gray-300 p-2">Thu, 9/18, 6:00 PM EDT</td>
-                            <td className="border border-gray-300 p-2">Empire of Pain, Ch 1-3</td>
-                            <td className="border border-gray-300 p-2">
-                                <textarea
-                                    className="border rounded p-2"
-                                    style={{ width: '100%', minWidth: '400px' }}
-                                    rows={6}
-                                    placeholder="Enter your reflection..."
-                                    value={reflection}
-                                    onChange={e => setReflection(e.target.value)}
-                                />
-                                <div className="mt-4 flex items-center justify-end">
-                                    <button
-                                        type="button"
-                                        className="bg-gray-200 text-gray-700 px-4 py-2 rounded mr-2 hover:bg-gray-300 transition"
-                                        onClick={handleSave}
-                                    >
-                                        Save
-                                    </button>
-                                    {saved && (
-                                        <span className="saved-indicator">
-                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">       
-                                                <circle cx="10" cy="10" r="10" fill="#22c55e"/>
-                                                <path d="M6 10.5l2.5 2.5 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                            </svg>
-                                            <p style={{ marginLeft: '6px' }}>Reflection Saved</p>
-                                        </span>
+                        {meetings.map(meeting => (
+                            <tr key={meeting.id}>
+                                <td className="border border-gray-300 p-2">{meeting.time}</td>
+                                <td className="border border-gray-300 p-2">{meeting.reading}</td>
+                                <td className="border border-gray-300 p-2">
+                                    {/* Only show textarea for the current meeting (first in array) */}
+                                    {meeting.id === 'meeting-2024-09-18' && (
+                                        <>
+                                            <textarea
+                                                className="border rounded p-2"
+                                                style={{ width: '100%', minWidth: '400px' }}
+                                                rows={6}
+                                                placeholder="Enter your reflection..."
+                                                value={reflection}
+                                                onChange={e => setReflection(e.target.value)}
+                                            />
+                                            <div className="mt-4 flex items-center justify-end">
+                                                <button
+                                                    type="button"
+                                                    className="bg-gray-200 text-gray-700 px-4 py-2 rounded mr-2 hover:bg-gray-300 transition"
+                                                    onClick={handleSave}
+                                                >
+                                                    Save
+                                                </button>
+                                                {saved && (
+                                                    <span className="saved-indicator">
+                                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">       
+                                                            <circle cx="10" cy="10" r="10" fill="#22c55e"/>
+                                                            <path d="M6 10.5l2.5 2.5 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                        </svg>
+                                                        <p style={{ marginLeft: '6px' }}>Reflection Saved</p>
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </>
                                     )}
-                                </div>
-                            </td>
-                            <td className="border border-gray-300 p-2 center-cell">
-                                <button
-                                    type="button"
-                                    className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded hover:bg-indigo-200 transition"
-                                    onClick={fetchAllReflections}
-                                >
-                                    Show Reflections
-                                </button>
-                            </td>
-                        </tr>
+                                </td>
+                                <td className="border border-gray-300 p-2 center-cell">
+                                    {/* Only show button for the current meeting (first in array) */}
+                                    {meeting.id === 'meeting-2024-09-18' && (
+                                        <button
+                                            type="button"
+                                            className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded hover:bg-indigo-200 transition"
+                                            onClick={fetchAllReflections}
+                                        >
+                                            Show Reflections
+                                        </button>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
