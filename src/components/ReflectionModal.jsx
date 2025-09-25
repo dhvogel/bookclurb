@@ -3,21 +3,31 @@ import PropTypes from 'prop-types';
 
 
 
-function ReflectionModal({ allReflections, setShowModal }) {
+function ReflectionModal({ allReflections, meetingId, setShowModal }) {
     return (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <h3 className="text-xl font-bold mb-2">Other Members' Reflections</h3>
-                <div className="reflection-list">
+        <div
+            className="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setShowModal(false)}
+            style={{ minHeight: '100vh' }}
+        >
+            <div
+                className="modal-content bg-white rounded-lg shadow-lg p-4 max-w-lg w-full mx-2 relative"
+                onClick={e => e.stopPropagation()}
+                style={{
+                    maxHeight: '90vh',
+                    overflowY: 'auto',
+                }}
+            >
+                <h3 className="text-xl font-bold mb-2 text-center">Other Members' Reflections</h3>
+                <div className="reflection-list space-y-4">
                     {Object.keys(allReflections).length === 0 ? (
-                        <p className="text-gray-500">No reflections yet.</p>
+                        <p className="text-gray-500 text-center">No reflections yet.</p>
                     ) : (
-                        Object.entries(allReflections).map(([uid, { name, reflection }]) => (
-                            <div key={uid} className="reflection-item">
-                                <span className="reflection-uid">{name}</span>
-                                <div className="reflection-text">{reflection}</div>
-                                {/* Comment icon below reflection */}
-                                <div className="reflection-comment-icon" style={{ marginTop: '8px' }}>
+                        Object.entries(allReflections[meetingId]).map(([uid, { name, reflection }]) => (
+                            <div key={uid} className="reflection-item bg-gray-100 rounded p-3">
+                                <span className="reflection-uid font-semibold block mb-1">{name}</span>
+                                <div className="reflection-text text-sm mb-2">{reflection}</div>
+                                <div className="reflection-comment-icon flex justify-end" style={{ marginTop: '8px' }}>
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         width="20"
@@ -34,7 +44,7 @@ function ReflectionModal({ allReflections, setShowModal }) {
                     )}
                 </div>
                 <button
-                    className="modal-close-btn"
+                    className="modal-close-btn mt-4 w-full py-2 bg-blue-600 text-white rounded font-semibold"
                     type="button"
                     onClick={() => setShowModal(false)}
                 >
