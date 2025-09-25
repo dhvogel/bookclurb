@@ -29,9 +29,9 @@ const Meetings = ({ user, db }) => {
     // Modified handleSave to show "Saved" indicator
     const handleSave = (id) => {
         set(ref(db, `reflections/${user.uid}/${id}`), {
-            reflection: userReflections[id] || "",
-            timestamp: Date.now()
-        }).then(() => {
+  reflection: userReflections[id]?.reflection || "",
+  timestamp: Date.now()
+}).then(() => {
             setSaved(true);
             setTimeout(() => setSaved(false), 1500);
         });
@@ -209,14 +209,19 @@ const Meetings = ({ user, db }) => {
                                     {/* Only show textarea for the current meeting (first in array) */}
                                     {(
                                         <>
-                                            <textarea
-                                                className="border rounded p-2"
-                                                style={{ width: '100%', minWidth: '400px' }}
-                                                rows={6}
-                                                placeholder="Enter your reflection..."
-                                                value={userReflections[meeting.id]?.reflection || ""}
-                                                onChange={e => setUserReflections(prev => ({ ...prev, [meeting.id]: e.target.value }))}
-                                            />
+                                           <textarea
+  className="border rounded p-2"
+  style={{ width: '100%', minWidth: '400px' }}
+  rows={6}
+  placeholder="Enter your reflection..."
+value={userReflections[meeting.id]?.reflection || ""}
+  onChange={e =>
+    setUserReflections(prev => ({
+      ...prev,
+      [meeting.id]: { reflection: e.target.value }
+    }))
+  }
+/>
                                             <div className="mt-4 flex items-center justify-end">
                                                 <button
                                                     type="button"
