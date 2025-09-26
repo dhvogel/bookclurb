@@ -2,6 +2,8 @@
 
 site for SOM Book Club
 
+- Notifications for when someone posts a reflection
+
 - Members
   - Books they've participated in
   - Book ratings
