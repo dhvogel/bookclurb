@@ -16,7 +16,6 @@ const Meetings = ({ user, db }) => {
       onValue(reflectionRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
-          console.log("Fetched user reflections:", data);
           setUserReflections(data);
         }
       });
