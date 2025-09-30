@@ -18,6 +18,24 @@ function ReflectionModal({ allReflections, meetingId, setShowModal }) {
                     overflowY: 'auto',
                 }}
             >
+                {/* Close button in upper right */}
+                <button
+                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    aria-label="Close"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
                 <h3 className="text-xl font-bold mb-2 text-center">Other Members' Reflections</h3>
                 <div className="reflection-list space-y-4">
                     {Object.keys(allReflections).length === 0 ? (
@@ -43,13 +61,6 @@ function ReflectionModal({ allReflections, meetingId, setShowModal }) {
                         ))
                     )}
                 </div>
-                <button
-                    className="modal-close-btn mt-4 w-full py-2 bg-blue-600 text-white rounded font-semibold"
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                >
-                    Close
-                </button>
             </div>
         </div>
     );
