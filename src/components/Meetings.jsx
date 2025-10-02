@@ -2,6 +2,7 @@ import React from "react";
 import HeaderBar from "./HeaderBar";
 import { ref, set, onValue } from "firebase/database";
 import ReflectionModal from "./ReflectionModal";
+import "../App.css";
 
 const Meetings = ({ user, db }) => {
   const [userReflections, setUserReflections] = React.useState("");
@@ -106,127 +107,32 @@ const Meetings = ({ user, db }) => {
       <HeaderBar user={user} />
       <div className="p-4" style={{ marginTop: "100px" }}>
         <h2 className="text-2xl font-bold mb-4">Upcoming Meetings</h2>
-        {/* Improved table styling */}
-        <style>
-          {`
-                        .meetings-table {
-                            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-                            border-radius: 12px;
-                            overflow: hidden;
-                            background: #fff;
-                        }
-                        .meetings-table th, .meetings-table td {
-                            transition: background 0.2s;
-                            padding-left: 24px !important;
-                            padding-right: 24px !important;
-                        }
-                        .meetings-table tbody tr:hover {
-                            background: #f3f4f6;
-                        }
-                        .meetings-table th {
-                            background: #f9fafb;
-                            font-weight: 600;
-                            color: #374151;
-                        }
-                        .meetings-table textarea {
-                            background: #f9fafb;
-                            border: 1px solid #e5e7eb;
-                            transition: border 0.2s;
-                        }
-                        .meetings-table textarea:focus {
-                            border: 1.5px solid #6366f1;
-                            outline: none;
-                            background: #fff;
-                        }
-                        .saved-indicator {
-                            display: inline-flex;
-                            align-items: center;
-                            color: #22c55e;
-                            font-weight: 500;
-                            margin-left: 8px;
-                            font-size: 1rem;
-                        }
-                        .center-cell {
-                            text-align: center;
-                        }
-                        .modal-overlay {
-                            position: fixed;
-                            top: 0;
-                            left: 0;
-                            width: 100vw;
-                            height: 100vh;
-                            background: rgba(0,0,0,0.3);
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            z-index: 1000;
-                        }
-                        .modal-content {
-                            background: #fff;
-                            border-radius: 12px;
-                            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-                            padding: 32px 24px;
-                            min-width: 340px;
-                            max-width: 90vw;
-                        }
-                        .modal-close-btn {
-                            background: #f3f4f6;
-                            color: #374151;
-                            border: none;
-                            border-radius: 6px;
-                            padding: 8px 16px;
-                            font-weight: 500;
-                            cursor: pointer;
-                            margin-top: 24px;
-                        }
-                        .modal-close-btn:hover {
-                            background: #e5e7eb;
-                        }
-                        .reflection-list {
-                            margin-top: 12px;
-                        }
-                        .reflection-item {
-                            margin-bottom: 16px;
-                            padding-bottom: 12px;
-                            border-bottom: 1px solid #f3f4f6;
-                        }
-                        .reflection-uid {
-                            font-size: 0.95rem;
-                            color: #6366f1;
-                            font-weight: 500;
-                        }
-                        .reflection-text {
-                            margin-top: 4px;
-                            font-size: 1rem;
-                            color: #374151;
-                        }
-                    `}
-        </style>
-        <table className="meetings-table w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-gray-300 p-2 text-left">
-                Meeting Time
-              </th>
-              <th className="border border-gray-300 p-2 text-left">Reading</th>
-              <th className="border border-gray-300 p-2 text-left">
-                Reflection
-              </th>
-              <th className="border border-gray-300 p-2 text-left">
-                Other Members' Reflections
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {meetings.map((meeting) => (
-              <tr key={meeting.id}>
-                <td className="border border-gray-300 p-2">{meeting.time}</td>
-                <td className="border border-gray-300 p-2">
-                  {meeting.reading}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {/* Only show textarea for the current meeting (first in array) */}
-                  {
+        {user ? (
+          <table className="meetings-table w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2 text-left">
+                  Meeting Time
+                </th>
+                <th className="border border-gray-300 p-2 text-left">
+                  Reading
+                </th>
+                <th className="border border-gray-300 p-2 text-left">
+                  Reflection
+                </th>
+                <th className="border border-gray-300 p-2 text-left">
+                  Other Members' Reflections
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {meetings.map((meeting) => (
+                <tr key={meeting.id}>
+                  <td className="border border-gray-300 p-2">{meeting.time}</td>
+                  <td className="border border-gray-300 p-2">
+                    {meeting.reading}
+                  </td>
+                  <td className="border border-gray-300 p-2">
                     <>
                       <textarea
                         className="border rounded p-2"
@@ -273,11 +179,8 @@ const Meetings = ({ user, db }) => {
                         )}
                       </div>
                     </>
-                  }
-                </td>
-                <td className="border border-gray-300 p-2 center-cell">
-                  {/* Only show button for the current meeting (first in array) */}
-                  {
+                  </td>
+                  <td className="border border-gray-300 p-2 center-cell">
                     <button
                       type="button"
                       className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded hover:bg-indigo-200 transition"
@@ -285,12 +188,25 @@ const Meetings = ({ user, db }) => {
                     >
                       Show Reflections
                     </button>
-                  }
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div
+            className="w-full p-8 rounded bg-gray-100 text-gray-400 flex flex-col items-center justify-center"
+            style={{
+              border: "2px solid #e5e7eb",
+              minHeight: "200px",
+              opacity: 0.7,
+            }}
+          >
+            <p className="text-lg font-semibold mb-2">
+              Please log in to view meeting details.
+            </p>
+          </div>
+        )}
       </div>
       {showModal && (
         <ReflectionModal
