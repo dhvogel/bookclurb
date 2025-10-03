@@ -23,3 +23,4 @@ yarn-debug.log*
 yarn-error.log*
 
 src/firebaseConfig.js
+src/config/members.js

@@ -1,5 +1,5 @@
-import React from 'react'
-import { color, motion } from 'framer-motion'
+import React from "react";
+import { color, motion } from "framer-motion";
 
 // SOMBookClubHome.jsx
 // Dark, moody homepage hero for a book club. Fullscreen background image.
@@ -31,5 +31,5 @@ export default function SOMBookClubHome() {
         SOM Book Club
       </p>
     </div>
-  )
+  );
 }

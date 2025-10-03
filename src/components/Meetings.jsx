@@ -86,6 +86,11 @@ const Meetings = ({ user, db }) => {
   const meetings = [
     // Add more meetings here as needed
     {
+      id: "meeting-2025-10-09",
+      time: "Thu, 10/9, 6:00 PM EDT",
+      reading: "Empire of Pain, Ch 11-14",
+    },
+    {
       id: "meeting-2025-10-02",
       time: "Thu, 10/2, 6:00 PM EDT",
       reading: "Empire of Pain, Ch 8-10",

@@ -3,7 +3,7 @@ import HeaderBar from "./HeaderBar";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
-const Login = ({setUser, user, auth}) => {
+const Login = ({ setUser, user, auth }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -13,7 +13,11 @@ const Login = ({setUser, user, auth}) => {
     e.preventDefault();
     setError("");
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, username, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        username,
+        password
+      );
       setUser(userCredential.user); // ✅ update state
       navigate("/profile"); // ✅ redirect to profile
     } catch (err) {
@@ -24,7 +28,16 @@ const Login = ({setUser, user, auth}) => {
   return (
     <>
       <HeaderBar user={user} /> {/* pass the state */}
-      <form onSubmit={handleSubmit} style={{marginTop: '8rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem'}}>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          marginTop: "8rem",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "1rem",
+        }}
+      >
         <input
           type="email"
           placeholder="Email"
