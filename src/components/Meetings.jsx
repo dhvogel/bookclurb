@@ -10,6 +10,7 @@ const Meetings = ({ user, db }) => {
     React.useState({});
   const [showModal, setShowModal] = React.useState(false);
   const [meetingId, setMeetingId] = React.useState("");
+  const [lastSaveTime, setLastSaveTime] = React.useState(0);
 
   React.useEffect(() => {
     if (user) {
@@ -26,13 +27,46 @@ const Meetings = ({ user, db }) => {
   const [saved, setSaved] = React.useState(false);
 
   // Modified handleSave to show "Saved" indicator
-  const handleSave = (id) => {
-    set(ref(db, `reflections/${user.uid}/${id}`), {
-      reflection: userReflections[id]?.reflection || "",
+  const handleSave = (meetingId) => {
+    if (lastSaveTime && Date.now() - lastSaveTime < 15000) {
+      const secondsLeft = Math.ceil(
+        (15000 - (Date.now() - lastSaveTime)) / 1000
+      );
+      alert(
+        `Please wait ${secondsLeft} more second${
+          secondsLeft !== 1 ? "s" : ""
+        } before saving again.`
+      );
+      return;
+    }
+    setLastSaveTime(Date.now());
+
+    set(ref(db, `reflections/${user.uid}/${meetingId}`), {
+      reflection: userReflections[meetingId]?.reflection || "",
       timestamp: Date.now(),
     }).then(() => {
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
+      // Fetch user's from users/{userId}
+      // Fetch all user IDs from users table and write notification for each
+      const usersRef = ref(db, "users");
+      onValue(
+        usersRef,
+        (usersSnapshot) => {
+          const usersData = usersSnapshot.val() || {};
+          const firstName = usersData[user.uid]?.first_name || "A user";
+          Object.keys(usersData).forEach((userId) => {
+            if (userId === user.uid) return; // Skip notifying oneself
+            // Write notification to notifications/{userId}/{meetingId}
+            set(ref(db, `notifications/${userId}/${meetingId}`), {
+              text: `${firstName} has submitted a post.`,
+              isRead: false,
+              timestamp: Date.now(),
+            });
+          });
+        },
+        { onlyOnce: true }
+      );
     });
   };
 
