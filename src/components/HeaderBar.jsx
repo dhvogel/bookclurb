@@ -1,10 +1,30 @@
+import { equalTo, onValue, orderByChild, query, ref } from "firebase/database";
 import React from "react";
 import { useLocation } from "react-router-dom";
 
-const HeaderBar = ({ user }) => {
+const HeaderBar = ({ user, db }) => {
   const location = useLocation();
   const isPeople = location.pathname === "/people";
+  const [unreadCount, setUnreadCount] = React.useState(0);
 
+  React.useEffect(() => {
+    if (!user || !db) return;
+    const unreadQuery = query(
+      ref(db, `notifications/${user.uid}`),
+      orderByChild("isRead"),
+      equalTo(false)
+    );
+
+    const unsubscribe = onValue(unreadQuery, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        setUnreadCount(Object.keys(data).length);
+      } else {
+        setUnreadCount(0);
+      }
+    });
+    return () => unsubscribe();
+  }, [user?.uid, db]);
   // Map emails to member info
   const emailToMember = {
     "dhvogel2468@gmail.com": {
@@ -125,6 +145,7 @@ const HeaderBar = ({ user }) => {
                   : "transparent",
               border: "2px solid #FFD700",
               transition: "background 0.2s, border 0.2s",
+              position: "relative",
             }}
             title={user.displayName || user.email}
           >
@@ -143,6 +164,30 @@ const HeaderBar = ({ user }) => {
                 border: "2px solid white",
               }}
             />
+            {unreadCount > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: "-4px",
+                  right: "-4px",
+                  minWidth: "22px",
+                  height: "22px",
+                  background: "red",
+                  color: "white",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.95rem",
+                  fontWeight: "bold",
+                  border: "2px solid white",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+                  zIndex: 2,
+                }}
+              >
+                {unreadCount}
+              </span>
+            )}
           </a>
         ) : (
           <a

@@ -109,7 +109,7 @@ const Meetings = ({ user, db }) => {
 
   return (
     <div>
-      <HeaderBar user={user} />
+      <HeaderBar user={user} db={db} />
       <div className="p-4" style={{ marginTop: "100px" }}>
         <h2 className="text-2xl font-bold mb-4">Upcoming Meetings</h2>
         {user ? (

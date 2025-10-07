@@ -3,10 +3,10 @@ import React from "react";
 import HeaderBar from "./HeaderBar";
 import members from "../config/members";
 
-const About = ({ user }) => {
+const About = ({ user, db }) => {
   return (
     <div>
-      <HeaderBar user={user} />
+      <HeaderBar user={user} db={db} />
       <div
         style={{
           display: "grid",
