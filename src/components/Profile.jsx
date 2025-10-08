@@ -103,15 +103,6 @@ const Profile = ({ user, db }) => {
               >
                 Message
               </th>
-              <th
-                style={{
-                  borderBottom: "1px solid #ccc",
-                  textAlign: "left",
-                  padding: "0.5em",
-                }}
-              >
-                Read
-              </th>
             </tr>
           </thead>
           <tbody>
