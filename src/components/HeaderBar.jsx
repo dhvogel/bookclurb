@@ -1,4 +1,11 @@
-import { equalTo, onValue, orderByChild, query, ref } from "firebase/database";
+import {
+  equalTo,
+  onValue,
+  orderByChild,
+  query,
+  ref,
+  update,
+} from "firebase/database";
 import React from "react";
 import { useLocation } from "react-router-dom";
 
@@ -25,6 +32,29 @@ const HeaderBar = ({ user, db }) => {
     });
     return () => unsubscribe();
   }, [user?.uid, db]);
+
+  const setNotificationsUnread = (user, db) => {
+    if (!user || !db) return;
+    // Only update if not already read
+    // Fetch all notifications for the user and mark unread ones as read
+    onValue(
+      ref(db, `notifications/${user.uid}`),
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const notifications = snapshot.val();
+          Object.entries(notifications).forEach(([id, notif]) => {
+            if (!notif.isRead) {
+              update(ref(db, `notifications/${user.uid}/${id}`), {
+                isRead: true,
+              });
+            }
+          });
+        }
+      },
+      { onlyOnce: true }
+    );
+  };
+
   // Map emails to member info
   const emailToMember = {
     "dhvogel2468@gmail.com": {
@@ -163,6 +193,7 @@ const HeaderBar = ({ user, db }) => {
                 objectFit: "cover",
                 border: "2px solid white",
               }}
+              onClick={() => setNotificationsUnread(user, db)}
             />
             {unreadCount > 0 && (
               <span

@@ -37,21 +37,6 @@ const Profile = ({ user, db }) => {
     }
   }, [user, db]);
 
-  React.useEffect(() => {
-    if (userNotifications.length > 0) {
-      const unreadNotifications = userNotifications.filter(
-        (notif) => notif.isRead === false
-      );
-      unreadNotifications.forEach((notif) => {
-        const notifRef = ref(db, `notifications/${user.uid}/${notif.id}`);
-        // Only update if not already read
-        if (!notif.isRead) {
-          update(notifRef, { isRead: true });
-        }
-      });
-    }
-  }, [userNotifications, user, db]);
-
   // Example notifications data with isRead property
   const notifications = [
     {
