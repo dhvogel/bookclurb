@@ -31,7 +31,7 @@ const Login = ({ setUser, user, auth }) => {
       <form
         onSubmit={handleSubmit}
         style={{
-          marginTop: "8rem",
+          marginTop: "200px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

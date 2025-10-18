@@ -12,7 +12,7 @@ const About = ({ user, db }) => {
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
           gap: "20px",
-          marginTop: "8rem",
+          marginTop: "100px",
         }}
       >
         {Array.isArray(members) &&
