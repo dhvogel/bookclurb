@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import Profile from './components/Profile';
 import Meetings from './components/Meetings';
+import LiteraryProfile from './components/LiteraryProfile';
 import { ref, set, onValue } from "firebase/database";
 
 function Home() {
@@ -72,6 +73,7 @@ function App() {
         <Route path="/profile" element={<Profile user={user} db={db} />} />
         <Route path="/login" element={<Login setUser={setUser} user={user} db={db} auth={auth} />} />
         <Route path="/meetings" element={<Meetings user={user} db={db} />} />
+        <Route path="/literary-profile" element={<LiteraryProfile user={user} db={db} />} />
       </Routes>
     </BrowserRouter>
   );

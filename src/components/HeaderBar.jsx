@@ -12,6 +12,7 @@ import { useLocation } from "react-router-dom";
 const HeaderBar = ({ user, db }) => {
   const location = useLocation();
   const isPeople = location.pathname === "/people";
+  const isLiteraryProfile = location.pathname === "/literary-profile";
   const [unreadCount, setUnreadCount] = React.useState(0);
 
   React.useEffect(() => {
@@ -160,6 +161,24 @@ const HeaderBar = ({ user, db }) => {
           }}
         >
           Meetings
+        </a>
+        <a
+          href="/literary-profile"
+          style={{
+            color: isLiteraryProfile ? "#FFD700" : "white",
+            background: isLiteraryProfile
+              ? "rgba(255,255,255,0.08)"
+              : "transparent",
+            padding: "0.5rem 1.2rem",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: isLiteraryProfile ? "bold" : "normal",
+            fontSize: "1.1rem",
+            letterSpacing: "1px",
+            transition: "background 0.2s, color 0.2s",
+          }}
+        >
+          Literary Profile
         </a>
         {user ? (
           <a
