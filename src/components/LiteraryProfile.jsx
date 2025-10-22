@@ -253,15 +253,73 @@ const LiteraryProfile = ({ user, db }) => {
 
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-700 mb-2">Top Themes</h3>
-                <div className="space-y-1">
-                  {groupAnalysis.topThemes.map(({ theme, count }, index) => (
-                    <div key={theme} className="flex justify-between text-sm">
-                      <span className="text-gray-600">{theme}</span>
-                      <span className="font-semibold text-indigo-600">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
+                <div className="space-y-2 max-w-xs mx-auto">
+                  {groupAnalysis.topThemes.map(({ theme, count }, index) => {
+                    // Slight color scale accent for rows
+                    const accentColors = [
+                      "bg-indigo-100",
+                      "bg-indigo-200",
+                      "bg-purple-100",
+                      "bg-indigo-300",
+                      "bg-purple-200",
+                    ];
+                    const colorIndex =
+                      count > 4 ? 4 : count - 1 >= 0 ? count - 1 : 0;
+                    const bubbleClass =
+                      accentColors[colorIndex] +
+                      " flex items-center justify-between px-3 py-2 rounded-lg shadow-sm transition transform hover:scale-102";
+                    return (
+                      <div
+                        key={theme}
+                        className={bubbleClass}
+                        style={{
+                          minWidth: 0,
+                          fontSize: "1rem",
+                          border: "1px solid #818cf8",
+                          maxWidth: "100%",
+                        }}
+                      >
+                        <div className="flex items-center min-w-0">
+                          <span
+                            className="inline-block mr-2 text-indigo-700"
+                            style={{ fontSize: "1.15rem" }}
+                          >
+                            {
+                              [
+                                "🌱",
+                                "🏛️",
+                                "🏞️",
+                                "🕵️",
+                                "⚔️",
+                                "🚀",
+                                "❤️",
+                                "👪",
+                                "🧠",
+                                "🌍",
+                                "📜",
+                                "💀",
+                                "🎭",
+                                "🔍",
+                              ][index % 13]
+                            }
+                          </span>
+                          <span
+                            className="truncate text-gray-900 font-medium"
+                            style={{ maxWidth: "8rem" }}
+                          >
+                            {theme} - {count}
+                          </span>
+                        </div>
+                        <span
+                          className="ml-3 min-w-[2rem] px-2 text-sm font-bold rounded-full text-indigo-700 bg-white border border-indigo-200 shadow-sm"
+                          style={{
+                            textAlign: "center",
+                          }}
+                          title={`${count} books`}
+                        ></span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
