@@ -1,7 +1,25 @@
 {
   "name": "sombookclub",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "description": "A modern, full-stack web application for managing book club meetings, member interactions, and reading reflections.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dhvogel/sombookclub.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dhvogel/sombookclub/issues"
+  },
+  "keywords": [
+    "book-club",
+    "react",
+    "firebase",
+    "typescript",
+    "meeting-management",
+    "reading-reflections"
+  ],
+  "author": "Dan Vogel <dhvogel@example.com>",
+  "license": "MIT",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
@@ -43,6 +61,8 @@
     "@types/node": "^24.9.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
-    "typescript": "^5.9.3"
+    "@vitejs/plugin-react": "^5.0.4",
+    "typescript": "^4.9.5",
+    "vite": "^7.1.11"
   }
 }

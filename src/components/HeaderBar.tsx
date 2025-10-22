@@ -124,7 +124,38 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
     >
       <h1 style={{ margin: 0, fontSize: "2rem", letterSpacing: "2px" }}>
         <a href="/" style={{ color: "inherit", textDecoration: "none" }}>
-          SOM Book Club
+          <span
+            style={{
+              display: "inline-block",
+              width: "100%",
+              textAlign: "center",
+              fontSize: "clamp(1.1rem, 3vw, 2rem)",
+              letterSpacing: "2px",
+              fontWeight: 700,
+              whiteSpace: "nowrap",
+              transition: "font-size 0.2s",
+              padding: "0 5px 10px 5px",
+              marginRight: "1.5em",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-block",
+              }}
+              className="hide-on-mobile"
+            >
+              SOM Book Club
+            </span>
+            <style>
+              {`
+                @media (max-width: 810px) {
+                  .hide-on-mobile {
+                    display: none !important;
+                  }
+                }
+              `}
+            </style>
+          </span>
         </a>
       </h1>
       <nav style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -190,6 +221,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
               display: "flex",
               alignItems: "center",
               padding: "0.2rem",
+              marginRight: "1.5em",
               borderRadius: "50%",
               background:
                 location.pathname === "/profile"

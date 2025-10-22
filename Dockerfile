@@ -1,10 +1,18 @@
 # Stage 1: Build the React app
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
+
+# Copy package files first for better caching
 COPY package.json package-lock.json ./
+
+# Install all dependencies (including dev dependencies needed for TypeScript compilation)
 RUN npm ci
+
+# Copy source code
 COPY . .
+
+# Build the TypeScript React app
 RUN npm run build
 
 # Stage 2: Serve the build with a static server
