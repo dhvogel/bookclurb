@@ -26,7 +26,7 @@ const Profile: React.FC<ProfileProps> = ({ user, db }) => {
           // Convert object to array if necessary
           const notificationsArray = Array.isArray(data)
             ? data
-            : Object.entries(data).map(([id, notif]) => ({
+            : Object.entries(data as Record<string, Notification>).map(([id, notif]) => ({
                 ...notif,
                 id,
               }));

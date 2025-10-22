@@ -29,6 +29,8 @@ const Meetings: React.FC<MeetingsProps> = ({ user, db }) => {
 
   // Modified handleSave to show "Saved" indicator
   const handleSave = (meetingId: string) => {
+    if (!user) return;
+    
     if (lastSaveTime && Date.now() - lastSaveTime < 15000) {
       const secondsLeft = Math.ceil(
         (15000 - (Date.now() - lastSaveTime)) / 1000
@@ -77,8 +79,8 @@ const Meetings: React.FC<MeetingsProps> = ({ user, db }) => {
     onValue(
       reflectionsRef,
       (snapshot) => {
-        const allReflections = snapshot.val();
-        const meetingReflections = {};
+        const allReflections = snapshot.val() as Record<string, Record<string, { reflection: string }>>;
+        const meetingReflections: Record<string, Record<string, { name: string; reflection: string }>> = {};
         if (allReflections) {
           Object.entries(allReflections).forEach(([uid, meetings]) => {
             if (meetings && meetings[id] && meetings[id].reflection) {

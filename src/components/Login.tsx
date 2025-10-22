@@ -4,10 +4,10 @@ import { getAuth, signInWithEmailAndPassword, Auth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { LoginProps } from "../types";
 
-const Login: React.FC<LoginProps> = ({ setUser, user, auth }) => {
-  const [username, setUsername] = useState < string > "";
-  const [password, setPassword] = useState < string > "";
-  const [error, setError] = useState < string > "";
+const Login: React.FC<LoginProps> = ({ setUser, user, auth, db }) => {
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string>("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -28,7 +28,7 @@ const Login: React.FC<LoginProps> = ({ setUser, user, auth }) => {
 
   return (
     <>
-      <HeaderBar user={user} /> {/* pass the state */}
+      <HeaderBar user={user} db={db} /> {/* pass the state */}
       <form
         onSubmit={handleSubmit}
         style={{
@@ -43,17 +43,13 @@ const Login: React.FC<LoginProps> = ({ setUser, user, auth }) => {
           type="email"
           placeholder="Email"
           value={username}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setUsername(e.target.value)
-          }
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setPassword(e.target.value)
-          }
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
         />
         <button type="submit">Login</button>
       </form>

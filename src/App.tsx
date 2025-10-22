@@ -6,7 +6,7 @@ import People from './components/People';
 import Login from './components/Login';
 import { db } from "./firebaseConfig"; // make sure this runs before using any Firebase services
 import { useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import Profile from './components/Profile';
 import Meetings from './components/Meetings';
 import LiteraryProfile from './components/LiteraryProfile';
@@ -55,7 +55,7 @@ function Home() {
 }
 
 function App() {
-  const [user, setUser] = useState(null); // Parent holds the state
+  const [user, setUser] = useState<User | null>(null); // Parent holds the state
   const auth = getAuth();
 
   useEffect(() => {

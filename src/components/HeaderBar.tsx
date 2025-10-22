@@ -10,13 +10,13 @@ import {
 import React from "react";
 import { useLocation } from "react-router-dom";
 import { User } from "firebase/auth";
-import { HeaderBarProps } from "../types";
+import { HeaderBarProps, Notification } from "../types";
 
 const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
   const location = useLocation();
   const isPeople = location.pathname === "/people";
   const isLiteraryProfile = location.pathname === "/literary-profile";
-  const [unreadCount, setUnreadCount] = React.useState < number > 0;
+  const [unreadCount, setUnreadCount] = React.useState<number>(0);
 
   React.useEffect(() => {
     if (!user || !db) return;
@@ -45,7 +45,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
       ref(db, `notifications/${user.uid}`),
       (snapshot) => {
         if (snapshot.exists()) {
-          const notifications = snapshot.val();
+          const notifications = snapshot.val() as Record<string, Notification>;
           Object.entries(notifications).forEach(([id, notif]) => {
             if (!notif.isRead) {
               update(ref(db, `notifications/${user.uid}/${id}`), {
@@ -60,7 +60,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
   };
 
   // Map emails to member info
-  const emailToMember: Record<string, { name: string, img: string }> = {
+  const emailToMember: Record<string, { name: string; img: string }> = {
     "dhvogel2468@gmail.com": {
       name: "Dan",
       img: "https://api.dicebear.com/7.x/bottts/png?seed=Dan&backgroundColor=ffffff",
@@ -103,7 +103,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
     },
   };
   // Determine member info based on user email
-  const member = user && emailToMember[user.email];
+  const member = user && user.email ? emailToMember[user.email] : undefined;
 
   return (
     <div
@@ -199,7 +199,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
               transition: "background 0.2s, border 0.2s",
               position: "relative",
             }}
-            title={user.displayName || user.email}
+            title={user.displayName || user.email || "User"}
           >
             <img
               src={

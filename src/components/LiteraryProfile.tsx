@@ -14,16 +14,15 @@ interface Book {
 interface GroupAnalysis {
   totalBooks: number;
   genreDistribution: Record<string, number>;
-  topThemes: Array<{ theme: string, count: number }>;
+  topThemes: Array<{ theme: string; count: number }>;
   averageDifficulty: number;
   decadeDistribution: Record<number, number>;
   personalityInsights: string[];
 }
 
 const LiteraryProfile: React.FC<LiteraryProfileProps> = ({ user, db }) => {
-  const [groupAnalysis, setGroupAnalysis] =
-    (useState < GroupAnalysis) | (null > null);
-  const [loading, setLoading] = useState < boolean > true;
+  const [groupAnalysis, setGroupAnalysis] = useState<GroupAnalysis | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Book data from your existing tracking
   const books: Book[] = [
@@ -116,29 +115,29 @@ const LiteraryProfile: React.FC<LiteraryProfileProps> = ({ user, db }) => {
     const analyzeBookClubPersonality = () => {
       // Calculate genre distribution
       const genres = books.map((book) => book.genre);
-      const genreCount = genres.reduce((acc, genre) => {
+      const genreCount = genres.reduce((acc: Record<string, number>, genre) => {
         acc[genre] = (acc[genre] || 0) + 1;
         return acc;
       }, {});
 
       // Extract all themes
       const allThemes = books.flatMap((book) => book.themes);
-      const themeCount = allThemes.reduce((acc, theme) => {
+      const themeCount = allThemes.reduce((acc: Record<string, number>, theme) => {
         acc[theme] = (acc[theme] || 0) + 1;
         return acc;
       }, {});
 
       // Calculate average difficulty
-      const difficultyLevels = { Intermediate: 2, Advanced: 3 };
+      const difficultyLevels: Record<string, number> = { Intermediate: 2, Advanced: 3 };
       const avgDifficulty =
         books.reduce(
-          (sum, book) => sum + difficultyLevels[book.difficulty],
+          (sum, book) => sum + (difficultyLevels[book.difficulty] || 0),
           0
         ) / books.length;
 
       // Analyze time periods
       const decades = books.map((book) => Math.floor(book.year / 10) * 10);
-      const decadeCount = decades.reduce((acc, decade) => {
+      const decadeCount = decades.reduce((acc: Record<number, number>, decade) => {
         acc[decade] = (acc[decade] || 0) + 1;
         return acc;
       }, {});
@@ -160,11 +159,7 @@ const LiteraryProfile: React.FC<LiteraryProfileProps> = ({ user, db }) => {
       };
     };
 
-    const generatePersonalityInsights = (
-      genres: Record<string, number>,
-      themes: Record<string, number>,
-      difficulty: number
-    ): string[] => {
+    const generatePersonalityInsights = (genres: Record<string, number>, themes: Record<string, number>, difficulty: number): string[] => {
       const insights: string[] = [];
 
       // Genre analysis
@@ -262,13 +257,13 @@ const LiteraryProfile: React.FC<LiteraryProfileProps> = ({ user, db }) => {
                 <p className="text-sm text-gray-600">
                   Total Books Read:{" "}
                   <span className="font-semibold">
-                    {groupAnalysis.totalBooks}
+                    {groupAnalysis?.totalBooks || 0}
                   </span>
                 </p>
                 <p className="text-sm text-gray-600">
                   Average Difficulty:{" "}
                   <span className="font-semibold">
-                    {groupAnalysis.averageDifficulty >= 2.5
+                    {(groupAnalysis?.averageDifficulty || 0) >= 2.5
                       ? "Advanced"
                       : "Intermediate"}
                   </span>
@@ -278,7 +273,7 @@ const LiteraryProfile: React.FC<LiteraryProfileProps> = ({ user, db }) => {
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-700 mb-2">Top Themes</h3>
                 <div className="space-y-2 max-w-xs mx-auto">
-                  {groupAnalysis.topThemes.map(({ theme, count }, index) => {
+                  {groupAnalysis?.topThemes?.map(({ theme, count }, index) => {
                     // Slight color scale accent for rows
                     const accentColors = [
                       "bg-indigo-100",
@@ -354,7 +349,7 @@ const LiteraryProfile: React.FC<LiteraryProfileProps> = ({ user, db }) => {
                 What Your Choices Say About You
               </h3>
               <div className="space-y-3">
-                {groupAnalysis.personalityInsights.map((insight, index) => (
+                {groupAnalysis?.personalityInsights?.map((insight, index) => (
                   <div key={index} className="flex items-start">
                     <span className="text-indigo-500 mr-2 mt-1">•</span>
                     <p className="text-gray-700">{insight}</p>

@@ -1,19 +1,12 @@
 import React from "react";
 
 interface ReflectionModalProps {
-  allReflections: Record<
-    string,
-    Record<string, { name: string, reflection: string }>
-  >;
+  allReflections: Record<string, Record<string, { name: string; reflection: string }>>;
   meetingId: string;
   setShowModal: (show: boolean) => void;
 }
 
-function ReflectionModal({
-  allReflections,
-  meetingId,
-  setShowModal,
-}: ReflectionModalProps) {
+function ReflectionModal({ allReflections, meetingId, setShowModal }: ReflectionModalProps) {
   return (
     <div
       className="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -99,5 +92,6 @@ function ReflectionModal({
     </div>
   );
 }
+
 
 export default ReflectionModal;
