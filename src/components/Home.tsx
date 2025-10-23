@@ -73,7 +73,7 @@ const Home: React.FC<HomeProps> = ({ user, db }) => {
             }}
           >
             Join our community of passionate readers. Discover new books, share insights, 
-            and connect with fellow book lovers through meaningful discussions.
+            and connect with fellow book lovers.
           </p>
           {!user && (
             <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
