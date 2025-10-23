@@ -5,7 +5,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Enabled-blue.svg)](https://www.docker.com/)
 [![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Cloud%20Run-green.svg)](https://cloud.google.com/run)
 
-> Book Clurb hosts modern book clubs. Remember, we all fam in the clurb.
+> Book Clurb is an open-source management platform for modern book clubs
 
 ## 🌟 Features
 

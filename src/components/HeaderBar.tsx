@@ -16,6 +16,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
   const location = useLocation();
   const isPeople = location.pathname === "/people";
   const isLiteraryProfile = location.pathname === "/literary-profile";
+  const isClubs = location.pathname === "/clubs";
   const [unreadCount, setUnreadCount] = React.useState<number>(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState<boolean>(false);
 
@@ -274,6 +275,24 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
           Meetings
         </a>
         <a
+          href="/clubs"
+          style={{
+            color: isClubs ? "#FFD700" : "white",
+            background: isClubs ? "rgba(255,255,255,0.08)" : "transparent",
+            padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: isClubs ? "bold" : "normal",
+            fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
+            letterSpacing: "0.5px",
+            transition: "background 0.2s, color 0.2s",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}
+        >
+          Clubs
+        </a>
+        <a
           href="/literary-profile"
           style={{
             color: isLiteraryProfile ? "#FFD700" : "white",
@@ -433,6 +452,24 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
           onClick={() => setIsMobileMenuOpen(false)}
         >
           Meetings
+        </a>
+        <a
+          href="/clubs"
+          style={{
+            color: isClubs ? "#FFD700" : "white",
+            background: isClubs ? "rgba(255,255,255,0.08)" : "transparent",
+            padding: "0.75rem 1rem",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: isClubs ? "bold" : "normal",
+            fontSize: "1.1rem",
+            letterSpacing: "0.5px",
+            transition: "background 0.2s, color 0.2s",
+            marginBottom: "0.5rem",
+          }}
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          Clubs
         </a>
         <a
           href="/literary-profile"

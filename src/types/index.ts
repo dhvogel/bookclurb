@@ -44,6 +44,11 @@ export interface LiteraryProfileProps {
   db: Database;
 }
 
+export interface ClubsProps {
+  user: User | null;
+  db: Database;
+}
+
 export interface Notification {
   isRead: boolean;
   [key: string]: any;
