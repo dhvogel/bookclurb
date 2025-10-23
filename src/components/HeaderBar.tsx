@@ -17,6 +17,25 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
   const isPeople = location.pathname === "/people";
   const isLiteraryProfile = location.pathname === "/literary-profile";
   const [unreadCount, setUnreadCount] = React.useState<number>(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState<boolean>(false);
+
+  // Close mobile menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isMobileMenuOpen && !target.closest('.mobile-nav') && !target.closest('.mobile-menu-btn')) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    if (isMobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
 
   React.useEffect(() => {
     if (!user || !db) return;
@@ -114,51 +133,105 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         width: "100%",
         background: "linear-gradient(90deg, #00356B 0%, #00509E 100%)",
         color: "white",
-        padding: "1rem 0",
+        padding: "0.75rem 1rem",
         boxShadow: "0 2px 8px rgba(60,60,120,0.07)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         zIndex: 1000,
+        minHeight: "60px",
+        flexWrap: "nowrap",
+        overflow: "visible",
       }}
     >
-      <h1 style={{ margin: 0, fontSize: "2rem", letterSpacing: "2px" }}>
+      <h1 style={{ margin: 0, fontSize: "clamp(1.2rem, 2.5vw, 1.8rem)", letterSpacing: "1px", flexShrink: 0 }}>
         <a href="/" style={{ color: "inherit", textDecoration: "none" }}>
           <span
             style={{
               display: "inline-block",
-              width: "100%",
-              textAlign: "center",
-              fontSize: "clamp(1.1rem, 3vw, 2rem)",
-              letterSpacing: "2px",
+              fontSize: "clamp(1rem, 2.5vw, 1.6rem)",
+              letterSpacing: "1px",
               fontWeight: 700,
               whiteSpace: "nowrap",
               transition: "font-size 0.2s",
-              padding: "0 5px 10px 5px",
-              marginRight: "1.5em",
             }}
+            className="hide-on-mobile"
           >
-            <span
-              style={{
-                display: "inline-block",
-              }}
-              className="hide-on-mobile"
-            >
-              SOM Book Club
-            </span>
-            <style>
-              {`
-                @media (max-width: 810px) {
-                  .hide-on-mobile {
-                    display: none !important;
-                  }
-                }
-              `}
-            </style>
+            SOM Book Club
           </span>
+          <span
+            style={{
+              display: "inline-block",
+              fontSize: "clamp(1rem, 2.5vw, 1.6rem)",
+              letterSpacing: "1px",
+              fontWeight: 700,
+              whiteSpace: "nowrap",
+              transition: "font-size 0.2s",
+            }}
+            className="show-on-mobile"
+          >
+            SOM Book Club
+          </span>
+          <style>
+            {`
+              @media (max-width: 768px) {
+                .hide-on-mobile {
+                  display: none !important;
+                }
+                .show-on-mobile {
+                  display: inline-block !important;
+                }
+              }
+              @media (min-width: 769px) {
+                .show-on-mobile {
+                  display: none !important;
+                }
+              }
+            `}
+          </style>
         </a>
       </h1>
-      <nav style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+      {/* Mobile hamburger menu button */}
+      <button
+        className="mobile-menu-btn"
+        onClick={() => {
+          console.log('Hamburger clicked, current state:', isMobileMenuOpen);
+          setIsMobileMenuOpen(!isMobileMenuOpen);
+        }}
+        style={{
+          display: "none",
+          background: "none",
+          border: "none",
+          color: "white",
+          fontSize: "1.5rem",
+          marginRight: "3rem",
+          cursor: "pointer",
+          borderRadius: "4px",
+          transition: "background 0.2s",
+          flexShrink: 0,
+          zIndex: 1001,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "none";
+        }}
+      >
+        ☰
+      </button>
+
+      <nav 
+        className="desktop-nav"
+        style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: "clamp(0.5rem, 1.5vw, 1rem)",
+          flexShrink: 1,
+          minWidth: 0,
+          overflow: "hidden"
+        }}
+      >
         <a
           href="/people"
           style={{
@@ -166,13 +239,15 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
             alignItems: "center",
             color: isPeople ? "#FFD700" : "white",
             background: isPeople ? "rgba(255,255,255,0.08)" : "transparent",
-            padding: "0.5rem 1.2rem",
+            padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
             borderRadius: "8px",
             textDecoration: "none",
             fontWeight: isPeople ? "bold" : "normal",
-            fontSize: "1.1rem",
-            letterSpacing: "1px",
+            fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
+            letterSpacing: "0.5px",
             transition: "background 0.2s, color 0.2s",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
           }}
         >
           People
@@ -185,13 +260,15 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
               location.pathname === "/meetings"
                 ? "rgba(255,255,255,0.08)"
                 : "transparent",
-            padding: "0.5rem 1.2rem",
+            padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
             borderRadius: "8px",
             textDecoration: "none",
             fontWeight: location.pathname === "/meetings" ? "bold" : "normal",
-            fontSize: "1.1rem",
-            letterSpacing: "1px",
+            fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
+            letterSpacing: "0.5px",
             transition: "background 0.2s, color 0.2s",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
           }}
         >
           Meetings
@@ -203,16 +280,19 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
             background: isLiteraryProfile
               ? "rgba(255,255,255,0.08)"
               : "transparent",
-            padding: "0.5rem 1.2rem",
+            padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
             borderRadius: "8px",
             textDecoration: "none",
             fontWeight: isLiteraryProfile ? "bold" : "normal",
-            fontSize: "1.1rem",
-            letterSpacing: "1px",
+            fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
+            letterSpacing: "0.5px",
             transition: "background 0.2s, color 0.2s",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
           }}
         >
-          Literary Profile
+          <span className="hide-on-mobile">Literary Profile</span>
+          <span className="show-on-mobile">Profile</span>
         </a>
         {user ? (
           <a
@@ -221,7 +301,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
               display: "flex",
               alignItems: "center",
               padding: "0.2rem",
-              marginRight: "1.5em",
+              marginRight: "clamp(0.5rem, 2vw, 1.5em)",
               borderRadius: "50%",
               background:
                 location.pathname === "/profile"
@@ -230,6 +310,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
               border: "2px solid #FFD700",
               transition: "background 0.2s, border 0.2s",
               position: "relative",
+              flexShrink: 0,
             }}
             title={user.displayName || user.email || "User"}
           >
@@ -241,8 +322,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
               }
               alt="Profile"
               style={{
-                width: "40px",
-                height: "40px",
+                width: "clamp(32px, 4vw, 40px)",
+                height: "clamp(32px, 4vw, 40px)",
                 borderRadius: "50%",
                 objectFit: "cover",
                 border: "2px solid white",
@@ -255,15 +336,15 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
                   position: "absolute",
                   top: "-4px",
                   right: "-4px",
-                  minWidth: "22px",
-                  height: "22px",
+                  minWidth: "clamp(18px, 3vw, 22px)",
+                  height: "clamp(18px, 3vw, 22px)",
                   background: "red",
                   color: "white",
                   borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "0.95rem",
+                  fontSize: "clamp(0.8rem, 2vw, 0.95rem)",
                   fontWeight: "bold",
                   border: "2px solid white",
                   boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
@@ -283,19 +364,170 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
                 location.pathname === "/login"
                   ? "rgba(255,255,255,0.08)"
                   : "transparent",
-              padding: "0.5rem 1.2rem",
+              padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
               borderRadius: "8px",
               textDecoration: "none",
               fontWeight: location.pathname === "/login" ? "bold" : "normal",
-              fontSize: "1.1rem",
-              letterSpacing: "1px",
+              fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
+              letterSpacing: "0.5px",
               transition: "background 0.2s, color 0.2s",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
             }}
           >
             Login
           </a>
         )}
       </nav>
+
+      {/* Mobile navigation menu */}
+      <div
+        className="mobile-nav"
+        style={{
+          display: isMobileMenuOpen ? "flex" : "none",
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          right: 0,
+          background: "linear-gradient(90deg, #00356B 0%, #00509E 100%)",
+          flexDirection: "column",
+          padding: "1rem",
+          boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+          zIndex: 1000,
+          maxHeight: "calc(100vh - 60px)",
+          overflowY: "auto",
+        }}
+      >
+        <a
+          href="/people"
+          style={{
+            color: isPeople ? "#FFD700" : "white",
+            background: isPeople ? "rgba(255,255,255,0.08)" : "transparent",
+            padding: "0.75rem 1rem",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: isPeople ? "bold" : "normal",
+            fontSize: "1.1rem",
+            letterSpacing: "0.5px",
+            transition: "background 0.2s, color 0.2s",
+            marginBottom: "0.5rem",
+          }}
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          People
+        </a>
+        <a
+          href="/meetings"
+          style={{
+            color: location.pathname === "/meetings" ? "#FFD700" : "white",
+            background: location.pathname === "/meetings" ? "rgba(255,255,255,0.08)" : "transparent",
+            padding: "0.75rem 1rem",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: location.pathname === "/meetings" ? "bold" : "normal",
+            fontSize: "1.1rem",
+            letterSpacing: "0.5px",
+            transition: "background 0.2s, color 0.2s",
+            marginBottom: "0.5rem",
+          }}
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          Meetings
+        </a>
+        <a
+          href="/literary-profile"
+          style={{
+            color: isLiteraryProfile ? "#FFD700" : "white",
+            background: isLiteraryProfile ? "rgba(255,255,255,0.08)" : "transparent",
+            padding: "0.75rem 1rem",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: isLiteraryProfile ? "bold" : "normal",
+            fontSize: "1.1rem",
+            letterSpacing: "0.5px",
+            transition: "background 0.2s, color 0.2s",
+            marginBottom: "0.5rem",
+          }}
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          Literary Profile
+        </a>
+        {user ? (
+          <a
+            href="/profile"
+            style={{
+              color: location.pathname === "/profile" ? "#FFD700" : "white",
+              background: location.pathname === "/profile" ? "rgba(255,255,255,0.08)" : "transparent",
+              padding: "0.75rem 1rem",
+              borderRadius: "8px",
+              textDecoration: "none",
+              fontWeight: location.pathname === "/profile" ? "bold" : "normal",
+              fontSize: "1.1rem",
+              letterSpacing: "0.5px",
+              transition: "background 0.2s, color 0.2s",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <img
+              src={member ? member.img : user.photoURL || "https://via.placeholder.com/40"}
+              alt="Profile"
+              style={{
+                width: "24px",
+                height: "24px",
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: "2px solid white",
+              }}
+            />
+            Profile {unreadCount > 0 && `(${unreadCount})`}
+          </a>
+        ) : (
+          <a
+            href="/login"
+            style={{
+              color: location.pathname === "/login" ? "#FFD700" : "white",
+              background: location.pathname === "/login" ? "rgba(255,255,255,0.08)" : "transparent",
+              padding: "0.75rem 1rem",
+              borderRadius: "8px",
+              textDecoration: "none",
+              fontWeight: location.pathname === "/login" ? "bold" : "normal",
+              fontSize: "1.1rem",
+              letterSpacing: "0.5px",
+              transition: "background 0.2s, color 0.2s",
+            }}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Login
+          </a>
+        )}
+      </div>
+
+      <style>
+        {`
+          @media (max-width: 768px) {
+            .mobile-menu-btn {
+              display: block !important;
+            }
+            .desktop-nav {
+              display: none !important;
+            }
+          }
+          @media (min-width: 769px) {
+            .mobile-menu-btn {
+              display: none !important;
+            }
+            .desktop-nav {
+              display: flex !important;
+            }
+            .mobile-nav {
+              display: none !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 };

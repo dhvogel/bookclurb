@@ -1,11 +1,11 @@
-# 📚 SOM Book Club
+# 📚 Book Clurb
 
 [![React](https://img.shields.io/badge/React-19.1.1-blue.svg)](https://reactjs.org/)
 [![Firebase](https://img.shields.io/badge/Firebase-12.2.1-orange.svg)](https://firebase.google.com/)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-blue.svg)](https://www.docker.com/)
 [![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Cloud%20Run-green.svg)](https://cloud.google.com/run)
 
-> A modern, full-stack web application for managing book club meetings, member interactions, and reading reflections.
+> Book Clurb hosts modern book clubs. Remember, we all fam in the clurb.
 
 ## 🌟 Features
 
@@ -123,7 +123,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👥 Team
 
 - **Lead Developer**: [Dan Vogel](https://github.com/dhvogel)
-- **Community**: 12 active book club members
 
 ## 📞 Support
 
