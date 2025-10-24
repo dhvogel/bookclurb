@@ -28,57 +28,72 @@ interface Club {
 const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
   const navigate = useNavigate();
   const [clubs, setClubs] = useState<Club[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // TODO: Change to true when Firebase is implemented
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
 
-  // Load user's clubs from Firebase
+  // Initialize with SOM Book Club
   useEffect(() => {
-    if (!user || !db) {
-      setLoading(false);
-      return;
-    }
-
-    const userRef = ref(db, `users/${user.uid}`);
-    const unsubscribe = onValue(userRef, (snapshot) => {
-      const userData = snapshot.val();
-      if (userData && userData.clubs) {
-        // Fetch club details for each club ID
-        const clubPromises = userData.clubs.map(async (clubId: string) => {
-          const clubRef = ref(db, `clubs/${clubId}`);
-          return new Promise<Club>((resolve) => {
-            const unsubscribe = onValue(clubRef, (clubSnapshot) => {
-              const clubData = clubSnapshot.val();
-              if (clubData) {
-                resolve({
-                  id: clubId,
-                  name: clubData.name || 'Untitled Club',
-                  coverImage: clubData.coverImage,
-                  coverColor: clubData.coverColor || '#667eea',
-                  nextMeeting: clubData.nextMeeting,
-                  currentBook: clubData.currentBook,
-                  unreadActivity: clubData.unreadActivity || 0,
-                  memberCount: clubData.memberCount || 0,
-                  description: clubData.description,
-                });
-                unsubscribe();
-              }
-            });
-          });
-        });
-
-        Promise.all(clubPromises).then((clubList) => {
-          setClubs(clubList);
-          setLoading(false);
-        });
-      } else {
-        setClubs([]);
-        setLoading(false);
+    setClubs([
+      {
+        id: 'bookclubid1',
+        name: 'SOM Book Club',
+        coverColor: '#00356b',
+        nextMeeting: { date: 'Oct 30, 2025', time: '6:00 PM EDT', location: 'WhatsApp' },
+        currentBook: { title: 'Empire of Pain', author: 'Patrick Radden Keefe' },
+        unreadActivity: 0,
+        memberCount: 8,
       }
-    });
+    ]);
+  }, []);
 
-    return () => unsubscribe();
-  }, [user, db]);
+  // Load user's clubs from Firebase
+  // useEffect(() => {
+  //   if (!user || !db) {
+  //     setLoading(false);
+  //     return;
+  //   }
+
+  //   const userRef = ref(db, `users/${user.uid}`);
+  //   const unsubscribe = onValue(userRef, (snapshot) => {
+  //     const userData = snapshot.val();
+  //     if (userData && userData.clubs) {
+  //       // Fetch club details for each club ID
+  //       const clubPromises = userData.clubs.map(async (clubId: string) => {
+  //         const clubRef = ref(db, `clubs/${clubId}`);
+  //         return new Promise<Club>((resolve) => {
+  //           const unsubscribe = onValue(clubRef, (clubSnapshot) => {
+  //             const clubData = clubSnapshot.val();
+  //             if (clubData) {
+  //               resolve({
+  //                 id: clubId,
+  //                 name: clubData.name || 'Untitled Club',
+  //                 coverImage: clubData.coverImage,
+  //                 coverColor: clubData.coverColor || '#667eea',
+  //                 nextMeeting: clubData.nextMeeting,
+  //                 currentBook: clubData.currentBook,
+  //                 unreadActivity: clubData.unreadActivity || 0,
+  //                 memberCount: clubData.memberCount || 0,
+  //                 description: clubData.description,
+  //               });
+  //               unsubscribe();
+  //             }
+  //           });
+  //         });
+  //       });
+
+  //       Promise.all(clubPromises).then((clubList) => {
+  //         setClubs(clubList);
+  //         setLoading(false);
+  //       });
+  //     } else {
+  //       setClubs([]);
+  //       setLoading(false);
+  //     }
+  //   });
+
+  //   return () => unsubscribe();
+  // }, [user, db]);
 
   // Cache clubs data locally for instant loading
   useEffect(() => {
@@ -142,7 +157,7 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
 
   const formatNextMeeting = (nextMeeting?: Club['nextMeeting']) => {
     if (!nextMeeting) return 'No upcoming meeting';
-    return `Next: ${nextMeeting.date} ${nextMeeting.time}`;
+    return `${nextMeeting.date} ${nextMeeting.time}`;
   };
 
   if (loading) {
@@ -173,50 +188,11 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
             </p>
           </div>
 
-          {clubs.length === 0 ? (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '4rem 2rem',
-              background: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-            }}>
-              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📚</div>
-              <h3 style={{ fontSize: '1.5rem', color: '#333', marginBottom: '1rem' }}>
-                No clubs yet
-              </h3>
-              <p style={{ color: '#666', marginBottom: '2rem' }}>
-                Join a book club to start your reading journey with others
-              </p>
-              <button
-                onClick={() => navigate('/people')}
-                style={{
-                  padding: '1rem 2rem',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                Explore Clubs
-              </button>
-            </div>
-          ) : (
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
-              gap: '1.5rem' 
-            }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
+            gap: '1.5rem' 
+          }}>
               {clubs.map((club) => (
                 <motion.div
                   key={club.id}
@@ -358,8 +334,49 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                   </div>
                 </motion.div>
               ))}
-            </div>
-          )}
+
+            {/* Show "No other clubs" message if no Firebase clubs */}
+            {clubs.length === 0 && (
+              <div style={{ 
+                gridColumn: '1 / -1',
+                textAlign: 'center', 
+                padding: '4rem 2rem',
+                background: 'white',
+                borderRadius: '12px',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+              }}>
+                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📚</div>
+                <h3 style={{ fontSize: '1.5rem', color: '#333', marginBottom: '1rem' }}>
+                  No other clubs yet
+                </h3>
+                <p style={{ color: '#666', marginBottom: '2rem' }}>
+                  Join more book clubs to expand your reading community
+                </p>
+                <button
+                  onClick={() => navigate('/people')}
+                  style={{
+                    padding: '1rem 2rem',
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold',
+                    background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  Explore More Clubs
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

@@ -11,6 +11,7 @@ import Profile from './components/Profile';
 import Meetings from './components/Meetings';
 import LiteraryProfile from './components/LiteraryProfile';
 import Clubs from './components/Clubs';
+import { ClubPage } from './features';
 
 function App() {
   const [user, setUser] = useState<User | null>(null); // Parent holds the state
@@ -33,7 +34,7 @@ function App() {
         <Route path="/meetings" element={<Meetings user={user} db={db} />} />
         <Route path="/literary-profile" element={<LiteraryProfile user={user} db={db} />} />
         <Route path="/clubs" element={<Clubs user={user} db={db} />} />
-        <Route path="/clubs/:clubId" element={<div>Club Page - Coming Soon</div>} />
+        <Route path="/clubs/:clubId" element={<ClubPage user={user} db={db} />} />
       </Routes>
     </BrowserRouter>
   );

@@ -72,7 +72,7 @@ const Home: React.FC<HomeProps> = ({ user, db }) => {
               textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
             }}
           >
-            Join our community of passionate readers. Discover new books, share insights, 
+            Join a community of passionate readers. Discover new books, share insights, 
             and connect with fellow book lovers.
           </p>
           {!user && (

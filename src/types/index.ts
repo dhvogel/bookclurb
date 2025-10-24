@@ -49,6 +49,44 @@ export interface ClubsProps {
   db: Database;
 }
 
+export interface ClubPageProps {
+  user: User | null;
+  db: Database;
+}
+
+export interface Club {
+  id: string;
+  name: string;
+  coverImage?: string;
+  coverColor?: string;
+  description?: string;
+  nextMeeting?: {
+    timestamp: string;
+    location?: string;
+  };
+  currentBook?: {
+    title: string;
+    author?: string;
+    isbn?: string;
+    coverUrl?: string;
+  };
+  memberCount: number;
+  members?: Array<{
+    id: string;
+    name: string;
+    avatar?: string;
+    role?: 'admin' | 'member';
+  }>;
+  recentActivity?: Array<{
+    id: string;
+    type: 'discussion' | 'meeting' | 'book_change' | 'member_join';
+    title: string;
+    author: string;
+    timestamp: string;
+    content?: string;
+  }>;
+}
+
 export interface Notification {
   isRead: boolean;
   [key: string]: any;
