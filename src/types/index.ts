@@ -62,6 +62,7 @@ export interface Club {
   description?: string;
   nextMeeting?: {
     timestamp: string;
+    timeZone: string;
     location?: string;
   };
   currentBook?: {

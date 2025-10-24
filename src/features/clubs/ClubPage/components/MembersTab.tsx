@@ -88,9 +88,6 @@ const MembersTab: React.FC<MembersTabProps> = ({ club }) => {
             
             {/* Book Reading Badges */}
             <div style={{ marginTop: '0.5rem' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#666', marginBottom: '0.5rem' }}>
-                Books Read:
-              </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
                 {bookData.map((book) => {
                   const status = getReadingStatus(member.name, book);

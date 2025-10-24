@@ -96,15 +96,16 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club }) => {
                 minWidth: '80px'
               }}>
                 <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
-                  {new Date(club.nextMeeting.timestamp).toLocaleDateString('en-US', { day: 'numeric' })}
+                  {new Date(club.nextMeeting.timestamp).toLocaleDateString('en-US', { day: 'numeric', timeZone: club.nextMeeting.timeZone })}
                 </div>
                 <div style={{ fontSize: '0.8rem', opacity: 0.9 }}>
-                  {new Date(club.nextMeeting.timestamp).toLocaleDateString('en-US', { month: 'short' })}
+                  {new Date(club.nextMeeting.timestamp).toLocaleDateString('en-US', { month: 'short', timeZone: club.nextMeeting.timeZone })}
                 </div>
               </div>
+              {/* TODO: Add to calendar */}
               <div>
                 <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>
-                  {new Date(club.nextMeeting.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                  {new Date(club.nextMeeting.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: club.nextMeeting.timeZone })}
                 </div>
                 {club.nextMeeting.location && (
                   <div style={{ color: '#666', fontSize: '0.9rem' }}>

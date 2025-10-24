@@ -22,7 +22,8 @@ export const useClubData = () => {
         coverColor: '#00356b',
         description: 'A vibrant community of readers exploring diverse literature and engaging in thoughtful discussions.',
         nextMeeting: { 
-          timestamp: '2025-10-30T18:00:00Z',
+          timestamp: '2025-10-30T22:00:00Z',
+          timeZone: 'America/New_York',
           location: 'WhatsApp' 
         },
         currentBook: { 
