@@ -32,7 +32,7 @@ export const useClubData = () => {
           isbn: '9780385545686',
           coverUrl: 'https://covers.openlibrary.org/b/isbn/9780385545686-L.jpg'
         },
-        memberCount: 8,
+        memberCount: 10,
         members: [
           { id: '1', name: 'Dan', role: 'admin', img: 'https://api.dicebear.com/7.x/bottts/png?seed=Dan&backgroundColor=f8f9fa' },
           { id: '2', name: 'Grant', role: 'member', img: 'https://api.dicebear.com/7.x/bottts/png?seed=Grant&backgroundColor=f8f9fa' },

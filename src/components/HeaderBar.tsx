@@ -14,7 +14,6 @@ import { HeaderBarProps, Notification } from "../types";
 
 const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
   const location = useLocation();
-  const isPeople = location.pathname === "/people";
   const isLiteraryProfile = location.pathname === "/literary-profile";
   const isClubs = location.pathname === "/clubs";
   const [unreadCount, setUnreadCount] = React.useState<number>(0);
@@ -234,26 +233,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         }}
       >
         <a
-          href="/people"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            color: isPeople ? "#FFD700" : "white",
-            background: isPeople ? "rgba(255,255,255,0.08)" : "transparent",
-            padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
-            borderRadius: "8px",
-            textDecoration: "none",
-            fontWeight: isPeople ? "bold" : "normal",
-            fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
-            letterSpacing: "0.5px",
-            transition: "background 0.2s, color 0.2s",
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-          }}
-        >
-          People
-        </a>
-        <a
           href="/meetings"
           style={{
             color: location.pathname === "/meetings" ? "#FFD700" : "white",
@@ -417,24 +396,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
           overflowY: "auto",
         }}
       >
-        <a
-          href="/people"
-          style={{
-            color: isPeople ? "#FFD700" : "white",
-            background: isPeople ? "rgba(255,255,255,0.08)" : "transparent",
-            padding: "0.75rem 1rem",
-            borderRadius: "8px",
-            textDecoration: "none",
-            fontWeight: isPeople ? "bold" : "normal",
-            fontSize: "1.1rem",
-            letterSpacing: "0.5px",
-            transition: "background 0.2s, color 0.2s",
-            marginBottom: "0.5rem",
-          }}
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          People
-        </a>
         <a
           href="/meetings"
           style={{

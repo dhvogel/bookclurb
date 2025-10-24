@@ -2,7 +2,6 @@ import logo from './logo.svg';
 import './App.css';
 import Home from './components/Home';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import People from './components/People';
 import Login from './components/Login';
 import { db } from "./firebaseConfig"; // make sure this runs before using any Firebase services
 import { useEffect, useState } from 'react';
@@ -28,7 +27,6 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home user={user} db={db} />} />
-        <Route path="/people" element={<People user={user} db={db} />} />
         <Route path="/profile" element={<Profile user={user} db={db} />} />
         <Route path="/login" element={<Login setUser={setUser} user={user} db={db} auth={auth} />} />
         <Route path="/meetings" element={<Meetings user={user} db={db} />} />

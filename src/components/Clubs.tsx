@@ -42,7 +42,7 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
         nextMeeting: { date: 'Oct 30, 2025', time: '6:00 PM EDT', location: 'WhatsApp' },
         currentBook: { title: 'Empire of Pain', author: 'Patrick Radden Keefe' },
         unreadActivity: 0,
-        memberCount: 8,
+        memberCount: 10,
       }
     ]);
   }, []);
@@ -329,6 +329,7 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                       gap: '0.5rem'
                     }}>
                       <span>👥</span>
+                      {/* TODO: Figure out where this memberCount is coming from and change it to 10*/}
                       <span>{club.memberCount} member{club.memberCount === 1 ? '' : 's'}</span>
                     </div>
                   </div>
