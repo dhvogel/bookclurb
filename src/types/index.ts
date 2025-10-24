@@ -76,6 +76,7 @@ export interface Club {
     id: string;
     name: string;
     avatar?: string;
+    img?: string;
     role?: 'admin' | 'member';
   }>;
   recentActivity?: Array<{

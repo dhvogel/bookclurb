@@ -66,22 +66,46 @@ const MembersTab: React.FC<MembersTabProps> = ({ club }) => {
                 width: '40px',
                 height: '40px',
                 borderRadius: '50%',
-                background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+                overflow: 'hidden',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: '1.1rem'
+                justifyContent: 'center'
               }}>
-                {member.name.split(' ').map(n => n[0]).join('')}
+                <img 
+                  src={member.img || `https://api.dicebear.com/7.x/bottts/png?seed=${member.name}&backgroundColor=f8f9fa`}
+                  alt={`${member.name}'s profile`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                  }}
+                  onError={(e) => {
+                    // Fallback to initials if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `<div style="
+                        width: 100%;
+                        height: 100%;
+                        background: #f8f9fa;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: #6b7280;
+                        font-weight: bold;
+                        font-size: 1.1rem;
+                      ">${member.name.split(' ').map(n => n[0]).join('')}</div>`;
+                    }
+                  }}
+                />
               </div>
               <div>
                 <div style={{ fontWeight: '600', color: '#333' }}>
                   {member.name}
                 </div>
                 <div style={{ fontSize: '0.9rem', color: '#666' }}>
-                  {member.role === 'admin' ? '👑 Admin' : '👤 Member'}
+                  {member.role === 'admin' ? 'Admin' : 'Member'}
                 </div>
               </div>
             </div>
