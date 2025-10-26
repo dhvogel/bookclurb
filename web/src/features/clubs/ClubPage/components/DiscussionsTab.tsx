@@ -102,19 +102,6 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
       
       // Add this meeting to the saved reflections set
       setSavedReflections(prev => new Set(prev).add(meetingId));
-      
-      // Send notifications to other club members
-      if (club.members) {
-        club.members.forEach((member) => {
-          if (member.id !== user.uid) {
-            set(ref(db, `notifications/${member.id}/${meetingId}`), {
-              text: `${userName} has submitted a reflection.`,
-              isRead: false,
-              timestamp: Date.now(),
-            });
-          }
-        });
-      }
     }).catch((error) => {
       console.error('Error saving reflection:', error);
       alert('Failed to save reflection. Please try again.');

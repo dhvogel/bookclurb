@@ -1,21 +1,11 @@
-import {
-  equalTo,
-  onValue,
-  orderByChild,
-  query,
-  ref,
-  update,
-  Database,
-} from "firebase/database";
 import React from "react";
 import { useLocation } from "react-router-dom";
 import { User } from "firebase/auth";
-import { HeaderBarProps, Notification } from "../types";
+import { HeaderBarProps } from "../types";
 
 const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
   const location = useLocation();
   const isClubs = location.pathname === "/clubs";
-  const [unreadCount, setUnreadCount] = React.useState<number>(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState<boolean>(false);
 
   // Close mobile menu when clicking outside
@@ -36,46 +26,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
     };
   }, [isMobileMenuOpen]);
 
-  React.useEffect(() => {
-    if (!user || !db) return;
-    const unreadQuery = query(
-      ref(db, `notifications/${user.uid}`),
-      orderByChild("isRead"),
-      equalTo(false)
-    );
 
-    const unsubscribe = onValue(unreadQuery, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        setUnreadCount(Object.keys(data).length);
-      } else {
-        setUnreadCount(0);
-      }
-    });
-    return () => unsubscribe();
-  }, [user?.uid, db]);
-
-  const setNotificationsUnread = (user: User, db: Database) => {
-    if (!user || !db) return;
-    // Only update if not already read
-    // Fetch all notifications for the user and mark unread ones as read
-    onValue(
-      ref(db, `notifications/${user.uid}`),
-      (snapshot) => {
-        if (snapshot.exists()) {
-          const notifications = snapshot.val() as Record<string, Notification>;
-          Object.entries(notifications).forEach(([id, notif]) => {
-            if (!notif.isRead) {
-              update(ref(db, `notifications/${user.uid}/${id}`), {
-                isRead: true,
-              });
-            }
-          });
-        }
-      },
-      { onlyOnce: true }
-    );
-  };
 
   // Map emails to member info
   const emailToMember: Record<string, { name: string; img: string }> = {
@@ -283,32 +234,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
                 objectFit: "cover",
                 border: "2px solid white",
               }}
-              onClick={() => setNotificationsUnread(user, db)}
             />
-            {unreadCount > 0 && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "-4px",
-                  right: "-4px",
-                  minWidth: "clamp(18px, 3vw, 22px)",
-                  height: "clamp(18px, 3vw, 22px)",
-                  background: "red",
-                  color: "white",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "clamp(0.8rem, 2vw, 0.95rem)",
-                  fontWeight: "bold",
-                  border: "2px solid white",
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
-                  zIndex: 2,
-                }}
-              >
-                {unreadCount}
-              </span>
-            )}
           </a>
         ) : (
           <a
@@ -401,7 +327,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
                 border: "2px solid white",
               }}
             />
-            Profile {unreadCount > 0 && `(${unreadCount})`}
           </a>
         ) : (
           <a

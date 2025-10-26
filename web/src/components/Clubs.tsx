@@ -256,11 +256,6 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
         // Navigate to club details (could be a modal or separate page)
         console.log('View details for club:', selectedClubId);
         break;
-      case 'mute':
-        // Toggle notification muting
-        const notificationRef = ref(db, `users/${user.uid}/mutedClubs/${selectedClubId}`);
-        await update(notificationRef, { muted: true });
-        break;
     }
     
     setShowMenu(false);
@@ -590,26 +585,6 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                   }}
                 >
                   📋 View Details
-                </button>
-                <button
-                  onClick={() => handleMenuAction('mute')}
-                  style={{
-                    padding: '0.75rem 1rem',
-                    border: 'none',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    borderRadius: '6px',
-                    textAlign: 'left',
-                    transition: 'background 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#f8f9fa';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
-                  🔇 Mute Notifications
                 </button>
                 <button
                   onClick={() => handleMenuAction('leave')}

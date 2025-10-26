@@ -112,10 +112,6 @@ export interface Club {
   }>;
 }
 
-export interface Notification {
-  isRead: boolean;
-  [key: string]: any;
-}
 
 // Book Voting System Types
 export interface BookVotingPoll {
