@@ -4,6 +4,11 @@ import { Database } from 'firebase/database';
 export interface Member {
   name: string;
   img: string;
+  bookData?: Array<{
+    title: string;
+    read: boolean;
+    halfCredit?: boolean;
+  }>;
 }
 
 export interface Book {
@@ -68,12 +73,25 @@ export interface Club {
     coverUrl?: string;
   };
   memberCount: number;
+  booksRead?: Array<{
+    title: string;
+    author?: string;
+    isbn?: string;
+    coverUrl?: string;
+    readBy: string[]; // Array of member names who read this book
+    completedAt?: string; // When the club finished reading this book
+  }>;
   members?: Array<{
     id: string;
     name: string;
     avatar?: string;
     img?: string;
     role?: 'admin' | 'member';
+    bookData?: Array<{
+      title: string;
+      read: boolean;
+      halfCredit?: boolean;
+    }>;
   }>;
   recentActivity?: Array<{
     id: string;

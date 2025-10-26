@@ -4,7 +4,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "add-members-to-club": "ts-node add_members_to_club/addMembersToClub.ts"
+    "add-members-to-club": "ts-node add_members_to_club/addMembersToClub.ts",
+    "add-books-to-club": "ts-node add_books_to_club/addBooksToClub.ts",
+    "add-overview-data": "ts-node add_overview_data/addOverviewData.ts",
+    "add-club-basic-info": "ts-node add_club_basic_info/addClubBasicInfo.ts"
   },
   "keywords": [],
   "author": "",

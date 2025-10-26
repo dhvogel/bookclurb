@@ -4,6 +4,7 @@ import { Database, ref, onValue, update } from 'firebase/database';
 import HeaderBar from './HeaderBar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ClubsProps, Club } from '../types';
+import { extractClubBooksRead } from '../utils/bookUtils';
 
 const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
   const navigate = useNavigate();
@@ -32,6 +33,192 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
         },
         memberCount: 10,
         description: 'A vibrant community of readers exploring diverse literature and engaging in thoughtful discussions.',
+        booksRead: [
+          {
+            title: "Tale of Two Cities",
+            author: "Charles Dickens",
+            readBy: ["Charles", "Grant", "Dan", "Alden"],
+            completedAt: "2024-01-15"
+          },
+          {
+            title: "Grapes of Wrath",
+            author: "John Steinbeck",
+            readBy: ["Grant", "Dan", "Alden", "Charles"],
+            completedAt: "2024-02-20"
+          },
+          {
+            title: "Socialism",
+            author: "Ludwig von Mises",
+            readBy: ["Dan", "Grant", "Alden"],
+            completedAt: "2024-03-10"
+          },
+          {
+            title: "Bomber Mafia",
+            author: "Malcolm Gladwell",
+            readBy: ["Dan", "Grant", "Alden"],
+            completedAt: "2024-04-05"
+          },
+          {
+            title: "The Secret Agent",
+            author: "Joseph Conrad",
+            readBy: ["Dan", "Grant", "Dhru"],
+            completedAt: "2024-05-12"
+          },
+          {
+            title: "Catch-22",
+            author: "Joseph Heller",
+            readBy: ["Dan", "Grant", "Dhru", "David"],
+            completedAt: "2024-06-18"
+          },
+          {
+            title: "Valiant Ambition",
+            author: "Nathaniel Philbrick",
+            readBy: ["Dan", "Grant", "Dhru", "David"],
+            completedAt: "2024-07-25"
+          },
+          {
+            title: "Poor Economics",
+            author: "Abhijit Banerjee & Esther Duflo",
+            readBy: ["Dan", "Grant", "Dhru", "David", "Margaret", "Paul"],
+            completedAt: "2024-08-30"
+          },
+          {
+            title: "The Fourth Turning",
+            author: "William Strauss & Neil Howe",
+            readBy: ["Dan", "Grant", "Dhru", "David"],
+            completedAt: "2024-09-15"
+          }
+        ],
+        members: [
+          {
+            id: 'member1',
+            name: 'Charles',
+            role: 'admin',
+            bookData: [
+              { title: "Tale of Two Cities", read: true },
+              { title: "Grapes of Wrath", read: true },
+              { title: "Socialism", read: false },
+              { title: "Bomber Mafia", read: false },
+              { title: "The Secret Agent", read: false },
+              { title: "Catch-22", read: false },
+              { title: "Valiant Ambition", read: false },
+              { title: "Poor Economics", read: false },
+              { title: "The Fourth Turning", read: false }
+            ]
+          },
+          {
+            id: 'member2',
+            name: 'Grant',
+            role: 'member',
+            bookData: [
+              { title: "Tale of Two Cities", read: true },
+              { title: "Grapes of Wrath", read: true },
+              { title: "Socialism", read: true },
+              { title: "Bomber Mafia", read: true },
+              { title: "The Secret Agent", read: true },
+              { title: "Catch-22", read: true },
+              { title: "Valiant Ambition", read: true },
+              { title: "Poor Economics", read: true },
+              { title: "The Fourth Turning", read: true }
+            ]
+          },
+          {
+            id: 'member3',
+            name: 'Dan',
+            role: 'member',
+            bookData: [
+              { title: "Tale of Two Cities", read: true },
+              { title: "Grapes of Wrath", read: true },
+              { title: "Socialism", read: true },
+              { title: "Bomber Mafia", read: true },
+              { title: "The Secret Agent", read: true },
+              { title: "Catch-22", read: true },
+              { title: "Valiant Ambition", read: true },
+              { title: "Poor Economics", read: true },
+              { title: "The Fourth Turning", read: true }
+            ]
+          },
+          {
+            id: 'member4',
+            name: 'Alden',
+            role: 'member',
+            bookData: [
+              { title: "Tale of Two Cities", read: true },
+              { title: "Grapes of Wrath", read: true },
+              { title: "Socialism", read: true },
+              { title: "Bomber Mafia", read: true },
+              { title: "The Secret Agent", read: false },
+              { title: "Catch-22", read: false },
+              { title: "Valiant Ambition", read: false },
+              { title: "Poor Economics", read: false },
+              { title: "The Fourth Turning", read: false }
+            ]
+          },
+          {
+            id: 'member5',
+            name: 'Dhru',
+            role: 'member',
+            bookData: [
+              { title: "Tale of Two Cities", read: false },
+              { title: "Grapes of Wrath", read: false },
+              { title: "Socialism", read: false },
+              { title: "Bomber Mafia", read: false },
+              { title: "The Secret Agent", read: true },
+              { title: "Catch-22", read: true },
+              { title: "Valiant Ambition", read: true },
+              { title: "Poor Economics", read: true },
+              { title: "The Fourth Turning", read: true }
+            ]
+          },
+          {
+            id: 'member6',
+            name: 'David',
+            role: 'member',
+            bookData: [
+              { title: "Tale of Two Cities", read: false },
+              { title: "Grapes of Wrath", read: false },
+              { title: "Socialism", read: false },
+              { title: "Bomber Mafia", read: false },
+              { title: "The Secret Agent", read: false },
+              { title: "Catch-22", read: true },
+              { title: "Valiant Ambition", read: true },
+              { title: "Poor Economics", read: true },
+              { title: "The Fourth Turning", read: true, halfCredit: true }
+            ]
+          },
+          {
+            id: 'member7',
+            name: 'Margaret',
+            role: 'member',
+            bookData: [
+              { title: "Tale of Two Cities", read: false },
+              { title: "Grapes of Wrath", read: false },
+              { title: "Socialism", read: false },
+              { title: "Bomber Mafia", read: false },
+              { title: "The Secret Agent", read: false },
+              { title: "Catch-22", read: false },
+              { title: "Valiant Ambition", read: false },
+              { title: "Poor Economics", read: true },
+              { title: "The Fourth Turning", read: false }
+            ]
+          },
+          {
+            id: 'member8',
+            name: 'Paul',
+            role: 'member',
+            bookData: [
+              { title: "Tale of Two Cities", read: false },
+              { title: "Grapes of Wrath", read: false },
+              { title: "Socialism", read: false },
+              { title: "Bomber Mafia", read: false },
+              { title: "The Secret Agent", read: false },
+              { title: "Catch-22", read: false },
+              { title: "Valiant Ambition", read: false },
+              { title: "Poor Economics", read: true },
+              { title: "The Fourth Turning", read: false }
+            ]
+          }
+        ]
       }
     ]);
   }, []);

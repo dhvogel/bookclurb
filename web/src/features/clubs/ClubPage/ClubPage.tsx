@@ -19,7 +19,7 @@ interface ClubPageProps {
 
 const ClubPage: React.FC<ClubPageProps> = ({ user, db }) => {
   const navigate = useNavigate();
-  const { club, loading } = useClubData();
+  const { club, loading } = useClubData({ db });
   const [activeTab, setActiveTab] = useState<'overview' | 'discussions' | 'members' | 'books'>('overview');
 
   if (loading) {
@@ -69,7 +69,7 @@ const ClubPage: React.FC<ClubPageProps> = ({ user, db }) => {
       case 'members':
         return <MembersTab club={club} />;
       case 'books':
-        return <BooksTab clubId={club.id} userId={user?.uid || ''} db={db} />;
+        return <BooksTab club={club} userId={user?.uid || ''} db={db} />;
       default:
         return <OverviewTab club={club} />;
     }

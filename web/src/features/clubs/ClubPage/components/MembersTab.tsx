@@ -1,33 +1,19 @@
 import React from 'react';
 import { Club } from '../../../../types';
+import { getClubReadingStats } from '../../../../utils/bookUtils';
 
 interface MembersTabProps {
   club: Club;
 }
 
 const MembersTab: React.FC<MembersTabProps> = ({ club }) => {
-  // Book reading data
-  const bookData = [
-    { title: "Tale of Two Cities", read: ["Charles", "Grant", "Dan", "Alden"] },
-    { title: "Grapes of Wrath", read: ["Grant", "Dan", "Alden", "Charles"] },
-    { title: "Socialism", read: ["Dan", "Grant", "Alden"] },
-    { title: "Bomber Mafia", read: ["Dan", "Grant", "Alden"] },
-    { title: "The Secret Agent", read: ["Dan", "Grant", "Dhru"] },
-    { title: "Catch-22", read: ["Dan", "Grant", "Dhru", "David"] },
-    { title: "Valiant Ambition", read: ["Dan", "Grant", "Dhru", "David"] },
-    { title: "Poor Economics", read: ["Dan", "Grant", "Dhru", "David", "Margaret", "Paul"] },
-    { 
-      title: "The Fourth Turning", 
-      read: ["Dan", "Grant", "Dhru", "David"],
-      halfCredit: ["David"]
-    }
-  ];
-
-  const getReadingStatus = (memberName: string, book: any) => {
-    if (book.halfCredit && book.halfCredit.includes(memberName)) {
+  const clubStats = getClubReadingStats(club);
+  
+  const getReadingStatus = (book: any) => {
+    if (book.halfCredit) {
       return 'half';
     }
-    return book.read.includes(memberName) ? 'read' : 'not-read';
+    return book.read ? 'read' : 'not-read';
   };
 
   const getStatusColor = (status: string) => {
@@ -51,8 +37,54 @@ const MembersTab: React.FC<MembersTabProps> = ({ club }) => {
       boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
     }}>
       <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#333' }}>
-        Club Members ({club.memberCount})
+        Club Members ({club.members?.length || 0})
       </h3>
+      
+      {/* Club Reading Statistics */}
+      <div style={{
+        background: '#f8f9fa',
+        borderRadius: '8px',
+        padding: '1.5rem',
+        marginBottom: '2rem',
+        border: '1px solid #e9ecef'
+      }}>
+        <h4 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '1rem', color: '#333' }}>
+          📚 Club Reading Statistics
+        </h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#667eea' }}>
+              {clubStats.totalBooks}
+            </div>
+            <div style={{ fontSize: '0.9rem', color: '#666' }}>
+              Books Read
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#10b981' }}>
+              {clubStats.avgBooksPerMember}
+            </div>
+            <div style={{ fontSize: '0.9rem', color: '#666' }}>
+              Avg per Member
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f59e0b' }}>
+              {clubStats.mostPopularBookReaders}
+            </div>
+            <div style={{ fontSize: '0.9rem', color: '#666' }}>
+              Most Popular Book Participation
+            </div>
+          </div>
+        </div>
+        {clubStats.mostPopularBook !== 'None' && (
+          <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.9rem', color: '#666' }}>
+              Most popular book: <strong>{clubStats.mostPopularBook}</strong>
+            </div>
+          </div>
+        )}
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
         {club.members?.map((member) => (
           <div key={member.id} style={{
@@ -113,8 +145,8 @@ const MembersTab: React.FC<MembersTabProps> = ({ club }) => {
             {/* Book Reading Badges */}
             <div style={{ marginTop: '0.5rem' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                {bookData.map((book) => {
-                  const status = getReadingStatus(member.name, book);
+                {member.bookData?.map((book) => {
+                  const status = getReadingStatus(book);
                   return (
                     <div
                       key={book.title}

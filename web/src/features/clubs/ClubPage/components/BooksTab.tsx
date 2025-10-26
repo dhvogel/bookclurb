@@ -1,6 +1,6 @@
 import React from 'react';
 import { Database } from 'firebase/database';
-import { BookSubmission, Vote } from '../../../../types';
+import { BookSubmission, Vote, Club } from '../../../../types';
 import BookSubmissionCard from './BookSubmissionCard';
 import VotingCard from './VotingCard';
 import LeaderboardCard from './LeaderboardCard';
@@ -9,12 +9,12 @@ import { isPollClosed } from '../../../../utils/votingUtils';
 import { useBookVoting } from '../useBookVoting';
 
 interface BooksTabProps {
-  clubId: string;
+  club: Club;
   userId: string;
   db: Database;
 }
 
-const BooksTab: React.FC<BooksTabProps> = ({ clubId, userId, db }) => {
+const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
   const {
     currentPoll,
     submissions,
@@ -25,7 +25,24 @@ const BooksTab: React.FC<BooksTabProps> = ({ clubId, userId, db }) => {
     submitVote,
     getUserVote,
     getUserSubmissions
-  } = useBookVoting({ db, clubId, userId });
+  } = useBookVoting({ db, clubId: club.id, userId });
+
+  // Helper function to map user IDs to member names
+  const getUserName = (userId: string): string => {
+    if (!club.members || !Array.isArray(club.members)) {
+      return 'Unknown Member';
+    }
+    
+    // Filter out any null/undefined members and find the matching one
+    const validMembers = club.members.filter(member => member && member.id);
+    const member = validMembers.find(m => m.id === userId);
+    
+    if (!member) {
+      return 'Unknown Member';
+    }
+    
+    return member.name || 'Unknown Member';
+  };
 
   const handleBookSubmission = async (submission: Omit<BookSubmission, 'id' | 'submittedAt'>) => {
     try {
@@ -93,17 +110,124 @@ const BooksTab: React.FC<BooksTabProps> = ({ clubId, userId, db }) => {
           <p style={{ color: '#666', marginBottom: '2rem' }}>
             Track the books we've read together as a club.
           </p>
-          <div style={{ textAlign: 'center', padding: '3rem' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
-            <h4 style={{ color: '#333', marginBottom: '0.5rem' }}>No book history yet</h4>
-            <p style={{ color: '#666', marginBottom: '2rem' }}>
-              Our reading journey starts with the first book!
-            </p>
-          </div>
+          
+          {club.booksRead && club.booksRead.length > 0 ? (
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              {club.booksRead.map((book, index) => (
+                <div key={index} style={{
+                  padding: '1.5rem',
+                  background: '#f8f9fa',
+                  borderRadius: '8px',
+                  border: '1px solid #e9ecef',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                    {/* Book Cover */}
+                    <div style={{
+                      width: '80px',
+                      height: '120px',
+                      background: book.coverUrl ? `url(${book.coverUrl}) center/cover` : '#e9ecef',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '2rem',
+                      color: '#6c757d'
+                    }}>
+                      {!book.coverUrl && '📖'}
+                    </div>
+                    
+                    {/* Book Details */}
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ 
+                        fontSize: '1.2rem', 
+                        fontWeight: '600', 
+                        marginBottom: '0.5rem', 
+                        color: '#333',
+                        margin: '0 0 0.5rem 0'
+                      }}>
+                        {book.title}
+                      </h4>
+                      {book.author && (
+                        <p style={{ 
+                          color: '#666', 
+                          marginBottom: '0.5rem',
+                          fontSize: '0.9rem',
+                          margin: '0 0 0.5rem 0'
+                        }}>
+                          by {book.author}
+                        </p>
+                      )}
+                      
+                      {/* Read By Section */}
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <span style={{ 
+                          fontSize: '0.8rem', 
+                          color: '#666', 
+                          fontWeight: '500' 
+                        }}>
+                          Read by {book.readBy.length} member{book.readBy.length !== 1 ? 's' : ''}:
+                        </span>
+                        <div style={{ 
+                          display: 'flex', 
+                          flexWrap: 'wrap', 
+                          gap: '0.25rem', 
+                          marginTop: '0.25rem' 
+                        }}>
+                          {book.readBy.map((userId, memberIndex) => (
+                            <span key={memberIndex} style={{
+                              padding: '0.25rem 0.5rem',
+                              background: '#667eea',
+                              color: 'white',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              fontWeight: '500'
+                            }}>
+                              {getUserName(userId)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Completion Date */}
+                      {book.completedAt && (
+                        <div style={{ 
+                          fontSize: '0.8rem', 
+                          color: '#666' 
+                        }}>
+                          Completed: {new Date(book.completedAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '3rem' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
+              <h4 style={{ color: '#333', marginBottom: '0.5rem' }}>No book history yet</h4>
+              <p style={{ color: '#666', marginBottom: '2rem' }}>
+                Our reading journey starts with the first book!
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Create New Poll */}
-        <CreatePollCard clubId={clubId} userId={userId} db={db} />
+        <CreatePollCard clubId={club.id} userId={userId} db={db} />
       </div>
     );
   }
@@ -126,13 +250,120 @@ const BooksTab: React.FC<BooksTabProps> = ({ clubId, userId, db }) => {
         <p style={{ color: '#666', marginBottom: '2rem' }}>
           Track the books we've read together as a club.
         </p>
-        <div style={{ textAlign: 'center', padding: '3rem' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
-          <h4 style={{ color: '#333', marginBottom: '0.5rem' }}>No book history yet</h4>
-          <p style={{ color: '#666', marginBottom: '2rem' }}>
-            Our reading journey starts with the first book!
-          </p>
-        </div>
+        
+        {club.booksRead && club.booksRead.length > 0 ? (
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {club.booksRead.map((book, index) => (
+              <div key={index} style={{
+                padding: '1.5rem',
+                background: '#f8f9fa',
+                borderRadius: '8px',
+                border: '1px solid #e9ecef',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                  {/* Book Cover */}
+                  <div style={{
+                    width: '80px',
+                    height: '120px',
+                    background: book.coverUrl ? `url(${book.coverUrl}) center/cover` : '#e9ecef',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '2rem',
+                    color: '#6c757d'
+                  }}>
+                    {!book.coverUrl && '📖'}
+                  </div>
+                  
+                  {/* Book Details */}
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ 
+                      fontSize: '1.2rem', 
+                      fontWeight: '600', 
+                      marginBottom: '0.5rem', 
+                      color: '#333',
+                      margin: '0 0 0.5rem 0'
+                    }}>
+                      {book.title}
+                    </h4>
+                    {book.author && (
+                      <p style={{ 
+                        color: '#666', 
+                        marginBottom: '0.5rem',
+                        fontSize: '0.9rem',
+                        margin: '0 0 0.5rem 0'
+                      }}>
+                        by {book.author}
+                      </p>
+                    )}
+                    
+                    {/* Read By Section */}
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <span style={{ 
+                        fontSize: '0.8rem', 
+                        color: '#666', 
+                        fontWeight: '500' 
+                      }}>
+                        Read by {book.readBy.length} member{book.readBy.length !== 1 ? 's' : ''}:
+                      </span>
+                      <div style={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: '0.25rem', 
+                        marginTop: '0.25rem' 
+                      }}>
+                        {book.readBy.map((userId, memberIndex) => (
+                          <span key={memberIndex} style={{
+                            padding: '0.25rem 0.5rem',
+                            background: '#667eea',
+                            color: 'white',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: '500'
+                          }}>
+                            {getUserName(userId)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Completion Date */}
+                    {book.completedAt && (
+                      <div style={{ 
+                        fontSize: '0.8rem', 
+                        color: '#666' 
+                      }}>
+                        Completed: {new Date(book.completedAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '3rem' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
+            <h4 style={{ color: '#333', marginBottom: '0.5rem' }}>No book history yet</h4>
+            <p style={{ color: '#666', marginBottom: '2rem' }}>
+              Our reading journey starts with the first book!
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Book Voting System */}
