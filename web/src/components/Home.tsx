@@ -12,19 +12,20 @@ interface HomeProps {
 const Home: React.FC<HomeProps> = ({ user, db }) => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // If user is logged in, redirect to their first club
-    if (user && db) {
-      const userRef = ref(db, `users/${user.uid}`);
-      onValue(userRef, (snapshot) => {
-        const userData = snapshot.val();
-        if (userData && userData.clubs && userData.clubs.length > 0) {
-          // Redirect to the first club
-          navigate(`/clubs/${userData.clubs[0]}`);
-        }
-      });
-    }
-  }, [user, db, navigate]);
+  // Removed automatic redirect to clubs page
+  // useEffect(() => {
+  //   // If user is logged in, redirect to their first club
+  //   if (user && db) {
+  //     const userRef = ref(db, `users/${user.uid}`);
+  //     onValue(userRef, (snapshot) => {
+  //       const userData = snapshot.val();
+  //       if (userData && userData.clubs && userData.clubs.length > 0) {
+  //         // Redirect to the first club
+  //         navigate(`/clubs/${userData.clubs[0]}`);
+  //       }
+  //     });
+  //   }
+  // }, [user, db, navigate]);
 
   return (
     <>

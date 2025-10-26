@@ -237,30 +237,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
             />
           </a>
         ) : (
-          <>
-            <a
-              href="/signup"
-              style={{
-                color: location.pathname === "/signup" ? "#FFD700" : "white",
-                background:
-                  location.pathname === "/signup"
-                    ? "rgba(255,255,255,0.08)"
-                    : "transparent",
-                padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
-                borderRadius: "8px",
-                textDecoration: "none",
-                fontWeight: location.pathname === "/signup" ? "bold" : "normal",
-                fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
-                letterSpacing: "0.5px",
-                transition: "background 0.2s, color 0.2s",
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-                marginRight: "clamp(0.5rem, 1.5vw, 1rem)",
-              }}
-            >
-              Sign Up
-            </a>
-            <a
+          <a
               href="/login"
               style={{
                 color: location.pathname === "/login" ? "#FFD700" : "white",
@@ -281,7 +258,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
             >
               Login
             </a>
-          </>
         )}
       </nav>
 
@@ -353,26 +329,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
             />
           </a>
         ) : (
-          <>
-            <a
-              href="/signup"
-              style={{
-                color: location.pathname === "/signup" ? "#FFD700" : "white",
-                background: location.pathname === "/signup" ? "rgba(255,255,255,0.08)" : "transparent",
-                padding: "0.75rem 1rem",
-                borderRadius: "8px",
-                textDecoration: "none",
-                fontWeight: location.pathname === "/signup" ? "bold" : "normal",
-                fontSize: "1.1rem",
-                letterSpacing: "0.5px",
-                transition: "background 0.2s, color 0.2s",
-                marginBottom: "0.5rem",
-              }}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Sign Up
-            </a>
-            <a
+          <a
               href="/login"
               style={{
                 color: location.pathname === "/login" ? "#FFD700" : "white",
@@ -389,7 +346,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
             >
               Login
             </a>
-          </>
         )}
       </div>
 
