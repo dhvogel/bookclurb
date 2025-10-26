@@ -24,11 +24,11 @@ clubId: "your-club-id"
 
 members:
   - id: "user001"
-    name: "Alice Johnson"
+    name: "Member1"
     avatar: "https://example.com/alice.png"
     role: "member"
   - id: "user002"
-    name: "Bob Smith"
+    name: "Member2"
     avatar: "https://example.com/bob.png"
     role: "admin"
 ```
@@ -58,8 +58,8 @@ The script will display:
 Example output:
 ```
 ✅ Added 2 new members. Total now: 5
-- Alice Johnson (user001)
-- Bob Smith (user002)
+- Member1 (user001)
+- Member2 (user002)
 ```
 
 ## Error Handling

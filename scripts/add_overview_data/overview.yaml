@@ -1,0 +1,35 @@
+clubId: "bookclubid1"
+
+overviewData:
+  currentBook:
+    title: "Empire of Pain"
+    author: "Patrick Radden Keefe"
+    isbn: "9780385545686"
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780385545686-L.jpg"
+
+  nextMeeting:
+    timestamp: "2025-10-30T22:00:00Z"
+    timeZone: "America/New_York"
+    location: "WhatsApp"
+
+  recentActivity:
+    - id: "activity1"
+      type: "discussion"
+      title: "Thoughts on Chapter 3"
+      author: "Dan"
+      timestamp: "2 hours ago"
+      content: "Boo Sacklers, boo!"
+    
+    - id: "activity2"
+      type: "book_change"
+      title: "Started reading Empire of Pain"
+      author: "Grant"
+      timestamp: "1 day ago"
+      content: "Excited to dive into this one!"
+    
+    - id: "activity3"
+      type: "member_join"
+      title: "New member joined"
+      author: "Sam"
+      timestamp: "3 days ago"
+      content: "Welcome to the club!"

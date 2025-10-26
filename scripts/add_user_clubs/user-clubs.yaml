@@ -1,0 +1,57 @@
+# User Club Memberships Configuration
+# This file maps Firebase user IDs to their club memberships and names
+
+userClubData:
+  # Dan (admin)
+  - userId: "VdGhXfiuZsXnew3sJvYBnpgpOhB2"
+    clubs: ["bookclubid1"]
+    first_name: "Dan"
+    last_name: "Vogel"
+  
+  # Margaret
+  - userId: "RAldS1WVb7Q8q9LIEKfIUbHCC142"
+    clubs: ["bookclubid1"]
+    first_name: "Margaret"
+    last_name: ""
+  
+  # Paul
+  - userId: "UkntiDEVv6gSrsKSz76t5TJnT0m2"
+    clubs: ["bookclubid1"]
+    first_name: "Paul"
+    last_name: ""
+  
+  # Alden
+  - userId: "be94I3S9KfMglGfd6eY3nr2ixX83"
+    clubs: ["bookclubid1"]
+    first_name: "Alden"
+    last_name: ""
+  
+  # David
+  - userId: "ofIaj4563eOsHpaSs8LKLo0pls52"
+    clubs: ["bookclubid1"]
+    first_name: "David"
+    last_name: ""
+  
+  # Charles
+  - userId: "qxNG6MNcNmS4kDaD6IXkr8V09ri1"
+    clubs: ["bookclubid1"]
+    first_name: "Charles"
+    last_name: ""
+  
+  # Sam
+  - userId: "z7ZuMDmGf4gjDGitIX0iuYpDUVm1"
+    clubs: ["bookclubid1"]
+    first_name: "Sam"
+    last_name: ""
+  
+  # Dhru
+  - userId: "wFBb88B2wpfZB38XckuzKq9mfkD2"
+    clubs: ["bookclubid1"]
+    first_name: "Dhru"
+    last_name: ""
+  
+  # Grant
+  - userId: "y45XTE1mA4UnOeGkhIkdxPKS0dC3"
+    clubs: ["bookclubid1"]
+    first_name: "Grant"
+    last_name: ""

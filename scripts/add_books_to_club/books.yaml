@@ -1,0 +1,237 @@
+clubId: "bookclubid1"
+
+# Books that the club has read
+booksRead:
+  - title: "Tale of Two Cities"
+    author: "Charles Dickens"
+    isbn: "9780141439600"
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780141439600-L.jpg"
+    readBy: ["qxNG6MNcNmS4kDaD6IXkr8V09ri1", "y45XTE1mA4UnOeGkhIkdxPKS0dC3", "VdGhXfiuZsXnew3sJvYBnpgpOhB2", "be94I3S9KfMglGfd6eY3nr2ixX83"]
+    completedAt: "2024-01-15"
+  
+  - title: "Grapes of Wrath"
+    author: "John Steinbeck"
+    isbn: "9780143039433"
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780143039433-L.jpg"
+    readBy: ["y45XTE1mA4UnOeGkhIkdxPKS0dC3", "VdGhXfiuZsXnew3sJvYBnpgpOhB2", "be94I3S9KfMglGfd6eY3nr2ixX83", "qxNG6MNcNmS4kDaD6IXkr8V09ri1"]
+    completedAt: "2024-02-20"
+  
+  - title: "Socialism"
+    author: "Ludwig von Mises"
+    isbn: "9780913966624"
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780913966624-L.jpg"
+    readBy: ["VdGhXfiuZsXnew3sJvYBnpgpOhB2", "y45XTE1mA4UnOeGkhIkdxPKS0dC3", "be94I3S9KfMglGfd6eY3nr2ixX83"]
+    completedAt: "2024-03-10"
+  
+  - title: "Bomber Mafia"
+    author: "Malcolm Gladwell"
+    isbn: "9780316296618"
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780316296618-L.jpg"
+    readBy: ["VdGhXfiuZsXnew3sJvYBnpgpOhB2", "y45XTE1mA4UnOeGkhIkdxPKS0dC3", "be94I3S9KfMglGfd6eY3nr2ixX83"]
+    completedAt: "2024-04-05"
+  
+  - title: "The Secret Agent"
+    author: "Joseph Conrad"
+    isbn: "9780141441572"
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780141441572-L.jpg"
+    readBy: ["VdGhXfiuZsXnew3sJvYBnpgpOhB2", "y45XTE1mA4UnOeGkhIkdxPKS0dC3", "wFBb88B2wpfZB38XckuzKq9mfkD2"]
+    completedAt: "2024-05-12"
+  
+  - title: "Catch-22"
+    author: "Joseph Heller"
+    isbn: "9780684833392"
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780684833392-L.jpg"
+    readBy: ["VdGhXfiuZsXnew3sJvYBnpgpOhB2", "y45XTE1mA4UnOeGkhIkdxPKS0dC3", "wFBb88B2wpfZB38XckuzKq9mfkD2", "ofIaj4563eOsHpaSs8LKLo0pls52"]
+    completedAt: "2024-06-18"
+  
+  - title: "Valiant Ambition"
+    author: "Nathaniel Philbrick"
+    isbn: "9780143110194"
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780143110194-L.jpg"
+    readBy: ["VdGhXfiuZsXnew3sJvYBnpgpOhB2", "y45XTE1mA4UnOeGkhIkdxPKS0dC3", "wFBb88B2wpfZB38XckuzKq9mfkD2", "ofIaj4563eOsHpaSs8LKLo0pls52"]
+    completedAt: "2024-07-25"
+  
+  - title: "Poor Economics"
+    author: "Abhijit Banerjee & Esther Duflo"
+    isbn: "9781610390934"
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9781610390934-L.jpg"
+    readBy: ["VdGhXfiuZsXnew3sJvYBnpgpOhB2", "y45XTE1mA4UnOeGkhIkdxPKS0dC3", "wFBb88B2wpfZB38XckuzKq9mfkD2", "ofIaj4563eOsHpaSs8LKLo0pls52", "RAldS1WVb7Q8q9LIEKfIUbHCC142", "UkntiDEVv6gSrsKSz76t5TJnT0m2"]
+    completedAt: "2024-08-30"
+  
+  - title: "The Fourth Turning"
+    author: "William Strauss & Neil Howe"
+    isbn: "9780553066821"
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780553066821-L.jpg"
+    readBy: ["VdGhXfiuZsXnew3sJvYBnpgpOhB2", "y45XTE1mA4UnOeGkhIkdxPKS0dC3", "wFBb88B2wpfZB38XckuzKq9mfkD2", "ofIaj4563eOsHpaSs8LKLo0pls52"]
+    completedAt: "2024-09-15"
+
+# Member book data - maps memberId to their reading history
+memberBookData:
+  # Charles (qxNG6MNcNmS4kDaD6IXkr8V09ri1)
+  "qxNG6MNcNmS4kDaD6IXkr8V09ri1":
+    - title: "Tale of Two Cities"
+      read: true
+    - title: "Grapes of Wrath"
+      read: true
+    - title: "Socialism"
+      read: false
+    - title: "Bomber Mafia"
+      read: false
+    - title: "The Secret Agent"
+      read: false
+    - title: "Catch-22"
+      read: false
+    - title: "Valiant Ambition"
+      read: false
+    - title: "Poor Economics"
+      read: false
+    - title: "The Fourth Turning"
+      read: false
+
+  # Grant (y45XTE1mA4UnOeGkhIkdxPKS0dC3)
+  "y45XTE1mA4UnOeGkhIkdxPKS0dC3":
+    - title: "Tale of Two Cities"
+      read: true
+    - title: "Grapes of Wrath"
+      read: true
+    - title: "Socialism"
+      read: true
+    - title: "Bomber Mafia"
+      read: true
+    - title: "The Secret Agent"
+      read: true
+    - title: "Catch-22"
+      read: true
+    - title: "Valiant Ambition"
+      read: true
+    - title: "Poor Economics"
+      read: true
+    - title: "The Fourth Turning"
+      read: true
+
+  # Dan (VdGhXfiuZsXnew3sJvYBnpgpOhB2)
+  "VdGhXfiuZsXnew3sJvYBnpgpOhB2":
+    - title: "Tale of Two Cities"
+      read: true
+    - title: "Grapes of Wrath"
+      read: true
+    - title: "Socialism"
+      read: true
+    - title: "Bomber Mafia"
+      read: true
+    - title: "The Secret Agent"
+      read: true
+    - title: "Catch-22"
+      read: true
+    - title: "Valiant Ambition"
+      read: true
+    - title: "Poor Economics"
+      read: true
+    - title: "The Fourth Turning"
+      read: true
+
+  # Alden (be94I3S9KfMglGfd6eY3nr2ixX83)
+  "be94I3S9KfMglGfd6eY3nr2ixX83":
+    - title: "Tale of Two Cities"
+      read: true
+    - title: "Grapes of Wrath"
+      read: true
+    - title: "Socialism"
+      read: true
+    - title: "Bomber Mafia"
+      read: true
+    - title: "The Secret Agent"
+      read: false
+    - title: "Catch-22"
+      read: false
+    - title: "Valiant Ambition"
+      read: false
+    - title: "Poor Economics"
+      read: false
+    - title: "The Fourth Turning"
+      read: false
+
+  # Dhru (wFBb88B2wpfZB38XckuzKq9mfkD2)
+  "wFBb88B2wpfZB38XckuzKq9mfkD2":
+    - title: "Tale of Two Cities"
+      read: false
+    - title: "Grapes of Wrath"
+      read: false
+    - title: "Socialism"
+      read: false
+    - title: "Bomber Mafia"
+      read: false
+    - title: "The Secret Agent"
+      read: true
+    - title: "Catch-22"
+      read: true
+    - title: "Valiant Ambition"
+      read: true
+    - title: "Poor Economics"
+      read: true
+    - title: "The Fourth Turning"
+      read: true
+
+  # David (ofIaj4563eOsHpaSs8LKLo0pls52)
+  "ofIaj4563eOsHpaSs8LKLo0pls52":
+    - title: "Tale of Two Cities"
+      read: false
+    - title: "Grapes of Wrath"
+      read: false
+    - title: "Socialism"
+      read: false
+    - title: "Bomber Mafia"
+      read: false
+    - title: "The Secret Agent"
+      read: false
+    - title: "Catch-22"
+      read: true
+    - title: "Valiant Ambition"
+      read: true
+    - title: "Poor Economics"
+      read: true
+    - title: "The Fourth Turning"
+      read: true
+      halfCredit: true
+
+  # Margaret (RAldS1WVb7Q8q9LIEKfIUbHCC142)
+  "RAldS1WVb7Q8q9LIEKfIUbHCC142":
+    - title: "Tale of Two Cities"
+      read: false
+    - title: "Grapes of Wrath"
+      read: false
+    - title: "Socialism"
+      read: false
+    - title: "Bomber Mafia"
+      read: false
+    - title: "The Secret Agent"
+      read: false
+    - title: "Catch-22"
+      read: false
+    - title: "Valiant Ambition"
+      read: false
+    - title: "Poor Economics"
+      read: true
+    - title: "The Fourth Turning"
+      read: false
+
+  # Paul (UkntiDEVv6gSrsKSz76t5TJnT0m2)
+  "UkntiDEVv6gSrsKSz76t5TJnT0m2":
+    - title: "Tale of Two Cities"
+      read: false
+    - title: "Grapes of Wrath"
+      read: false
+    - title: "Socialism"
+      read: false
+    - title: "Bomber Mafia"
+      read: false
+    - title: "The Secret Agent"
+      read: false
+    - title: "Catch-22"
+      read: false
+    - title: "Valiant Ambition"
+      read: false
+    - title: "Poor Economics"
+      read: true
+    - title: "The Fourth Turning"
+      read: false

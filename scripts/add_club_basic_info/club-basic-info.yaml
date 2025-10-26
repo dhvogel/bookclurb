@@ -1,0 +1,6 @@
+clubId: "bookclubid1"
+
+basicInfo:
+  name: "SOM Book Club"
+  description: "A vibrant community of readers exploring diverse literature and engaging in thoughtful discussions."
+  coverColor: "#00356b"
