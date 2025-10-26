@@ -39,10 +39,6 @@ export interface ProfileProps {
   db: Database;
 }
 
-export interface MeetingsProps {
-  user: User | null;
-  db: Database;
-}
 
 
 export interface ClubsProps {

@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Database, ref, onValue } from 'firebase/database';
+import { User } from 'firebase/auth';
 import { Club } from '../../../types';
 
 interface UseClubDataProps {
   db: Database;
+  user: User | null;
 }
 
-export const useClubData = ({ db }: UseClubDataProps) => {
+export const useClubData = ({ db, user }: UseClubDataProps) => {
   const { clubId } = useParams<{ clubId: string }>();
   const navigate = useNavigate();
   const [club, setClub] = useState<Club | null>(null);
@@ -19,7 +21,7 @@ export const useClubData = ({ db }: UseClubDataProps) => {
       return;
     }
 
-    if (!db) {
+    if (!db || !user) {
       setLoading(false);
       return;
     }
@@ -29,10 +31,20 @@ export const useClubData = ({ db }: UseClubDataProps) => {
     const unsubscribe = onValue(clubRef, (snapshot) => {
       const clubData = snapshot.val();
       if (clubData) {
-        setClub({
-          id: clubId,
-          ...clubData
-        });
+        // Check if user is actually a member of this club
+        const isMember = clubData.members && 
+          Object.values(clubData.members).some((member: any) => member.id === user.uid);
+        
+        if (isMember) {
+          setClub({
+            id: clubId,
+            ...clubData
+          });
+        } else {
+          // User is not a member, redirect to clubs page
+          setClub(null);
+          navigate('/clubs');
+        }
       } else {
         setClub(null);
       }
@@ -43,7 +55,7 @@ export const useClubData = ({ db }: UseClubDataProps) => {
     });
 
     return () => unsubscribe();
-  }, [clubId, db, navigate]);
+  }, [clubId, db, user, navigate]);
 
   return { club, loading };
 };

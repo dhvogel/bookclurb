@@ -9,266 +9,73 @@ import { extractClubBooksRead } from '../utils/bookUtils';
 const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
   const navigate = useNavigate();
   const [clubs, setClubs] = useState<Club[]>([]);
-  const [loading, setLoading] = useState(false); // TODO: Change to true when Firebase is implemented
+  const [loading, setLoading] = useState(true);
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
 
-  // Initialize with SOM Book Club
-  useEffect(() => {
-    setClubs([
-      {
-        id: 'bookclubid1',
-        name: 'SOM Book Club',
-        coverColor: '#00356b',
-        nextMeeting: { 
-          timestamp: '2025-10-30T22:00:00Z',
-          timeZone: 'America/New_York',
-          location: 'WhatsApp' 
-        },
-        currentBook: { 
-          title: 'Empire of Pain', 
-          author: 'Patrick Radden Keefe',
-          isbn: '9780385545686',
-          coverUrl: 'https://covers.openlibrary.org/b/isbn/9780385545686-L.jpg'
-        },
-        memberCount: 10,
-        description: 'A vibrant community of readers exploring diverse literature and engaging in thoughtful discussions.',
-        booksRead: [
-          {
-            title: "Tale of Two Cities",
-            author: "Charles Dickens",
-            readBy: ["Charles", "Grant", "Dan", "Alden"],
-            completedAt: "2024-01-15"
-          },
-          {
-            title: "Grapes of Wrath",
-            author: "John Steinbeck",
-            readBy: ["Grant", "Dan", "Alden", "Charles"],
-            completedAt: "2024-02-20"
-          },
-          {
-            title: "Socialism",
-            author: "Ludwig von Mises",
-            readBy: ["Dan", "Grant", "Alden"],
-            completedAt: "2024-03-10"
-          },
-          {
-            title: "Bomber Mafia",
-            author: "Malcolm Gladwell",
-            readBy: ["Dan", "Grant", "Alden"],
-            completedAt: "2024-04-05"
-          },
-          {
-            title: "The Secret Agent",
-            author: "Joseph Conrad",
-            readBy: ["Dan", "Grant", "Dhru"],
-            completedAt: "2024-05-12"
-          },
-          {
-            title: "Catch-22",
-            author: "Joseph Heller",
-            readBy: ["Dan", "Grant", "Dhru", "David"],
-            completedAt: "2024-06-18"
-          },
-          {
-            title: "Valiant Ambition",
-            author: "Nathaniel Philbrick",
-            readBy: ["Dan", "Grant", "Dhru", "David"],
-            completedAt: "2024-07-25"
-          },
-          {
-            title: "Poor Economics",
-            author: "Abhijit Banerjee & Esther Duflo",
-            readBy: ["Dan", "Grant", "Dhru", "David", "Margaret", "Paul"],
-            completedAt: "2024-08-30"
-          },
-          {
-            title: "The Fourth Turning",
-            author: "William Strauss & Neil Howe",
-            readBy: ["Dan", "Grant", "Dhru", "David"],
-            completedAt: "2024-09-15"
-          }
-        ],
-        members: [
-          {
-            id: 'member1',
-            name: 'Charles',
-            role: 'admin',
-            bookData: [
-              { title: "Tale of Two Cities", read: true },
-              { title: "Grapes of Wrath", read: true },
-              { title: "Socialism", read: false },
-              { title: "Bomber Mafia", read: false },
-              { title: "The Secret Agent", read: false },
-              { title: "Catch-22", read: false },
-              { title: "Valiant Ambition", read: false },
-              { title: "Poor Economics", read: false },
-              { title: "The Fourth Turning", read: false }
-            ]
-          },
-          {
-            id: 'member2',
-            name: 'Grant',
-            role: 'member',
-            bookData: [
-              { title: "Tale of Two Cities", read: true },
-              { title: "Grapes of Wrath", read: true },
-              { title: "Socialism", read: true },
-              { title: "Bomber Mafia", read: true },
-              { title: "The Secret Agent", read: true },
-              { title: "Catch-22", read: true },
-              { title: "Valiant Ambition", read: true },
-              { title: "Poor Economics", read: true },
-              { title: "The Fourth Turning", read: true }
-            ]
-          },
-          {
-            id: 'member3',
-            name: 'Dan',
-            role: 'member',
-            bookData: [
-              { title: "Tale of Two Cities", read: true },
-              { title: "Grapes of Wrath", read: true },
-              { title: "Socialism", read: true },
-              { title: "Bomber Mafia", read: true },
-              { title: "The Secret Agent", read: true },
-              { title: "Catch-22", read: true },
-              { title: "Valiant Ambition", read: true },
-              { title: "Poor Economics", read: true },
-              { title: "The Fourth Turning", read: true }
-            ]
-          },
-          {
-            id: 'member4',
-            name: 'Alden',
-            role: 'member',
-            bookData: [
-              { title: "Tale of Two Cities", read: true },
-              { title: "Grapes of Wrath", read: true },
-              { title: "Socialism", read: true },
-              { title: "Bomber Mafia", read: true },
-              { title: "The Secret Agent", read: false },
-              { title: "Catch-22", read: false },
-              { title: "Valiant Ambition", read: false },
-              { title: "Poor Economics", read: false },
-              { title: "The Fourth Turning", read: false }
-            ]
-          },
-          {
-            id: 'member5',
-            name: 'Dhru',
-            role: 'member',
-            bookData: [
-              { title: "Tale of Two Cities", read: false },
-              { title: "Grapes of Wrath", read: false },
-              { title: "Socialism", read: false },
-              { title: "Bomber Mafia", read: false },
-              { title: "The Secret Agent", read: true },
-              { title: "Catch-22", read: true },
-              { title: "Valiant Ambition", read: true },
-              { title: "Poor Economics", read: true },
-              { title: "The Fourth Turning", read: true }
-            ]
-          },
-          {
-            id: 'member6',
-            name: 'David',
-            role: 'member',
-            bookData: [
-              { title: "Tale of Two Cities", read: false },
-              { title: "Grapes of Wrath", read: false },
-              { title: "Socialism", read: false },
-              { title: "Bomber Mafia", read: false },
-              { title: "The Secret Agent", read: false },
-              { title: "Catch-22", read: true },
-              { title: "Valiant Ambition", read: true },
-              { title: "Poor Economics", read: true },
-              { title: "The Fourth Turning", read: true, halfCredit: true }
-            ]
-          },
-          {
-            id: 'member7',
-            name: 'Margaret',
-            role: 'member',
-            bookData: [
-              { title: "Tale of Two Cities", read: false },
-              { title: "Grapes of Wrath", read: false },
-              { title: "Socialism", read: false },
-              { title: "Bomber Mafia", read: false },
-              { title: "The Secret Agent", read: false },
-              { title: "Catch-22", read: false },
-              { title: "Valiant Ambition", read: false },
-              { title: "Poor Economics", read: true },
-              { title: "The Fourth Turning", read: false }
-            ]
-          },
-          {
-            id: 'member8',
-            name: 'Paul',
-            role: 'member',
-            bookData: [
-              { title: "Tale of Two Cities", read: false },
-              { title: "Grapes of Wrath", read: false },
-              { title: "Socialism", read: false },
-              { title: "Bomber Mafia", read: false },
-              { title: "The Secret Agent", read: false },
-              { title: "Catch-22", read: false },
-              { title: "Valiant Ambition", read: false },
-              { title: "Poor Economics", read: true },
-              { title: "The Fourth Turning", read: false }
-            ]
-          }
-        ]
-      }
-    ]);
-  }, []);
 
   // Load user's clubs from Firebase
-  // useEffect(() => {
-  //   if (!user || !db) {
-  //     setLoading(false);
-  //     return;
-  //   }
+  useEffect(() => {
+    if (!user || !db) {
+      setLoading(false);
+      return;
+    }
 
-  //   const userRef = ref(db, `users/${user.uid}`);
-  //   const unsubscribe = onValue(userRef, (snapshot) => {
-  //     const userData = snapshot.val();
-  //     if (userData && userData.clubs) {
-  //       // Fetch club details for each club ID
-  //       const clubPromises = userData.clubs.map(async (clubId: string) => {
-  //         const clubRef = ref(db, `clubs/${clubId}`);
-  //         return new Promise<Club>((resolve) => {
-  //           const unsubscribe = onValue(clubRef, (clubSnapshot) => {
-  //             const clubData = clubSnapshot.val();
-  //             if (clubData) {
-  //               resolve({
-  //                 id: clubId,
-  //                 name: clubData.name || 'Untitled Club',
-  //                 coverImage: clubData.coverImage,
-  //                 coverColor: clubData.coverColor || '#667eea',
-  //                 nextMeeting: clubData.nextMeeting,
-  //                 currentBook: clubData.currentBook,
-  //                 memberCount: clubData.memberCount || 0,
-  //                 description: clubData.description,
-  //               });
-  //               unsubscribe();
-  //             }
-  //           });
-  //         });
-  //       });
+    setLoading(true);
+    const userRef = ref(db, `users/${user.uid}`);
+    const unsubscribe = onValue(userRef, async (snapshot) => {
+      const userData = snapshot.val();
+      if (userData && userData.clubs) {
+        // Fetch club details for each club ID and verify membership
+        const clubPromises = userData.clubs.map(async (clubId: string) => {
+          const clubRef = ref(db, `clubs/${clubId}`);
+          return new Promise<Club | null>((resolve) => {
+            const unsubscribe = onValue(clubRef, (clubSnapshot) => {
+              const clubData = clubSnapshot.val();
+              if (clubData) {
+                // Check if user is actually a member of this club
+                const isMember = clubData.members && 
+                  Object.values(clubData.members).some((member: any) => member.id === user.uid);
+                
+                if (isMember) {
+                  resolve({
+                    id: clubId,
+                    name: clubData.name || 'Untitled Club',
+                    coverImage: clubData.coverImage,
+                    coverColor: clubData.coverColor || '#667eea',
+                    nextMeeting: clubData.nextMeeting,
+                    currentBook: clubData.currentBook,
+                    memberCount: clubData.memberCount || 0,
+                    description: clubData.description,
+                    booksRead: clubData.booksRead,
+                    members: clubData.members,
+                    recentActivity: clubData.recentActivity,
+                  });
+                } else {
+                  resolve(null); // User is not a member
+                }
+              } else {
+                resolve(null); // Club doesn't exist
+              }
+              unsubscribe();
+            });
+          });
+        });
 
-  //       Promise.all(clubPromises).then((clubList) => {
-  //         setClubs(clubList);
-  //         setLoading(false);
-  //       });
-  //     } else {
-  //       setClubs([]);
-  //       setLoading(false);
-  //     }
-  //   });
+        Promise.all(clubPromises).then((clubList) => {
+          // Filter out null values (clubs user is not a member of)
+          const validClubs = clubList.filter((club): club is Club => club !== null);
+          setClubs(validClubs);
+          setLoading(false);
+        });
+      } else {
+        setClubs([]);
+        setLoading(false);
+      }
+    });
 
-  //   return () => unsubscribe();
-  // }, [user, db]);
+    return () => unsubscribe();
+  }, [user, db]);
 
   // Cache clubs data locally for instant loading
   useEffect(() => {
@@ -277,7 +84,7 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
     }
   }, [clubs]);
 
-  // Load cached data on mount
+  // Load cached data on mount (only when user is not logged in)
   useEffect(() => {
     const cachedClubs = localStorage.getItem('userClubs');
     if (cachedClubs && !user) {

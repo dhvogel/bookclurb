@@ -7,7 +7,6 @@ import { db } from "./firebaseConfig"; // make sure this runs before using any F
 import { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import Profile from './components/Profile';
-import Meetings from './components/Meetings';
 import Clubs from './components/Clubs';
 import { ClubPage } from './features';
 
@@ -28,7 +27,6 @@ function App() {
         <Route path="/" element={<Home user={user} db={db} />} />
         <Route path="/profile" element={<Profile user={user} db={db} />} />
         <Route path="/login" element={<Login setUser={setUser} user={user} db={db} auth={auth} />} />
-        <Route path="/meetings" element={<Meetings user={user} db={db} />} />
         <Route path="/clubs" element={<Clubs user={user} db={db} />} />
         <Route path="/clubs/:clubId" element={<ClubPage user={user} db={db} />} />
       </Routes>
