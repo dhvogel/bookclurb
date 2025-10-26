@@ -93,3 +93,56 @@ export interface Notification {
   isRead: boolean;
   [key: string]: any;
 }
+
+// Book Voting System Types
+export interface BookVotingPoll {
+  id: string;
+  clubId: string;
+  status: 'submission' | 'voting' | 'closed';
+  closesAt: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface BookSubmission {
+  id: string;
+  pollId: string;
+  userId: string;
+  bookId: string;
+  comment?: string;
+  submittedAt: string;
+  bookDetails: {
+    title: string;
+    author: string;
+    isbn?: string;
+    coverUrl?: string;
+    description?: string;
+    publishedDate?: string;
+  };
+}
+
+export interface Vote {
+  id: string;
+  pollId: string;
+  userId: string;
+  rankings: string[]; // Array of book_submission_ids in order of preference
+  submittedAt: string;
+}
+
+export interface GoogleBooksVolume {
+  id: string;
+  volumeInfo: {
+    title: string;
+    authors?: string[];
+    industryIdentifiers?: Array<{
+      type: string;
+      identifier: string;
+    }>;
+    imageLinks?: {
+      thumbnail?: string;
+      smallThumbnail?: string;
+    };
+    description?: string;
+    publishedDate?: string;
+  };
+}

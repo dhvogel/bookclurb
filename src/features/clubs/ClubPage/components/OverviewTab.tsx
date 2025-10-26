@@ -65,9 +65,110 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club }) => {
                   padding: '1rem', 
                   borderRadius: '8px',
                   fontSize: '0.9rem',
-                  color: '#666'
+                  color: '#666',
+                  marginBottom: '1rem'
                 }}>
                   📖 Currently reading • Discussion starts soon
+                </div>
+              </div>
+            </div>
+            
+            {/* Reading Progress Tracker - Full Width */}
+            <div style={{ marginTop: '1.5rem' }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: '0.5rem'
+              }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#333' }}>
+                  Reading Progress
+                </span>
+              </div>
+              
+              {/* Progress Bar - Full Width */}
+              <div style={{
+                width: '100%',
+                height: '8px',
+                backgroundColor: '#e9ecef',
+                borderRadius: '4px',
+                overflow: 'hidden',
+                marginBottom: '0.5rem',
+                position: 'relative'
+              }}>
+                {/* Completed chapters (1-19) */}
+                <div style={{
+                  width: '79.17%', // 19/24 = 79.17%
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                  borderRadius: '4px 0 0 4px',
+                  transition: 'width 0.3s ease',
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  zIndex: 1
+                }} />
+                {/* Not started (after chapter 24) */}
+                <div style={{
+                  width: '100%', // covers the whole bar
+                  height: '100%',
+                  background: '#f2f2f2',
+                  borderRadius: '4px',
+                  position: 'absolute',
+                  left: '100%',
+                  top: 0,
+                  zIndex: 0
+                }} />
+                
+                {/* Current week chapters (20-24) - highlighted section */}
+                <div style={{
+                  position: 'absolute',
+                  left: '79.17%', // Start at chapter 20
+                  width: '20.83%', // 5 chapters (20-24) = 20.83%
+                  height: '100%',
+                  background: 'repeating-linear-gradient(45deg, yellow, #ff6b6b 2px, #ff8e8e 2px, #ff8e8e 4px)',
+                  borderRadius: '0 4px 4px 0',
+                  boxShadow: '0 0 0 1px #ff6b6b',
+                  animation: 'pulse 2s infinite'
+                }} />
+              </div>
+              
+              {/* Chapter Numbers */}
+              <div style={{
+                position: 'relative',
+                marginTop: '0.25rem'
+              }}>
+                {/* Current chapter number (20) at progress position */}
+                <div style={{
+                  position: 'absolute',
+                  left: '79.17%', // Position at current progress
+                  transform: 'translateX(-50%)',
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  color: '#333',
+                  backgroundColor: 'white',
+                  padding: '2px 4px',
+                  borderRadius: '3px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  zIndex: 2
+                }}>
+                  Ch. 20
+                </div>
+                
+                {/* Total chapters number (24) at end of bar */}
+                <div style={{
+                  position: 'absolute',
+                  right: '0',
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  color: '#666',
+                  backgroundColor: 'white',
+                  padding: '2px 4px',
+                  borderRadius: '3px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  zIndex: 2
+                }}>
+                  24
                 </div>
               </div>
             </div>
