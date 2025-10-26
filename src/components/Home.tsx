@@ -62,7 +62,7 @@ const Home: React.FC<HomeProps> = ({ user, db }) => {
               textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
             }}
           >
-            Welcome to SOM Book Club
+            Welcome to Book Clurb
           </h1>
           <p
             style={{
