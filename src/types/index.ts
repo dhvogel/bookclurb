@@ -39,10 +39,6 @@ export interface MeetingsProps {
   db: Database;
 }
 
-export interface LiteraryProfileProps {
-  user: User | null;
-  db: Database;
-}
 
 export interface ClubsProps {
   user: User | null;

@@ -14,7 +14,6 @@ import { HeaderBarProps, Notification } from "../types";
 
 const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
   const location = useLocation();
-  const isLiteraryProfile = location.pathname === "/literary-profile";
   const isClubs = location.pathname === "/clubs";
   const [unreadCount, setUnreadCount] = React.useState<number>(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState<boolean>(false);
@@ -271,27 +270,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         >
           Clubs
         </a>
-        <a
-          href="/literary-profile"
-          style={{
-            color: isLiteraryProfile ? "#FFD700" : "white",
-            background: isLiteraryProfile
-              ? "rgba(255,255,255,0.08)"
-              : "transparent",
-            padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
-            borderRadius: "8px",
-            textDecoration: "none",
-            fontWeight: isLiteraryProfile ? "bold" : "normal",
-            fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
-            letterSpacing: "0.5px",
-            transition: "background 0.2s, color 0.2s",
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-          }}
-        >
-          <span className="hide-on-mobile">Literary Profile</span>
-          <span className="show-on-mobile">Profile</span>
-        </a>
         {user ? (
           <a
             href="/profile"
@@ -431,24 +409,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
           onClick={() => setIsMobileMenuOpen(false)}
         >
           Clubs
-        </a>
-        <a
-          href="/literary-profile"
-          style={{
-            color: isLiteraryProfile ? "#FFD700" : "white",
-            background: isLiteraryProfile ? "rgba(255,255,255,0.08)" : "transparent",
-            padding: "0.75rem 1rem",
-            borderRadius: "8px",
-            textDecoration: "none",
-            fontWeight: isLiteraryProfile ? "bold" : "normal",
-            fontSize: "1.1rem",
-            letterSpacing: "0.5px",
-            transition: "background 0.2s, color 0.2s",
-            marginBottom: "0.5rem",
-          }}
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          Literary Profile
         </a>
         {user ? (
           <a
