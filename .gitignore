@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-web/node_modules
+node_modules
 
 # testing
 /coverage
@@ -22,3 +22,6 @@ yarn-error.log*
 
 web/src/firebaseConfig.ts
 web/src/config/members.ts
+
+scripts/add_members_to_club/members.yaml
+firebase_sa_key.json

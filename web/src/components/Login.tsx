@@ -39,6 +39,7 @@ const Login: React.FC<LoginProps> = ({ setUser, user, auth, db }) => {
           gap: "1rem",
         }}
       >
+      {/* TODO: Add a Google login button*/}
         <input
           type="email"
           placeholder="Email"
