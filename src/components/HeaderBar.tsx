@@ -157,7 +157,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
             }}
             className="hide-on-mobile"
           >
-            SOM Book Club
+            Book Clurb
           </span>
           <span
             style={{
@@ -170,7 +170,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
             }}
             className="show-on-mobile"
           >
-            SOM Book Club
+            Book Clurb
           </span>
           <style>
             {`
