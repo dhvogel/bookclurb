@@ -1,6 +1,6 @@
 import React from 'react';
 import { User } from 'firebase/auth';
-import { Database, ref, set, onValue } from 'firebase/database';
+import { Database, ref, set, onValue, update } from 'firebase/database';
 import ReflectionModal from '../../../../components/ReflectionModal';
 import { Club } from '../../../../types';
 
@@ -19,22 +19,32 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
   const [lastSaveTime, setLastSaveTime] = React.useState<number>(0);
   const [saved, setSaved] = React.useState<boolean>(false);
   const [expandedMeeting, setExpandedMeeting] = React.useState<string | null>(null);
+  const [savedReflections, setSavedReflections] = React.useState<Set<string>>(new Set());
 
+  // Load user reflections from club.meetings structure
   React.useEffect(() => {
-    if (user) {
-      const reflectionRef = ref(db, `reflections/${user.uid}`);
-      onValue(reflectionRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          setUserReflections(data);
+    if (user && club?.meetings) {
+      const userReflectionsMap: Record<string, { reflection: string }> = {};
+      const savedMeetingIds = new Set<string>();
+      
+      club.meetings.forEach(meeting => {
+        if (meeting.reflections) {
+          const userReflection = meeting.reflections.find(r => r.userId === user.uid);
+          if (userReflection) {
+            userReflectionsMap[meeting.id] = { reflection: userReflection.reflection };
+            savedMeetingIds.add(meeting.id);
+          }
         }
       });
+      
+      setUserReflections(userReflectionsMap);
+      setSavedReflections(savedMeetingIds);
     }
-  }, [user, db]);
+  }, [user, club]);
 
-  // Modified handleSave to show "Saved" indicator
+  // Modified handleSave to save to club.meetings structure
   const handleSave = (meetingId: string) => {
-    if (!user) return;
+    if (!user || !club) return;
     
     if (lastSaveTime && Date.now() - lastSaveTime < 15000) {
       const secondsLeft = Math.ceil(
@@ -49,133 +59,101 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
     }
     setLastSaveTime(Date.now());
 
-    set(ref(db, `reflections/${user.uid}/${meetingId}`), {
+    // Find the meeting in club.meetings
+    const meetingIndex = club.meetings?.findIndex(m => m.id === meetingId);
+    if (meetingIndex === undefined || meetingIndex === -1) {
+      console.error(`Meeting ${meetingId} not found in club.meetings`);
+      return;
+    }
+
+    // Get user name from club members data
+    const clubMember = club.members?.find(member => member && member.id === user.uid);
+    const userName = clubMember?.name || user.displayName || 'User';
+    
+    // Create or update the reflection
+    const newReflection = {
+      userId: user.uid,
+      userName: userName,
       reflection: userReflections[meetingId]?.reflection || "",
       timestamp: Date.now(),
+    };
+
+    // Update the club.meetings structure
+    const updatedMeetings = [...(club.meetings || [])];
+    const meeting = updatedMeetings[meetingIndex];
+    
+    if (!meeting.reflections) {
+      meeting.reflections = [];
+    }
+    
+    // Remove existing reflection from this user if it exists
+    meeting.reflections = meeting.reflections.filter(r => r.userId !== user.uid);
+    
+    // Add the new reflection
+    meeting.reflections.push(newReflection);
+
+    // Save to Firebase
+    const clubRef = ref(db, `clubs/${club.id}`);
+    update(clubRef, {
+      meetings: updatedMeetings
     }).then(() => {
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
-      // Fetch user's from users/{userId}
-      // Fetch all user IDs from users table and write notification for each
-      const usersRef = ref(db, "users");
-      onValue(
-        usersRef,
-        (usersSnapshot) => {
-          const usersData = usersSnapshot.val() || {};
-          const firstName = usersData[user.uid]?.first_name || "A user";
-          Object.keys(usersData).forEach((userId) => {
-            if (userId === user.uid) return; // Skip notifying oneself
-            // Write notification to notifications/{userId}/{meetingId}
-            set(ref(db, `notifications/${userId}/${meetingId}`), {
-              text: `${firstName} has submitted a post.`,
+      
+      // Add this meeting to the saved reflections set
+      setSavedReflections(prev => new Set(prev).add(meetingId));
+      
+      // Send notifications to other club members
+      if (club.members) {
+        club.members.forEach((member) => {
+          if (member.id !== user.uid) {
+            set(ref(db, `notifications/${member.id}/${meetingId}`), {
+              text: `${userName} has submitted a reflection.`,
               isRead: false,
               timestamp: Date.now(),
             });
-          });
-        },
-        { onlyOnce: true }
-      );
+          }
+        });
+      }
+    }).catch((error) => {
+      console.error('Error saving reflection:', error);
+      alert('Failed to save reflection. Please try again.');
     });
   };
 
-  // Helper function to fetch and log all user reflections for the meeting
+  // Helper function to get all reflections for a meeting from club.meetings structure
   const fetchAllReflectionsForMeeting = (id: string) => {
-    const reflectionsRef = ref(db, "reflections");
-    onValue(
-      reflectionsRef,
-      (snapshot) => {
-        const allReflections = snapshot.val() as Record<string, Record<string, { reflection: string }>>;
-        const meetingReflections: Record<string, Record<string, { name: string; reflection: string }>> = {};
-        if (allReflections) {
-          Object.entries(allReflections).forEach(([uid, meetings]) => {
-            if (meetings && meetings[id] && meetings[id].reflection) {
-              // Fetch user's first_name and last_name from users/${uid}
-              const userRef = ref(db, `users/${uid}`);
-              onValue(
-                userRef,
-                (userSnapshot) => {
-                  const userData = userSnapshot.val();
-                  const name = userData
-                    ? `${userData.first_name || ""} ${
-                        userData.last_name || ""
-                      }`.trim()
-                    : uid;
-                  meetingReflections[id] = meetingReflections[id] || {};
-                  meetingReflections[id][uid] = {
-                    name,
-                    reflection: meetings[id].reflection,
-                  };
-                  // Update state after each user fetch
-                  setAllReflectionsForMeeting((prev) => ({
-                    ...prev,
-                    ...meetingReflections,
-                  }));
-                },
-                { onlyOnce: true }
-              );
-            }
-          });
-        }
-        setMeetingId(id);
-        setAllReflectionsForMeeting(meetingReflections);
-        setShowModal(true);
-      },
-      { onlyOnce: true }
-    );
+    if (!club?.meetings) {
+      console.error('No meetings found in club data');
+      return;
+    }
+
+    const meeting = club.meetings.find(m => m.id === id);
+    if (!meeting || !meeting.reflections) {
+      setAllReflectionsForMeeting({});
+      setMeetingId(id);
+      setShowModal(true);
+      return;
+    }
+
+    // Convert reflections to the format expected by ReflectionModal
+    const meetingReflections: Record<string, Record<string, { name: string; reflection: string }>> = {};
+    meetingReflections[id] = {};
+    
+    meeting.reflections.forEach(reflection => {
+      meetingReflections[id][reflection.userId] = {
+        name: reflection.userName,
+        reflection: reflection.reflection,
+      };
+    });
+
+    setMeetingId(id);
+    setAllReflectionsForMeeting(meetingReflections);
+    setShowModal(true);
   };
 
-  // Array of meetings - this could be made dynamic based on club data
-  const meetings: Array<{ id: string; time: string; reading: string; date: string; status: 'upcoming' | 'past' | 'current' }> = [
-    {
-      id: "meeting-2025-10-30",
-      time: "Thu, 10/30, 6:00 PM EDT",
-      reading: "Empire of Pain, Ch 26-End",
-      date: "2025-10-30",
-      status: 'current'
-    },
-    {
-      id: "meeting-2025-10-23",
-      time: "Thu, 10/23, 6:00 PM EDT",
-      reading: "Empire of Pain, Ch 21-25",
-      date: "2025-10-23",
-      status: 'past'
-    },
-    {
-      id: "meeting-2025-10-16",
-      time: "Thu, 10/16, 6:00 PM EDT",
-      reading: "Empire of Pain, Ch 15-20",
-      date: "2025-10-16",
-      status: 'past'
-    },
-    {
-      id: "meeting-2025-10-09",
-      time: "Thu, 10/9, 6:00 PM EDT",
-      reading: "Empire of Pain, Ch 11-14",
-      date: "2025-10-09",
-      status: 'past'
-    },
-    {
-      id: "meeting-2025-10-02",
-      time: "Thu, 10/2, 6:00 PM EDT",
-      reading: "Empire of Pain, Ch 8-10",
-      date: "2025-10-02",
-      status: 'past'
-    },
-    {
-      id: "meeting-2025-09-25",
-      time: "Thu, 9/25, 6:00 PM EDT",
-      reading: "Empire of Pain, Ch 4-7",
-      date: "2025-09-25",
-      status: 'past'
-    },
-    {
-      id: "meeting-2025-09-18",
-      time: "Thu, 9/18, 6:00 PM EDT",
-      reading: "Empire of Pain, Ch 1-3",
-      date: "2025-09-18",
-      status: 'past'
-    },
-  ];
+  // Use meetings from club data, fallback to empty array if not available
+  const meetings = club?.meetings || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -298,6 +276,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
       <div style={{ display: 'grid', gap: '1.5rem' }}>
         {meetings.map((meeting) => {
           const hasReflection = userReflections[meeting.id]?.reflection;
+          const isSaved = savedReflections.has(meeting.id);
           const isExpanded = expandedMeeting === meeting.id;
           
           return (
@@ -342,7 +321,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
                 </div>
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {hasReflection && (
+                  {isSaved && (
                     <div style={{ 
                       background: '#dcfce7',
                       color: '#166534',
@@ -367,11 +346,14 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
 
               {/* Expanded Content */}
               {isExpanded && (
-                <div style={{ 
-                  borderTop: '1px solid #e5e7eb', 
-                  paddingTop: '1.5rem',
-                  animation: 'fadeIn 0.3s ease'
-                }}>
+                <div 
+                  style={{ 
+                    borderTop: '1px solid #e5e7eb', 
+                    paddingTop: '1.5rem',
+                    animation: 'fadeIn 0.3s ease'
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {/* Reflection Input */}
                   <div style={{ marginBottom: '1.5rem' }}>
                     <label style={{ 
@@ -398,6 +380,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
                       }}
                       onFocus={(e) => e.currentTarget.style.borderColor = '#667eea'}
                       onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+                      onClick={(e) => e.stopPropagation()}
                       placeholder="Share your thoughts about this week's reading..."
                       value={userReflections[meeting.id]?.reflection || ""}
                       onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>

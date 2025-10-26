@@ -97,6 +97,19 @@ export interface Club {
     timestamp: string;
     content?: string;
   }>;
+  meetings?: Array<{
+    id: string;
+    time: string;
+    reading: string;
+    date: string;
+    status: 'upcoming' | 'past' | 'current';
+    reflections?: Array<{
+      userId: string;
+      userName: string;
+      reflection: string;
+      timestamp: number;
+    }>;
+  }>;
 }
 
 export interface Notification {
