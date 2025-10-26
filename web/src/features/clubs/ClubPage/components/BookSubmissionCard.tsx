@@ -70,11 +70,13 @@ const BookSubmissionCard: React.FC<BookSubmissionCardProps> = ({
       id => id.type === 'ISBN_13' || id.type === 'ISBN_10'
     )?.identifier;
 
+    const trimmedComment = comment.trim();
+    
     const submission: Omit<BookSubmission, 'id' | 'submittedAt'> = {
       pollId,
       userId,
       bookId: selectedBook.id,
-      comment: comment.trim() || undefined,
+      ...(trimmedComment && { comment: trimmedComment }),
       bookDetails: {
         title: selectedBook.volumeInfo.title,
         author: selectedBook.volumeInfo.authors?.join(', ') || 'Unknown Author',
