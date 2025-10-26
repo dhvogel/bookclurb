@@ -1,29 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User } from 'firebase/auth';
 import { Database, ref, onValue, update } from 'firebase/database';
 import HeaderBar from './HeaderBar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ClubsProps } from '../types';
-
-interface Club {
-  id: string;
-  name: string;
-  coverImage?: string;
-  coverColor?: string;
-  nextMeeting?: {
-    date: string;
-    time: string;
-    location?: string;
-  };
-  currentBook?: {
-    title: string;
-    author?: string;
-  };
-  unreadActivity: number;
-  memberCount: number;
-  description?: string;
-}
+import { ClubsProps, Club } from '../types';
 
 const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
   const navigate = useNavigate();
@@ -39,10 +19,19 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
         id: 'bookclubid1',
         name: 'SOM Book Club',
         coverColor: '#00356b',
-        nextMeeting: { date: 'Oct 30, 2025', time: '6:00 PM EDT', location: 'WhatsApp' },
-        currentBook: { title: 'Empire of Pain', author: 'Patrick Radden Keefe' },
-        unreadActivity: 0,
+        nextMeeting: { 
+          timestamp: '2025-10-30T22:00:00Z',
+          timeZone: 'America/New_York',
+          location: 'WhatsApp' 
+        },
+        currentBook: { 
+          title: 'Empire of Pain', 
+          author: 'Patrick Radden Keefe',
+          isbn: '9780385545686',
+          coverUrl: 'https://covers.openlibrary.org/b/isbn/9780385545686-L.jpg'
+        },
         memberCount: 10,
+        description: 'A vibrant community of readers exploring diverse literature and engaging in thoughtful discussions.',
       }
     ]);
   }, []);
@@ -72,7 +61,6 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
   //                 coverColor: clubData.coverColor || '#667eea',
   //                 nextMeeting: clubData.nextMeeting,
   //                 currentBook: clubData.currentBook,
-  //                 unreadActivity: clubData.unreadActivity || 0,
   //                 memberCount: clubData.memberCount || 0,
   //                 description: clubData.description,
   //               });
@@ -157,7 +145,23 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
 
   const formatNextMeeting = (nextMeeting?: Club['nextMeeting']) => {
     if (!nextMeeting) return 'No upcoming meeting';
-    return `${nextMeeting.date} ${nextMeeting.time}`;
+    
+    try {
+      const date = new Date(nextMeeting.timestamp);
+      const formattedDate = date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+      const formattedTime = date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+      return `${formattedDate} ${formattedTime}`;
+    } catch (error) {
+      return 'Invalid meeting date';
+    }
   };
 
   if (loading) {
@@ -229,27 +233,6 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                       position: 'relative',
                     }}
                   >
-                    {/* Unread Activity Badge */}
-                    {club.unreadActivity > 0 && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '12px',
-                          right: '12px',
-                          background: '#ff4757',
-                          color: 'white',
-                          borderRadius: '20px',
-                          padding: '4px 8px',
-                          fontSize: '0.8rem',
-                          fontWeight: 'bold',
-                          minWidth: '20px',
-                          textAlign: 'center',
-                        }}
-                      >
-                        {club.unreadActivity}
-                      </div>
-                    )}
-                    
                     {/* Club Name Overlay */}
                     <div
                       style={{
