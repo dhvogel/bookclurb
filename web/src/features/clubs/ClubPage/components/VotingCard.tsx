@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookSubmission, Vote } from '../../../../types';
+import { BookSubmission, Vote, Club } from '../../../../types';
 
 interface VotingCardProps {
   pollId: string;
@@ -8,6 +8,7 @@ interface VotingCardProps {
   onVote: (vote: Omit<Vote, 'id' | 'submittedAt'>) => void;
   existingVote?: Vote;
   pollClosesAt: string;
+  club?: Club;
 }
 
 const VotingCard: React.FC<VotingCardProps> = ({
@@ -16,14 +17,33 @@ const VotingCard: React.FC<VotingCardProps> = ({
   submissions,
   onVote,
   existingVote,
-  pollClosesAt
+  pollClosesAt,
+  club
 }) => {
+  // Helper function to get member name from userId
+  const getUserName = (userIdToLookup: string): string => {
+    if (!club?.members || !Array.isArray(club.members)) {
+      return 'Unknown Member';
+    }
+    
+    const validMembers = club.members.filter(member => member && member.id);
+    const member = validMembers.find(m => m.id === userIdToLookup);
+    
+    if (!member) {
+      return 'Unknown Member';
+    }
+    
+    return member.name || 'Unknown Member';
+  };
   const [rankings, setRankings] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState('');
 
+  // Load rankings from existing vote whenever it changes
   useEffect(() => {
     if (existingVote) {
       setRankings(existingVote.rankings);
+    } else {
+      setRankings([]);
     }
   }, [existingVote]);
 
@@ -140,43 +160,11 @@ const VotingCard: React.FC<VotingCardProps> = ({
             The voting period has ended. Check the results below!
           </p>
         </div>
-      ) : hasVoted ? (
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>✅</div>
-          <h5 style={{ color: '#333', marginBottom: '0.5rem' }}>Vote Submitted</h5>
-          <p style={{ color: '#666', margin: 0 }}>
-            Thank you for voting! You can change your vote until the poll closes.
-          </p>
-          <button
-            onClick={() => setRankings([])}
-            style={{
-              background: 'transparent',
-              color: '#007bff',
-              border: '2px solid #007bff',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              fontSize: '0.9rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              marginTop: '1rem',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#007bff';
-              e.currentTarget.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = '#007bff';
-            }}
-          >
-            Change Vote
-          </button>
-        </div>
       ) : (
         <div>
           <p style={{ color: '#666', marginBottom: '1.5rem' }}>
             Rank the books in order of preference (1 = most preferred):
+            {hasVoted && ' You can update your vote at any time until the poll closes.'}
           </p>
 
           <div style={{ marginBottom: '1.5rem' }}>
@@ -249,7 +237,7 @@ const VotingCard: React.FC<VotingCardProps> = ({
                   </div>
 
                   <div style={{ color: '#999', fontSize: '0.8rem' }}>
-                    Submitted by {submission.userId}
+                    Submitted by {getUserName(submission.userId)}
                   </div>
                 </div>
               );
@@ -285,7 +273,7 @@ const VotingCard: React.FC<VotingCardProps> = ({
                 }
               }}
             >
-              Submit Vote
+              {hasVoted ? 'Update Vote' : 'Submit Vote'}
             </button>
           </div>
         </div>

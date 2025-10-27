@@ -164,13 +164,14 @@ export const useBookVoting = ({ db, clubId, userId }: UseBookVotingProps) => {
       const existingVote = votes.find(v => v.userId === userId);
       
       if (existingVote) {
-        // Update existing vote
+        // Update existing vote - use set to replace entire object
         const voteRef = ref(db, `clubs/${clubId}/votes/${existingVote.id}`);
+        // Don't include 'id' in the saved data - Firebase uses it as the key
         const updatedVote: Omit<Vote, 'id'> = {
           ...vote,
           submittedAt: new Date().toISOString()
         };
-        await update(voteRef, updatedVote);
+        await set(voteRef, updatedVote);
         return existingVote.id;
       } else {
         // Create new vote

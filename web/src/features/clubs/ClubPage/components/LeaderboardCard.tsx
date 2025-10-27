@@ -36,12 +36,19 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
 
     const submissionResults: SubmissionResult[] = submissions.map(submission => {
       const submissionVotes = votes.filter(vote => 
-        vote.rankings.includes(submission.id)
+        vote.rankings && vote.rankings.includes(submission.id)
       );
       
       const firstChoiceVotes = votes.filter(vote => 
-        vote.rankings[0] === submission.id
+        vote.rankings && vote.rankings[0] === submission.id
       ).length;
+
+      // Calculate rank distribution (how many votes at each rank)
+      const rankDistribution: { [key: number]: number } = {};
+      submissionVotes.forEach(vote => {
+        const rank = vote.rankings.indexOf(submission.id) + 1;
+        rankDistribution[rank] = (rankDistribution[rank] || 0) + 1;
+      });
 
       const totalRanks = submissionVotes.reduce((sum, vote) => {
         const rank = vote.rankings.indexOf(submission.id) + 1;
@@ -57,15 +64,27 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
         totalVotes: submissionVotes.length,
         firstChoiceVotes,
         averageRank,
-        isEliminated: false
-      };
+        isEliminated: false,
+        rankDistribution // Add this for more detailed display
+      } as SubmissionResult & { rankDistribution: { [key: number]: number } };
     });
 
-    // Sort by first choice votes, then by average rank
+    // Sort by: has votes (voted items first), then first choice votes, then average rank
     return submissionResults.sort((a, b) => {
+      // First, separate books with votes from books without votes
+      const aHasVotes = a.totalVotes > 0;
+      const bHasVotes = b.totalVotes > 0;
+      
+      if (aHasVotes !== bHasVotes) {
+        return aHasVotes ? -1 : 1; // Books with votes come first
+      }
+      
+      // If both have votes or both don't, sort by first choice votes
       if (b.firstChoiceVotes !== a.firstChoiceVotes) {
         return b.firstChoiceVotes - a.firstChoiceVotes;
       }
+      
+      // Then by average rank
       return a.averageRank - b.averageRank;
     });
   };
@@ -199,23 +218,22 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
                   )}
                 </div>
 
-                <div style={{ textAlign: 'right', minWidth: '120px' }}>
+                <div style={{ textAlign: 'right', minWidth: '180px' }}>
                   <div style={{ 
                     fontSize: '1.2rem', 
                     fontWeight: 'bold',
                     color: isWinner ? '#28a745' : '#333',
                     marginBottom: '0.25rem'
                   }}>
-                    {result.firstChoiceVotes} vote{result.firstChoiceVotes !== 1 ? 's' : ''}
+                    {result.firstChoiceVotes} first-choice vote{result.firstChoiceVotes !== 1 ? 's' : ''}
                   </div>
-                  <div style={{ color: '#666', fontSize: '0.9rem' }}>
-                    {percentage.toFixed(1)}%
+                  <div style={{ color: '#666', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
+                    {percentage.toFixed(1)}% of first-choice
                   </div>
-                  {result.totalVotes > result.firstChoiceVotes && (
-                    <div style={{ color: '#999', fontSize: '0.8rem' }}>
-                      {result.totalVotes - result.firstChoiceVotes} other rank{result.totalVotes - result.firstChoiceVotes !== 1 ? 's' : ''}
-                    </div>
-                  )}
+                  <div style={{ color: '#999', fontSize: '0.8rem' }}>
+                    Avg rank: {result.averageRank > 0 ? result.averageRank.toFixed(1) : '-'} 
+                    {result.totalVotes > 0 && ` | ${result.totalVotes} total vote${result.totalVotes !== 1 ? 's' : ''}`}
+                  </div>
                 </div>
               </div>
             );

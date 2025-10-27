@@ -368,13 +368,36 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
 
       {/* Book Voting System */}
       {currentPoll.status === 'submission' && (
-        <BookSubmissionCard
-          pollId={currentPoll.id}
-          userId={userId}
-          onSubmission={handleBookSubmission}
-          existingSubmissions={submissions}
-          maxSubmissions={2}
-        />
+        <>
+          <BookSubmissionCard
+            pollId={currentPoll.id}
+            userId={userId}
+            onSubmission={handleBookSubmission}
+            existingSubmissions={submissions}
+            maxSubmissions={2}
+          />
+
+          {submissions.length > 0 && (
+            <>
+              <VotingCard
+                pollId={currentPoll.id}
+                userId={userId}
+                submissions={submissions}
+                onVote={handleVote}
+                existingVote={userVote}
+                pollClosesAt={currentPoll.closesAt}
+                club={club}
+              />
+              
+              <LeaderboardCard
+                submissions={submissions}
+                votes={votes}
+                pollClosesAt={currentPoll.closesAt}
+                isPollClosed={pollClosed}
+              />
+            </>
+          )}
+        </>
       )}
 
       {currentPoll.status === 'voting' && (
@@ -386,6 +409,7 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
             onVote={handleVote}
             existingVote={userVote}
             pollClosesAt={currentPoll.closesAt}
+            club={club}
           />
           
           <LeaderboardCard
