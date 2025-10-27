@@ -75,6 +75,11 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                     Object.values(clubData.members).some((member: any) => member.id === user.uid);
                   
                   if (isMember) {
+                    // Calculate member count from members object
+                    const membersCount = clubData.members 
+                      ? (Array.isArray(clubData.members) ? clubData.members.length : Object.keys(clubData.members).length)
+                      : 0;
+                    
                     resolve({
                       id: clubId,
                       name: clubData.name || 'Untitled Club',
@@ -82,7 +87,7 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                       coverColor: clubData.coverColor || '#667eea',
                       nextMeeting: clubData.nextMeeting,
                       currentBook: clubData.currentBook,
-                      memberCount: clubData.memberCount || 0,
+                      memberCount: clubData.memberCount || membersCount,
                       description: clubData.description,
                       booksRead: clubData.booksRead,
                       members: clubData.members,
@@ -131,19 +136,26 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
           // Get a few clubs for exploration (limit to 6)
           const publicClubs = Object.entries(clubsData)
             .slice(0, 6)
-            .map(([clubId, clubData]: [string, any]) => ({
-              id: clubId,
-              name: clubData.name || 'Untitled Club',
-              coverImage: clubData.coverImage,
-              coverColor: clubData.coverColor || '#667eea',
-              nextMeeting: clubData.nextMeeting,
-              currentBook: clubData.currentBook,
-              memberCount: clubData.memberCount || 0,
-              description: clubData.description,
-              booksRead: clubData.booksRead,
-              members: clubData.members,
-              recentActivity: clubData.recentActivity,
-            }));
+            .map(([clubId, clubData]: [string, any]) => {
+              // Calculate member count from members object
+              const membersCount = clubData.members 
+                ? (Array.isArray(clubData.members) ? clubData.members.length : Object.keys(clubData.members).length)
+                : 0;
+              
+              return {
+                id: clubId,
+                name: clubData.name || 'Untitled Club',
+                coverImage: clubData.coverImage,
+                coverColor: clubData.coverColor || '#667eea',
+                nextMeeting: clubData.nextMeeting,
+                currentBook: clubData.currentBook,
+                memberCount: clubData.memberCount || membersCount,
+                description: clubData.description,
+                booksRead: clubData.booksRead,
+                members: clubData.members,
+                recentActivity: clubData.recentActivity,
+              };
+            });
           clearTimeout(timeoutId);
           setClubs(publicClubs);
         } else {
@@ -465,7 +477,6 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                       gap: '0.5rem'
                     }}>
                       <span>👥</span>
-                      {/* TODO: Figure out where this memberCount is coming from and change it to 10*/}
                       <span>{club.memberCount} member{club.memberCount === 1 ? '' : 's'}</span>
                     </div>
                   </div>
