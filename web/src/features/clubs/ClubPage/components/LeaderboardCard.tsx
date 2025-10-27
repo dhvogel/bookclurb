@@ -115,7 +115,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
     <div style={{
       background: 'white',
       borderRadius: '12px',
-      padding: '1.5rem',
+      padding: '1rem',
       boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
       marginBottom: '1rem'
     }}>
@@ -148,13 +148,14 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '1rem',
-                  padding: '1rem',
+                  gap: '0.75rem',
+                  padding: '0.75rem',
                   border: isWinner ? '3px solid #28a745' : '2px solid #e1e5e9',
                   borderRadius: '8px',
                   marginBottom: '0.75rem',
                   background: isWinner ? '#f8fff9' : '#f8f9fa',
-                  position: 'relative'
+                  position: 'relative',
+                  flexWrap: 'wrap'
                 }}
               >
                 {isWinner && (
@@ -178,11 +179,12 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
                 )}
 
                 <div style={{
-                  minWidth: '40px',
+                  minWidth: '35px',
                   textAlign: 'center',
-                  fontSize: '1.5rem',
+                  fontSize: '1.25rem',
                   fontWeight: 'bold',
-                  color: isWinner ? '#28a745' : '#666'
+                  color: isWinner ? '#28a745' : '#666',
+                  flexShrink: 0
                 }}>
                   {index + 1}
                 </div>
@@ -192,47 +194,46 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
                     src={result.submission.bookDetails.coverUrl}
                     alt={result.submission.bookDetails.title}
                     style={{
-                      width: '50px',
-                      height: '75px',
+                      width: '45px',
+                      height: '68px',
                       objectFit: 'cover',
-                      borderRadius: '4px'
+                      borderRadius: '4px',
+                      flexShrink: 0
                     }}
                   />
                 )}
 
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: '150px', wordBreak: 'break-word' }}>
                   <div style={{ 
                     fontWeight: 'bold', 
                     marginBottom: '0.25rem',
-                    color: isWinner ? '#28a745' : '#333'
+                    color: isWinner ? '#28a745' : '#333',
+                    fontSize: '0.95rem'
                   }}>
                     {result.submission.bookDetails.title}
                   </div>
-                  <div style={{ color: '#666', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
+                  <div style={{ color: '#666', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
                     by {result.submission.bookDetails.author}
                   </div>
                   {result.submission.comment && (
-                    <div style={{ color: '#555', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                    <div style={{ color: '#555', fontSize: '0.75rem', fontStyle: 'italic' }}>
                       "{result.submission.comment}"
                     </div>
                   )}
                 </div>
 
-                <div style={{ textAlign: 'right', minWidth: '180px' }}>
+                <div style={{ textAlign: 'right', minWidth: '100px', flexShrink: 1 }}>
                   <div style={{ 
-                    fontSize: '1.2rem', 
+                    fontSize: '0.95rem', 
                     fontWeight: 'bold',
                     color: isWinner ? '#28a745' : '#333',
-                    marginBottom: '0.25rem'
+                    marginBottom: '0.25rem',
+                    wordBreak: 'break-word'
                   }}>
-                    {result.firstChoiceVotes} first-choice vote{result.firstChoiceVotes !== 1 ? 's' : ''}
+                    {result.firstChoiceVotes} vote{result.firstChoiceVotes !== 1 ? 's' : ''}
                   </div>
-                  <div style={{ color: '#666', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
-                    {percentage.toFixed(1)}% of first-choice
-                  </div>
-                  <div style={{ color: '#999', fontSize: '0.8rem' }}>
-                    Avg rank: {result.averageRank > 0 ? result.averageRank.toFixed(1) : '-'} 
-                    {result.totalVotes > 0 && ` | ${result.totalVotes} total vote${result.totalVotes !== 1 ? 's' : ''}`}
+                  <div style={{ color: '#999', fontSize: '0.7rem' }}>
+                    Avg: {result.averageRank > 0 ? result.averageRank.toFixed(1) : '-'}
                   </div>
                 </div>
               </div>
