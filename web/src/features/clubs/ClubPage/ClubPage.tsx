@@ -81,7 +81,7 @@ const ClubPage: React.FC<ClubPageProps> = ({ user, db }) => {
       <div style={{ marginTop: '80px', minHeight: 'calc(100vh - 80px)', background: '#f8f9fa' }}>
         <ClubHeader club={club} />
         
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }} className="club-page-container">
           <ClubTabs activeTab={activeTab} setActiveTab={setActiveTab} />
           
           <AnimatePresence mode="wait">
@@ -96,6 +96,18 @@ const ClubPage: React.FC<ClubPageProps> = ({ user, db }) => {
             </motion.div>
           </AnimatePresence>
         </div>
+        <style>{`
+          @media (max-width: 768px) {
+            .club-page-container {
+              padding: 1rem !important;
+            }
+          }
+          @media (max-width: 480px) {
+            .club-page-container {
+              padding: 0.75rem !important;
+            }
+          }
+        `}</style>
       </div>
     </>
   );
