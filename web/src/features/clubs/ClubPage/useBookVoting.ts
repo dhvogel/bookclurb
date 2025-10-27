@@ -23,7 +23,6 @@ export const useBookVoting = ({ db, clubId, userId }: UseBookVotingProps) => {
 
     const unsubscribe = onValue(pollQuery, (snapshot) => {
       const polls = snapshot.val();
-      console.log('Polls data:', polls);
       
       if (polls) {
         const pollEntries = Object.entries(polls) as [string, BookVotingPoll][];
@@ -32,14 +31,11 @@ export const useBookVoting = ({ db, clubId, userId }: UseBookVotingProps) => {
         );
         
         if (activePoll) {
-          console.log('Found active poll:', activePoll);
           setCurrentPoll({ ...activePoll[1], id: activePoll[0] });
         } else {
-          console.log('No active poll found');
           setCurrentPoll(null);
         }
       } else {
-        console.log('No polls data');
         setCurrentPoll(null);
       }
       setLoading(false);

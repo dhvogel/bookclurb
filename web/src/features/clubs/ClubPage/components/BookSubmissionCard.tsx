@@ -72,20 +72,38 @@ const BookSubmissionCard: React.FC<BookSubmissionCardProps> = ({
 
     const trimmedComment = comment.trim();
     
+    // Build bookDetails object, only including defined properties
+    const bookDetails: BookSubmission['bookDetails'] = {
+      title: selectedBook.volumeInfo.title,
+      author: selectedBook.volumeInfo.authors?.join(', ') || 'Unknown Author'
+    };
+    
+    // Add optional fields only if they're defined
+    if (isbn) {
+      bookDetails.isbn = isbn;
+    }
+    if (selectedBook.volumeInfo.imageLinks?.thumbnail) {
+      bookDetails.coverUrl = selectedBook.volumeInfo.imageLinks.thumbnail.replace('http:', 'https:');
+    }
+    if (selectedBook.volumeInfo.description) {
+      bookDetails.description = selectedBook.volumeInfo.description;
+    }
+    if (selectedBook.volumeInfo.publishedDate) {
+      bookDetails.publishedDate = selectedBook.volumeInfo.publishedDate;
+    }
+    
+    // Build submission object
     const submission: Omit<BookSubmission, 'id' | 'submittedAt'> = {
       pollId,
       userId,
       bookId: selectedBook.id,
-      ...(trimmedComment && { comment: trimmedComment }),
-      bookDetails: {
-        title: selectedBook.volumeInfo.title,
-        author: selectedBook.volumeInfo.authors?.join(', ') || 'Unknown Author',
-        isbn,
-        coverUrl: selectedBook.volumeInfo.imageLinks?.thumbnail?.replace('http:', 'https:'),
-        description: selectedBook.volumeInfo.description,
-        publishedDate: selectedBook.volumeInfo.publishedDate
-      }
+      bookDetails
     };
+    
+    // Only include comment if it's not empty
+    if (trimmedComment) {
+      submission.comment = trimmedComment;
+    }
 
     onSubmission(submission);
     setSelectedBook(null);
