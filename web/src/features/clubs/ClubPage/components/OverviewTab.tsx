@@ -1,7 +1,5 @@
 import React from 'react';
 import { Club } from '../../../../types';
-import ClubStats from './Sidebar/ClubStats';
-import QuickActions from './Sidebar/QuickActions';
 
 interface OverviewTabProps {
   club: Club;
@@ -23,9 +21,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club }) => {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-      {/* Main Content */}
-      <div>
+    <div>
         {/* Current Book */}
         {club.currentBook && (
           <div style={{
@@ -152,7 +148,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club }) => {
                   boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                   zIndex: 2
                 }}>
-                  Ch. 20
+                  Chapter 20
                 </div>
                 
                 {/* Total chapters number (24) at end of bar */}
@@ -260,13 +256,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club }) => {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Sidebar */}
-      <div>
-        <ClubStats club={club} />
-        <QuickActions />
-      </div>
     </div>
   );
 };
