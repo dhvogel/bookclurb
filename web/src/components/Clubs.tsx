@@ -5,6 +5,7 @@ import HeaderBar from './HeaderBar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ClubsProps, Club } from '../types';
 import { extractClubBooksRead } from '../utils/bookUtils';
+import CreateClubModal from './CreateClubModal';
 
 const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
   const [loading, setLoading] = useState(true);
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
 
   // Load clubs based on user authentication status
@@ -315,20 +317,48 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
       <div style={{ marginTop: '80px', minHeight: 'calc(100vh - 80px)', background: '#f8f9fa' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
           <div style={{ marginBottom: '2rem' }}>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#333', marginBottom: '0.5rem' }}>
-              {user ? 'My Clubs' : 'Explore Clubs'}
-            </h1>
-            <p style={{ color: '#666', fontSize: '1.1rem' }}>
-              {user ? (
-                clubs.length === 0 
-                  ? "You're not part of any clubs yet. Join a club to get started!"
-                  : `You're part of ${clubs.length} club${clubs.length === 1 ? '' : 's'}`
-              ) : (
-                clubs.length === 0 
-                  ? "Discover amazing book clubs and join the reading community!"
-                  : `Explore ${clubs.length} book club${clubs.length === 1 ? '' : 's'} and find your next read`
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+              <div>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#333', marginBottom: '0.5rem' }}>
+                  {user ? 'My Clubs' : 'Explore Clubs'}
+                </h1>
+                <p style={{ color: '#666', fontSize: '1.1rem' }}>
+                  {user ? (
+                    clubs.length === 0 
+                      ? "You're not part of any clubs yet. Join a club to get started!"
+                      : `You're part of ${clubs.length} club${clubs.length === 1 ? '' : 's'}`
+                  ) : (
+                    clubs.length === 0 
+                      ? "Discover amazing book clubs and join the reading community!"
+                      : `Explore ${clubs.length} book club${clubs.length === 1 ? '' : 's'} and find your next read`
+                  )}
+                </p>
+              </div>
+              {user && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  + Create Club
+                </button>
               )}
-            </p>
+            </div>
             {!user && (
               <div style={{ marginTop: '1rem' }}>
                 <button
@@ -422,9 +452,9 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                   </div>
 
                   {/* Club Content */}
-                  <div style={{ padding: '1.5rem' }}>
+                  <div style={{ padding: '1.5rem', minHeight: '200px', display: 'flex', flexDirection: 'column' }}>
                     {/* Next Meeting Info */}
-                    <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ marginBottom: '1rem', minHeight: '48px' }}>
                       <div style={{ 
                         fontSize: '0.9rem', 
                         color: '#666', 
@@ -436,37 +466,62 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                       <div style={{ 
                         fontSize: '1rem', 
                         color: '#333',
-                        fontWeight: '600'
+                        fontWeight: '600',
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word'
                       }}>
                         {formatNextMeeting(club.nextMeeting)}
                       </div>
                     </div>
 
                     {/* Current Book */}
-                    {club.currentBook && (
-                      <div style={{ marginBottom: '1rem' }}>
-                        <div style={{ 
-                          fontSize: '0.9rem', 
-                          color: '#666', 
-                          marginBottom: '0.25rem',
-                          fontWeight: '500'
-                        }}>
-                          Current Book
-                        </div>
-                        <div style={{ 
-                          fontSize: '1rem', 
-                          color: '#333',
-                          fontWeight: '600'
-                        }}>
-                          {club.currentBook.title}
-                          {club.currentBook.author && (
-                            <span style={{ color: '#666', fontWeight: 'normal' }}>
-                              {' '}by {club.currentBook.author}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                    <div style={{ marginBottom: '1rem', minHeight: '48px' }}>
+                      {club.currentBook ? (
+                        <>
+                          <div style={{ 
+                            fontSize: '0.9rem', 
+                            color: '#666', 
+                            marginBottom: '0.25rem',
+                            fontWeight: '500'
+                          }}>
+                            Current Book
+                          </div>
+                          <div style={{ 
+                            fontSize: '1rem', 
+                            color: '#333',
+                            fontWeight: '600',
+                            wordWrap: 'break-word',
+                            overflowWrap: 'break-word'
+                          }}>
+                            {club.currentBook.title}
+                            {club.currentBook.author && (
+                              <span style={{ color: '#666', fontWeight: 'normal' }}>
+                                {' '}by {club.currentBook.author}
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ 
+                            fontSize: '0.9rem', 
+                            color: '#666', 
+                            marginBottom: '0.25rem',
+                            fontWeight: '500'
+                          }}>
+                            Current Book
+                          </div>
+                          <div style={{ 
+                            fontSize: '1rem', 
+                            color: '#999',
+                            fontWeight: '400',
+                            fontStyle: 'italic'
+                          }}>
+                            No current book
+                          </div>
+                        </>
+                      )}
+                    </div>
 
                     {/* Member Count */}
                     <div style={{ 
@@ -474,7 +529,8 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                       color: '#666',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.5rem'
+                      gap: '0.5rem',
+                      marginTop: 'auto'
                     }}>
                       <span>👥</span>
                       <span>{club.memberCount} member{club.memberCount === 1 ? '' : 's'}</span>
@@ -623,6 +679,16 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Create Club Modal */}
+      {user && (
+        <CreateClubModal 
+          show={showCreateModal} 
+          onClose={() => setShowCreateModal(false)} 
+          user={user} 
+          db={db} 
+        />
+      )}
     </>
   );
 };
