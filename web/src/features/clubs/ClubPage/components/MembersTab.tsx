@@ -1,14 +1,11 @@
 import React from 'react';
 import { Club } from '../../../../types';
-import { getClubReadingStats } from '../../../../utils/bookUtils';
 
 interface MembersTabProps {
   club: Club;
 }
 
 const MembersTab: React.FC<MembersTabProps> = ({ club }) => {
-  const clubStats = getClubReadingStats(club);
-  
   const getReadingStatus = (book: any) => {
     if (book.halfCredit) {
       return 'half';
@@ -40,51 +37,6 @@ const MembersTab: React.FC<MembersTabProps> = ({ club }) => {
         Club Members ({club.members?.length || 0})
       </h3>
       
-      {/* Club Reading Statistics */}
-      <div style={{
-        background: '#f8f9fa',
-        borderRadius: '8px',
-        padding: '1.5rem',
-        marginBottom: '2rem',
-        border: '1px solid #e9ecef'
-      }}>
-        <h4 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '1rem', color: '#333' }}>
-          📚 Club Reading Statistics
-        </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#667eea' }}>
-              {clubStats.totalBooks}
-            </div>
-            <div style={{ fontSize: '0.9rem', color: '#666' }}>
-              Books Read
-            </div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#10b981' }}>
-              {clubStats.avgBooksPerMember}
-            </div>
-            <div style={{ fontSize: '0.9rem', color: '#666' }}>
-              Avg per Member
-            </div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f59e0b' }}>
-              {clubStats.mostPopularBookReaders}
-            </div>
-            <div style={{ fontSize: '0.9rem', color: '#666' }}>
-              Most Popular Book Participation
-            </div>
-          </div>
-        </div>
-        {clubStats.mostPopularBook !== 'None' && (
-          <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.9rem', color: '#666' }}>
-              Most popular book: <strong>{clubStats.mostPopularBook}</strong>
-            </div>
-          </div>
-        )}
-      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
         {club.members?.map((member) => (
           <div key={member.id} style={{

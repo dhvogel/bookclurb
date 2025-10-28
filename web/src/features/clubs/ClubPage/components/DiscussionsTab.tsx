@@ -20,6 +20,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
   const [saved, setSaved] = React.useState<boolean>(false);
   const [expandedMeeting, setExpandedMeeting] = React.useState<string | null>(null);
   const [savedReflections, setSavedReflections] = React.useState<Set<string>>(new Set());
+  const [collapsedMeetings, setCollapsedMeetings] = React.useState<Set<string>>(new Set());
 
   // Load user reflections from club.meetings structure
   React.useEffect(() => {
@@ -154,7 +155,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'upcoming': return '📅';
-      case 'current': return '🔥';
+      case 'current': return '⚡';
       case 'past': return '✅';
       default: return '📅';
     }
@@ -227,36 +228,6 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
             </p>
           </div>
         </div>
-        
-        {/* Quick Stats */}
-        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-          <div style={{ 
-            background: '#f8f9fa', 
-            padding: '0.75rem 1rem', 
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <span style={{ fontSize: '1.2rem' }}>📚</span>
-            <span style={{ fontSize: '0.9rem', color: '#666' }}>
-              {meetings.length} meetings scheduled
-            </span>
-          </div>
-          <div style={{ 
-            background: '#f8f9fa', 
-            padding: '0.75rem 1rem', 
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <span style={{ fontSize: '1.2rem' }}>✍️</span>
-            <span style={{ fontSize: '0.9rem', color: '#666' }}>
-              {Object.keys(userReflections).length} reflections written
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Meetings Grid */}
@@ -264,7 +235,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
         {meetings.map((meeting) => {
           const hasReflection = userReflections[meeting.id]?.reflection;
           const isSaved = savedReflections.has(meeting.id);
-          const isExpanded = expandedMeeting === meeting.id;
+          const isExpanded = expandedMeeting === meeting.id || meeting.status === 'upcoming';
           
           return (
             <div
