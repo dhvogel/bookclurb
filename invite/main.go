@@ -225,9 +225,15 @@ func sendClubInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate signup link
-	signupLink := fmt.Sprintf("%s/signup?invite=%s&email=%s",
-		baseURL, req.ClubID, url.QueryEscape(req.Email))
+	// Require inviteId to generate the signup link
+	if req.InviteID == "" {
+		http.Error(w, "InviteID is required", http.StatusBadRequest)
+		return
+	}
+
+	// Generate signup link with unique invite ID
+	signupLink := fmt.Sprintf("%s/signup?inviteId=%s&clubId=%s&email=%s",
+		baseURL, req.InviteID, req.ClubID, url.QueryEscape(req.Email))
 
 	// Create email
 	if mailer == nil {
@@ -259,24 +265,8 @@ func sendClubInvite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update invite status to 'sent' (invite was already created by frontend)
-	if req.InviteID != "" {
-		updateInviteStatus(ctx, req.ClubID, req.InviteID, "sent", "")
-		log.Printf("Updated invite %s status to sent", req.InviteID)
-	} else {
-		// Fallback: create invite record if frontend didn't provide inviteId
-		inviteRef := firebaseDB.NewRef(fmt.Sprintf("club_invites/%s", req.ClubID))
-		inviteData := map[string]interface{}{
-			"email":     req.Email,
-			"invitedBy": userID,
-			"invitedAt": time.Now().Unix(),
-			"status":    "sent",
-		}
-		if newRef, err := inviteRef.Push(ctx, inviteData); err != nil {
-			log.Printf("Warning: Failed to store invite record: %v", err)
-		} else {
-			_ = newRef // Reference created successfully
-		}
-	}
+	updateInviteStatus(ctx, req.ClubID, req.InviteID, "sent", "")
+	log.Printf("Updated invite %s status to sent", req.InviteID)
 
 	// Return success response
 	response := InviteResponse{
@@ -389,6 +379,101 @@ func updateInviteStatus(ctx context.Context, clubID, inviteID, status, errorMsg 
 	}
 }
 
+// Invite represents an invite record from Firebase
+type Invite struct {
+	Email       string `json:"email"`
+	ClubID      string `json:"clubId"`
+	ClubName    string `json:"clubName"`
+	InvitedBy   string `json:"invitedBy"`
+	InviterName string `json:"inviterName"`
+	CreatedAt   int64  `json:"createdAt"`
+	Status      string `json:"status"`
+	SentAt      int64  `json:"sentAt,omitempty"`
+	UpdatedAt   int64  `json:"updatedAt,omitempty"`
+	Error       string `json:"error,omitempty"`
+}
+
+// ValidateInviteRequest represents the request to validate an invite
+type ValidateInviteRequest struct {
+	InviteID string `json:"inviteId"`
+	ClubID   string `json:"clubId"`
+}
+
+// ValidateInviteResponse represents the response from validation
+type ValidateInviteResponse struct {
+	Valid     bool   `json:"valid"`
+	Message   string `json:"message,omitempty"`
+	ClubID    string `json:"clubId,omitempty"`
+	ClubName  string `json:"clubName,omitempty"`
+	InviterName string `json:"inviterName,omitempty"`
+	Email     string `json:"email,omitempty"`
+}
+
+// validateInvite handles the HTTP request to validate an invite ID
+func validateInvite(w http.ResponseWriter, r *http.Request) {
+	// Only allow POST requests
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Parse the request body
+	var req ValidateInviteRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+
+	// Validate input
+	if req.InviteID == "" || req.ClubID == "" {
+		http.Error(w, "Missing required fields: inviteId or clubId", http.StatusBadRequest)
+		return
+	}
+
+	// Look up the invite in Firebase
+	inviteRef := firebaseDB.NewRef(fmt.Sprintf("club_invites/%s/%s", req.ClubID, req.InviteID))
+	var invite Invite
+	if err := inviteRef.Get(ctx, &invite); err != nil {
+		log.Printf("Invite not found: %v", err)
+		response := ValidateInviteResponse{
+			Valid:   false,
+			Message: "Invite not found",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// Check if invite is active (status must be "sent")
+	if invite.Status != "sent" {
+		response := ValidateInviteResponse{
+			Valid:   false,
+			Message: fmt.Sprintf("Invite is not active. Status: %s", invite.Status),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// Invite is valid and active
+	response := ValidateInviteResponse{
+		Valid:       true,
+		Message:     "Invite is valid and active",
+		ClubID:      invite.ClubID,
+		ClubName:    invite.ClubName,
+		InviterName: invite.InviterName,
+		Email:       invite.Email,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
 func main() {
 	// Use PORT environment variable, or default to 8080
 	port := "8080"
@@ -398,6 +483,7 @@ func main() {
 
 	// Setup HTTP routes with CORS protection
 	http.HandleFunc("/SendClubInvite", corsHandler(sendClubInvite))
+	http.HandleFunc("/ValidateInvite", corsHandler(validateInvite))
 	
 	// Health check endpoint for Cloud Run
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
