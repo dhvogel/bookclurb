@@ -334,7 +334,8 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
                         fontFamily: 'inherit',
                         resize: 'vertical',
                         transition: 'border-color 0.2s ease',
-                        outline: 'none'
+                        outline: 'none',
+                        whiteSpace: 'pre-wrap'
                       }}
                       onFocus={(e) => e.currentTarget.style.borderColor = '#667eea'}
                       onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
