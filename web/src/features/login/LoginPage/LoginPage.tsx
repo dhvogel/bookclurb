@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import HeaderBar from "./HeaderBar";
+import HeaderBar from "../../../components/HeaderBar";
 import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, Auth, signOut } from "firebase/auth";
 import { Database, ref, get } from "firebase/database";
 import { useNavigate } from "react-router-dom";
-import { LoginProps } from "../types";
+import { LoginProps } from "../../../types";
 
-const Login: React.FC<LoginProps> = ({ setUser, user, auth, db }) => {
+const LoginPage: React.FC<LoginProps> = ({ setUser, user, auth, db }) => {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -230,4 +230,5 @@ const Login: React.FC<LoginProps> = ({ setUser, user, auth, db }) => {
   );
 };
 
-export default Login;
+export default LoginPage;
+
