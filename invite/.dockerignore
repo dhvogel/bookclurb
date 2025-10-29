@@ -1,0 +1,62 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+server
+sendClubInvite
+
+# Test files
+*_test.go
+testdata/
+
+# Documentation
+*.md
+README.md
+DEPLOY.md
+frontend-integration.md
+deploy-cloudrun.sh
+deploy.sh
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.local
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Firebase service account keys (should not be in image)
+firebase_sa_key.json
+*-sa-key.json
+*.json
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose.yml
+

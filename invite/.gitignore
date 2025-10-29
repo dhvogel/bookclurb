@@ -1,0 +1,65 @@
+# Compiled binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+server
+sendClubInvite
+
+# Go workspace
+go.work
+
+# Environment and configuration files with secrets
+.env
+.env.local
+.env.*.local
+.deploy-config
+.deploy-config.local
+*.env
+*.key
+*.pem
+*.p12
+*.json.key
+*credentials*.json
+*secret*.json
+*sa-key*.json
+*-sa-key.json
+
+# Service account keys
+firebase_sa_key.json
+gcp-service-account.json
+google-credentials.json
+
+# Test files that might contain tokens
+test-token.txt
+*.token
+test-*.json.local
+
+# IDE and editor files
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Example files with secrets
+docker-build-example.md
+*-example.md
+iam-policy.yaml
