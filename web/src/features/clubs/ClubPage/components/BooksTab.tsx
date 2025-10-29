@@ -92,6 +92,60 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
     }
   };
 
+  // Function to make On Deck book the current book and move current book to history
+  const handleMakeCurrentBook = async () => {
+    if (!isAdmin || !club.onDeckBook) return;
+
+    setSettingOnDeck('makeCurrent');
+    try {
+      const clubRef = ref(db, `clubs/${club.id}`);
+      const updates: any = {};
+
+      // Get all member IDs for readBy array
+      const memberIds = club.members?.map(m => m.id).filter(Boolean) || [];
+
+      // If there's a current book, move it to booksRead
+      if (club.currentBook) {
+        const existingBooksRead = club.booksRead || [];
+        const newBookEntry = {
+          title: club.currentBook.title,
+          author: club.currentBook.author || '',
+          isbn: club.currentBook.isbn || '',
+          coverUrl: club.currentBook.coverUrl || '',
+          readBy: memberIds,
+          completedAt: new Date().toISOString().split('T')[0] // Today's date in YYYY-MM-DD format
+        };
+
+        // Check if book already exists in booksRead (to avoid duplicates)
+        const bookExists = existingBooksRead.some(
+          (book: any) => book.title === club.currentBook?.title
+        );
+
+        if (!bookExists) {
+          updates.booksRead = [...existingBooksRead, newBookEntry];
+        }
+      }
+
+      // Make onDeckBook the currentBook
+      updates.currentBook = {
+        title: club.onDeckBook.title,
+        author: club.onDeckBook.author || '',
+        isbn: club.onDeckBook.isbn || '',
+        coverUrl: club.onDeckBook.coverUrl || ''
+      };
+
+      // Clear onDeckBook
+      updates.onDeckBook = null;
+
+      await update(clubRef, updates);
+    } catch (error) {
+      console.error('Failed to make On Deck book current:', error);
+      alert('Failed to make On Deck book current. Please try again.');
+    } finally {
+      setSettingOnDeck(null);
+    }
+  };
+
   const handleBookSubmission = async (submission: Omit<BookSubmission, 'id' | 'submittedAt'>) => {
     try {
       await submitBook(submission);
@@ -162,26 +216,48 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                 </h3>
               </div>
               {isAdmin && (
-                <button
-                  onClick={handleRemoveOnDeck}
-                  disabled={settingOnDeck === 'remove'}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    fontSize: '0.85rem',
-                    fontWeight: '500',
-                    background: settingOnDeck === 'remove'
-                      ? '#ccc'
-                      : '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: settingOnDeck === 'remove' ? 'not-allowed' : 'pointer',
-                    transition: 'opacity 0.2s',
-                    opacity: settingOnDeck === 'remove' ? 0.7 : 1
-                  }}
-                >
-                  {settingOnDeck === 'remove' ? 'Removing...' : 'Remove from On Deck'}
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={handleMakeCurrentBook}
+                    disabled={settingOnDeck === 'makeCurrent'}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.85rem',
+                      fontWeight: '500',
+                      background: settingOnDeck === 'makeCurrent'
+                        ? '#ccc'
+                        : 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: settingOnDeck === 'makeCurrent' ? 'not-allowed' : 'pointer',
+                      transition: 'opacity 0.2s',
+                      opacity: settingOnDeck === 'makeCurrent' ? 0.7 : 1
+                    }}
+                  >
+                    {settingOnDeck === 'makeCurrent' ? 'Updating...' : 'Make Current Book'}
+                  </button>
+                  <button
+                    onClick={handleRemoveOnDeck}
+                    disabled={settingOnDeck === 'remove'}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.85rem',
+                      fontWeight: '500',
+                      background: settingOnDeck === 'remove'
+                        ? '#ccc'
+                        : '#dc3545',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: settingOnDeck === 'remove' ? 'not-allowed' : 'pointer',
+                      transition: 'opacity 0.2s',
+                      opacity: settingOnDeck === 'remove' ? 0.7 : 1
+                    }}
+                  >
+                    {settingOnDeck === 'remove' ? 'Removing...' : 'Remove from On Deck'}
+                  </button>
+                </div>
               )}
             </div>
             <div style={{ display: 'flex', gap: '1.5rem' }}>
@@ -378,26 +454,48 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
               </h3>
             </div>
             {isAdmin && (
-              <button
-                onClick={handleRemoveOnDeck}
-                disabled={settingOnDeck === 'remove'}
-                style={{
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.85rem',
-                  fontWeight: '500',
-                  background: settingOnDeck === 'remove'
-                    ? '#ccc'
-                    : '#dc3545',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: settingOnDeck === 'remove' ? 'not-allowed' : 'pointer',
-                  transition: 'opacity 0.2s',
-                  opacity: settingOnDeck === 'remove' ? 0.7 : 1
-                }}
-              >
-                {settingOnDeck === 'remove' ? 'Removing...' : 'Remove from On Deck'}
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={handleMakeCurrentBook}
+                  disabled={settingOnDeck === 'makeCurrent'}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.85rem',
+                    fontWeight: '500',
+                    background: settingOnDeck === 'makeCurrent'
+                      ? '#ccc'
+                      : 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: settingOnDeck === 'makeCurrent' ? 'not-allowed' : 'pointer',
+                    transition: 'opacity 0.2s',
+                    opacity: settingOnDeck === 'makeCurrent' ? 0.7 : 1
+                  }}
+                >
+                  {settingOnDeck === 'makeCurrent' ? 'Updating...' : 'Make Current Book'}
+                </button>
+                <button
+                  onClick={handleRemoveOnDeck}
+                  disabled={settingOnDeck === 'remove'}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.85rem',
+                    fontWeight: '500',
+                    background: settingOnDeck === 'remove'
+                      ? '#ccc'
+                      : '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: settingOnDeck === 'remove' ? 'not-allowed' : 'pointer',
+                    transition: 'opacity 0.2s',
+                    opacity: settingOnDeck === 'remove' ? 0.7 : 1
+                  }}
+                >
+                  {settingOnDeck === 'remove' ? 'Removing...' : 'Remove from On Deck'}
+                </button>
+              </div>
             )}
           </div>
           <div style={{ display: 'flex', gap: '1.5rem' }}>
