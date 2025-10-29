@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
 import HeaderBar from "./HeaderBar";
 import { getAuth, signOut } from "firebase/auth";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, get, update } from "firebase/database";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { ProfileProps, Club } from "../types";
 
 const Profile: React.FC<ProfileProps> = ({ user, db }) => {
   const navigate = useNavigate();
   const [clubs, setClubs] = useState<Club[]>([]);
   const [clubsLoading, setClubsLoading] = useState(true);
+  const [clubToLeave, setClubToLeave] = useState<{ id: string; name: string } | null>(null);
+  const [leavingClub, setLeavingClub] = useState(false);
 
   // Load user's clubs
   useEffect(() => {
@@ -91,6 +94,80 @@ const Profile: React.FC<ProfileProps> = ({ user, db }) => {
 
   const handleClubClick = (clubId: string) => {
     navigate(`/clubs/${clubId}`);
+  };
+
+  const handleLeaveClubClick = (clubId: string, clubName: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation when clicking leave button
+    setClubToLeave({ id: clubId, name: clubName });
+  };
+
+  const handleLeaveClubConfirm = async () => {
+    if (!clubToLeave || !user || !db) {
+      return;
+    }
+
+    setLeavingClub(true);
+
+    try {
+      const { id: clubId, name: clubName } = clubToLeave;
+      // Remove club ID from user's clubs array
+      const userRef = ref(db, `users/${user.uid}`);
+      const userSnapshot = await get(userRef);
+      const userData = userSnapshot.val() || {};
+      const userClubs = userData.clubs || [];
+      
+      const updatedClubs = userClubs.filter((id: string) => id !== clubId);
+      await update(userRef, { clubs: updatedClubs });
+
+      // Remove user from club's members
+      const clubRef = ref(db, `clubs/${clubId}`);
+      const clubSnapshot = await get(clubRef);
+      const clubData = clubSnapshot.val();
+
+      if (clubData && clubData.members) {
+        let updatedMembers: any[] | { [key: string]: any };
+        let updatedMemberCount: number;
+
+        if (Array.isArray(clubData.members)) {
+          // Members is an array
+          updatedMembers = clubData.members.filter((member: any) => member && member.id !== user.uid);
+          updatedMemberCount = (updatedMembers as any[]).length;
+        } else {
+          // Members is an object (key-value pairs)
+          updatedMembers = {};
+          let count = 0;
+          Object.keys(clubData.members).forEach((key) => {
+            const member = clubData.members[key];
+            if (member && member.id !== user.uid) {
+              (updatedMembers as { [key: string]: any })[key] = member;
+              count++;
+            }
+          });
+          updatedMemberCount = count;
+        }
+
+        // Update club with new members list and member count
+        await update(clubRef, {
+          members: updatedMembers,
+          memberCount: updatedMemberCount,
+        });
+      }
+
+      // Remove club from local state immediately for better UX
+      setClubs((prevClubs) => prevClubs.filter((club) => club.id !== clubId));
+      
+      // Close modal
+      setClubToLeave(null);
+    } catch (error) {
+      console.error("Error leaving club:", error);
+      alert("Failed to leave club. Please try again.");
+    } finally {
+      setLeavingClub(false);
+    }
+  };
+
+  const handleLeaveClubCancel = () => {
+    setClubToLeave(null);
   };
 
   return (
@@ -315,22 +392,49 @@ const Profile: React.FC<ProfileProps> = ({ user, db }) => {
                             alignItems: "center",
                             gap: "0.5rem",
                             fontSize: "0.875rem",
-                            color: "#6c757d"
+                            color: "#6c757d",
+                            marginBottom: "0.75rem"
                           }}>
                             <span>👥 {club.memberCount} members</span>
                           </div>
                           
                           {club.currentBook && (
                             <div style={{ 
-                              marginTop: "0.75rem",
-                              paddingTop: "0.75rem",
-                              borderTop: "1px solid #e9ecef",
+                              marginBottom: "0.75rem",
+                              paddingBottom: "0.75rem",
+                              borderBottom: "1px solid #e9ecef",
                               fontSize: "0.875rem",
                               color: "#495057"
                             }}>
                               <strong>Current Book:</strong> {club.currentBook.title}
                             </div>
                           )}
+                          
+                          <button
+                            onClick={(e) => handleLeaveClubClick(club.id, club.name, e)}
+                            style={{
+                              width: "100%",
+                              backgroundColor: "#fff",
+                              color: "#dc3545",
+                              border: "1px solid #dc3545",
+                              borderRadius: "6px",
+                              padding: "0.5rem",
+                              fontSize: "0.875rem",
+                              fontWeight: "500",
+                              cursor: "pointer",
+                              transition: "all 0.2s ease"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = "#dc3545";
+                              e.currentTarget.style.color = "white";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = "#fff";
+                              e.currentTarget.style.color = "#dc3545";
+                            }}
+                          >
+                            Leave Club
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -395,6 +499,125 @@ const Profile: React.FC<ProfileProps> = ({ user, db }) => {
           )}
         </div>
       </div>
+
+      {/* Leave Club Confirmation Modal */}
+      <AnimatePresence>
+        {clubToLeave && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+            }}
+            onClick={handleLeaveClubCancel}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '2rem',
+                minWidth: '400px',
+                maxWidth: '500px',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ 
+                fontSize: '1.5rem', 
+                fontWeight: 'bold', 
+                marginBottom: '1rem',
+                color: '#333'
+              }}>
+                Leave Club?
+              </div>
+              
+              <p style={{
+                marginBottom: '1.5rem',
+                color: '#666',
+                lineHeight: '1.6'
+              }}>
+                Are you sure you want to leave <strong>"{clubToLeave.name}"</strong>?
+              </p>
+
+              <div style={{ 
+                display: 'flex', 
+                gap: '1rem', 
+                justifyContent: 'flex-end' 
+              }}>
+                <button
+                  onClick={handleLeaveClubCancel}
+                  disabled={leavingClub}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    background: '#f8f9fa',
+                    color: '#495057',
+                    border: '1px solid #dee2e6',
+                    borderRadius: '8px',
+                    cursor: leavingClub ? 'not-allowed' : 'pointer',
+                    transition: 'background-color 0.2s ease',
+                    opacity: leavingClub ? 0.6 : 1,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!leavingClub) {
+                      e.currentTarget.style.backgroundColor = '#e9ecef';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!leavingClub) {
+                      e.currentTarget.style.backgroundColor = '#f8f9fa';
+                    }
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLeaveClubConfirm}
+                  disabled={leavingClub}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    background: leavingClub ? '#ccc' : '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: leavingClub ? 'not-allowed' : 'pointer',
+                    transition: 'background-color 0.2s ease',
+                    opacity: leavingClub ? 0.6 : 1,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!leavingClub) {
+                      e.currentTarget.style.backgroundColor = '#c82333';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!leavingClub) {
+                      e.currentTarget.style.backgroundColor = '#dc3545';
+                    }
+                  }}
+                >
+                  {leavingClub ? 'Leaving...' : 'Leave Club'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
