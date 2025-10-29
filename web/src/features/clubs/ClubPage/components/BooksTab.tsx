@@ -1,5 +1,5 @@
-import React from 'react';
-import { Database } from 'firebase/database';
+import React, { useState } from 'react';
+import { Database, ref, update } from 'firebase/database';
 import { BookSubmission, Vote, Club } from '../../../../types';
 import BookSubmissionCard from './BookSubmissionCard';
 import VotingCard from './VotingCard';
@@ -27,6 +27,13 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
     getUserSubmissions
   } = useBookVoting({ db, clubId: club.id, userId });
 
+  const [settingOnDeck, setSettingOnDeck] = useState<string | null>(null);
+
+  // Check if current user is an admin
+  const isAdmin = club.members?.some(
+    member => member.id === userId && member.role === 'admin'
+  );
+
   // Helper function to map user IDs to member names
   const getUserName = (userId: string): string => {
     if (!club.members || !Array.isArray(club.members)) {
@@ -42,6 +49,47 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
     }
     
     return member.name || 'Unknown Member';
+  };
+
+  // Function to set a book as "On Deck"
+  const handleSetOnDeck = async (book: { title: string; author?: string; isbn?: string; coverUrl?: string }) => {
+    if (!isAdmin) return;
+
+    setSettingOnDeck(book.title);
+    try {
+      const clubRef = ref(db, `clubs/${club.id}`);
+      await update(clubRef, {
+        onDeckBook: {
+          title: book.title,
+          author: book.author || '',
+          isbn: book.isbn || '',
+          coverUrl: book.coverUrl || ''
+        }
+      });
+    } catch (error) {
+      console.error('Failed to set On Deck book:', error);
+      alert('Failed to set On Deck book. Please try again.');
+    } finally {
+      setSettingOnDeck(null);
+    }
+  };
+
+  // Function to remove "On Deck" designation
+  const handleRemoveOnDeck = async () => {
+    if (!isAdmin) return;
+
+    setSettingOnDeck('remove');
+    try {
+      const clubRef = ref(db, `clubs/${club.id}`);
+      await update(clubRef, {
+        onDeckBook: null
+      });
+    } catch (error) {
+      console.error('Failed to remove On Deck book:', error);
+      alert('Failed to remove On Deck book. Please try again.');
+    } finally {
+      setSettingOnDeck(null);
+    }
   };
 
   const handleBookSubmission = async (submission: Omit<BookSubmission, 'id' | 'submittedAt'>) => {
@@ -96,6 +144,82 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
   if (!currentPoll) {
     return (
       <div>
+        {/* On Deck Book Card */}
+        {club.onDeckBook && (
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
+            border: '2px solid #667eea',
+            borderRadius: '12px',
+            padding: '2rem',
+            marginBottom: '1rem',
+            boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.5rem' }}>📌</span>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#333', margin: 0 }}>
+                  On Deck
+                </h3>
+              </div>
+              {isAdmin && (
+                <button
+                  onClick={handleRemoveOnDeck}
+                  disabled={settingOnDeck === 'remove'}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.85rem',
+                    fontWeight: '500',
+                    background: settingOnDeck === 'remove'
+                      ? '#ccc'
+                      : '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: settingOnDeck === 'remove' ? 'not-allowed' : 'pointer',
+                    transition: 'opacity 0.2s',
+                    opacity: settingOnDeck === 'remove' ? 0.7 : 1
+                  }}
+                >
+                  {settingOnDeck === 'remove' ? 'Removing...' : 'Remove from On Deck'}
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '1.5rem' }}>
+              {club.onDeckBook.coverUrl && (
+                <img
+                  src={club.onDeckBook.coverUrl}
+                  alt={club.onDeckBook.title}
+                  style={{
+                    width: '120px',
+                    height: '180px',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                    objectFit: 'cover'
+                  }}
+                />
+              )}
+              <div style={{ flex: 1 }}>
+                <h4 style={{ fontSize: '1.3rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#333' }}>
+                  {club.onDeckBook.title}
+                </h4>
+                {club.onDeckBook.author && (
+                  <p style={{ color: '#666', marginBottom: '1rem', fontSize: '1rem' }}>
+                    by {club.onDeckBook.author}
+                  </p>
+                )}
+                <p style={{ 
+                  color: '#667eea', 
+                  fontSize: '0.9rem', 
+                  fontStyle: 'italic',
+                  margin: 0
+                }}>
+                  Next up for the club!
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Book History Card */}
         <div style={{
           background: 'white',
@@ -236,6 +360,82 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
 
   return (
     <div>
+      {/* On Deck Book Card */}
+      {club.onDeckBook && (
+        <div style={{
+          background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
+          border: '2px solid #667eea',
+          borderRadius: '12px',
+          padding: '2rem',
+          marginBottom: '1rem',
+          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1.5rem' }}>📌</span>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#333', margin: 0 }}>
+                On Deck
+              </h3>
+            </div>
+            {isAdmin && (
+              <button
+                onClick={handleRemoveOnDeck}
+                disabled={settingOnDeck === 'remove'}
+                style={{
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.85rem',
+                  fontWeight: '500',
+                  background: settingOnDeck === 'remove'
+                    ? '#ccc'
+                    : '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: settingOnDeck === 'remove' ? 'not-allowed' : 'pointer',
+                  transition: 'opacity 0.2s',
+                  opacity: settingOnDeck === 'remove' ? 0.7 : 1
+                }}
+              >
+                {settingOnDeck === 'remove' ? 'Removing...' : 'Remove from On Deck'}
+              </button>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '1.5rem' }}>
+            {club.onDeckBook.coverUrl && (
+              <img
+                src={club.onDeckBook.coverUrl}
+                alt={club.onDeckBook.title}
+                style={{
+                  width: '120px',
+                  height: '180px',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                  objectFit: 'cover'
+                }}
+              />
+            )}
+            <div style={{ flex: 1 }}>
+              <h4 style={{ fontSize: '1.3rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#333' }}>
+                {club.onDeckBook.title}
+              </h4>
+              {club.onDeckBook.author && (
+                <p style={{ color: '#666', marginBottom: '1rem', fontSize: '1rem' }}>
+                  by {club.onDeckBook.author}
+                </p>
+              )}
+              <p style={{ 
+                color: '#667eea', 
+                fontSize: '0.9rem', 
+                fontStyle: 'italic',
+                margin: 0
+              }}>
+                Next up for the club!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Book History Card */}
       <div style={{
         background: 'white',
@@ -394,6 +594,9 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                 votes={votes}
                 pollClosesAt={currentPoll.closesAt}
                 isPollClosed={pollClosed}
+                isAdmin={isAdmin}
+                onSetOnDeck={handleSetOnDeck}
+                settingOnDeck={settingOnDeck}
               />
             </>
           )}
@@ -417,6 +620,9 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
             votes={votes}
             pollClosesAt={currentPoll.closesAt}
             isPollClosed={pollClosed}
+            isAdmin={isAdmin}
+            onSetOnDeck={handleSetOnDeck}
+            settingOnDeck={settingOnDeck}
           />
         </>
       )}
@@ -427,6 +633,9 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
           votes={votes}
           pollClosesAt={currentPoll.closesAt}
           isPollClosed={true}
+          isAdmin={isAdmin}
+          onSetOnDeck={handleSetOnDeck}
+          settingOnDeck={settingOnDeck}
         />
       )}
     </div>

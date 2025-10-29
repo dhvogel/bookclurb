@@ -68,6 +68,12 @@ export interface Club {
     isbn?: string;
     coverUrl?: string;
   };
+  onDeckBook?: {
+    title: string;
+    author?: string;
+    isbn?: string;
+    coverUrl?: string;
+  };
   memberCount: number;
   booksRead?: Array<{
     title: string;

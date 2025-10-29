@@ -6,6 +6,9 @@ interface LeaderboardCardProps {
   votes: Vote[];
   pollClosesAt: string;
   isPollClosed: boolean;
+  isAdmin?: boolean;
+  onSetOnDeck?: (book: { title: string; author?: string; isbn?: string; coverUrl?: string }) => void;
+  settingOnDeck?: string | null;
 }
 
 interface SubmissionResult {
@@ -20,7 +23,10 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
   submissions,
   votes,
   pollClosesAt,
-  isPollClosed
+  isPollClosed,
+  isAdmin = false,
+  onSetOnDeck,
+  settingOnDeck = null
 }) => {
   // Calculate Instant-Runoff Voting results
   const calculateIRVResults = (): SubmissionResult[] => {
@@ -235,6 +241,36 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
                   <div style={{ color: '#999', fontSize: '0.7rem' }}>
                     Avg: {result.averageRank > 0 ? result.averageRank.toFixed(1) : '-'}
                   </div>
+                  {/* Admin Action: Set as On Deck - Only visible to admins on live leaderboard */}
+                  {isAdmin === true && onSetOnDeck && !isPollClosed && (
+                    <button
+                      onClick={() => onSetOnDeck({
+                        title: result.submission.bookDetails.title,
+                        author: result.submission.bookDetails.author,
+                        isbn: result.submission.bookDetails.isbn,
+                        coverUrl: result.submission.bookDetails.coverUrl
+                      })}
+                      disabled={settingOnDeck === result.submission.bookDetails.title}
+                      style={{
+                        marginTop: '0.5rem',
+                        padding: '0.35rem 0.7rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        background: settingOnDeck === result.submission.bookDetails.title
+                          ? '#ccc'
+                          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: settingOnDeck === result.submission.bookDetails.title ? 'not-allowed' : 'pointer',
+                        transition: 'opacity 0.2s',
+                        opacity: settingOnDeck === result.submission.bookDetails.title ? 0.7 : 1,
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {settingOnDeck === result.submission.bookDetails.title ? '...' : '📌 On Deck'}
+                    </button>
+                  )}
                 </div>
               </div>
             );
