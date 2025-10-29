@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import HeaderBar from "./HeaderBar";
-import { getAuth, signInWithEmailAndPassword, Auth } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, Auth, signOut } from "firebase/auth";
+import { Database, ref, get } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import { LoginProps } from "../types";
 
@@ -11,6 +12,47 @@ const Login: React.FC<LoginProps> = ({ setUser, user, auth, db }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const navigate = useNavigate();
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setIsLoading(true);
+    
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const signedInUser = result.user;
+
+      // Check if user exists in database
+      const userRef = ref(db, `users/${signedInUser.uid}`);
+      const userSnapshot = await get(userRef);
+      
+      if (!userSnapshot.exists()) {
+        // User doesn't exist in database - this is a new account
+        // Sign them out and show error
+        await signOut(auth);
+        setError("New accounts can only be created with an invite link. Please use your invite link to sign up.");
+        setIsLoading(false);
+        return;
+      }
+
+      // User exists - allow sign in
+      setUser(signedInUser);
+      navigate("/profile");
+    } catch (err: any) {
+      console.error('Google signin error:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError("Sign-in was cancelled.");
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError("Google Sign-In is not enabled. Please contact support or use email/password to sign in.");
+      } else if (err.code === 'auth/account-exists-with-different-credential') {
+        setError("An account already exists with this email address. Please sign in with your email and password instead.");
+      } else {
+        setError("Failed to sign in with Google. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -43,6 +85,43 @@ const Login: React.FC<LoginProps> = ({ setUser, user, auth, db }) => {
           </div>
           
           <form onSubmit={handleSubmit} className="login-form">
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              className="google-signin-button"
+              disabled={isLoading}
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18">
+                <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+                <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+                <path fill="#FBBC05" d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.712s.102-1.172.282-1.712V4.956H.957C.348 6.174 0 7.55 0 9s.348 2.826.957 4.044l3.007-2.332z"/>
+                <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.956L3.964 7.288C4.672 5.163 6.656 3.58 9 3.58z"/>
+              </svg>
+              {isLoading ? 'Signing in...' : 'Sign in with Google'}
+            </button>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              margin: '1.5rem 0',
+              gap: '0.75rem'
+            }}>
+              <div style={{
+                flex: 1,
+                height: '1px',
+                backgroundColor: '#e5e7eb'
+              }}></div>
+              <span style={{
+                color: '#6b7280',
+                fontSize: '0.875rem'
+              }}>or</span>
+              <div style={{
+                flex: 1,
+                height: '1px',
+                backgroundColor: '#e5e7eb'
+              }}></div>
+            </div>
+
             <div className="form-group">
               <label htmlFor="email" className="form-label">Email Address</label>
               <div className="input-wrapper">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import HeaderBar from "./HeaderBar";
-import { User, getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { User, getAuth, createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { Database, ref, get, update } from "firebase/database";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -97,6 +97,124 @@ const Signup: React.FC<SignupProps> = ({ user, db }) => {
     validateInvite();
   }, [inviteId, clubId, inviteEmail]);
 
+  const handleUserCreated = async (newUser: User, displayNameValue?: string) => {
+    if (!inviteValid || !inviteData?.clubId || !inviteId) {
+      setError("Invalid invite. Cannot proceed with signup.");
+      return;
+    }
+
+    // Update display name if provided (and not already set from Google)
+    if (displayNameValue && displayNameValue.trim() && !newUser.displayName) {
+      await updateProfile(newUser, {
+        displayName: displayNameValue.trim()
+      });
+    }
+
+    // Add user to club
+    const clubRef = ref(db, `clubs/${inviteData.clubId}`);
+    const clubSnapshot = await get(clubRef);
+    const clubData = clubSnapshot.val() || {};
+
+    const members = clubData.members || [];
+    const userMember = {
+      id: newUser.uid,
+      name: displayNameValue?.trim() || newUser.displayName || newUser.email || 'New Member',
+      img: newUser.photoURL || '',
+      role: 'member'
+    };
+
+    // Check if user is already a member (shouldn't happen, but safety check)
+    if (!members.some((m: any) => m.id === newUser.uid)) {
+      members.push(userMember);
+      await update(clubRef, {
+        members: members,
+        memberCount: members.length
+      });
+    }
+
+    // Add club to user's clubs array
+    const userRef = ref(db, `users/${newUser.uid}`);
+    const userSnapshot = await get(userRef);
+    const userData = userSnapshot.val() || {};
+    const userClubs = userData.clubs || [];
+
+    if (!userClubs.includes(inviteData.clubId)) {
+      userClubs.push(inviteData.clubId);
+    }
+
+    // Set user profile data
+    const finalDisplayName = displayNameValue?.trim() || newUser.displayName || '';
+    const nameParts = finalDisplayName.split(' ');
+    const updates: any = {
+      clubs: userClubs,
+      first_name: nameParts[0] || newUser.email?.split('@')[0] || 'User',
+    };
+
+    if (nameParts.length > 1) {
+      updates.last_name = nameParts.slice(1).join(' ');
+    }
+
+    await update(userRef, updates);
+
+    // Mark invite as accepted
+    const inviteRef = ref(db, `club_invites/${inviteData.clubId}/${inviteId}`);
+    await update(inviteRef, {
+      status: 'accepted',
+      acceptedAt: Date.now(),
+      acceptedBy: newUser.uid
+    });
+
+    // Navigate to the club page
+    navigate(`/clubs/${inviteData.clubId}`);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setIsLoading(true);
+
+    if (!inviteValid || !inviteData?.clubId || !inviteId) {
+      setError("Invalid invite. Cannot proceed with signup.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Check if email matches invite (if invite has an email restriction)
+    if (inviteData.email && email && email.trim()) {
+      if (inviteData.email.toLowerCase() !== email.trim().toLowerCase()) {
+        setError("The email in the invite link does not match. Please use the email address from your invite.");
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const newUser = result.user;
+
+      // If invite has email restriction, verify it matches
+      if (inviteData.email && newUser.email?.toLowerCase() !== inviteData.email.toLowerCase()) {
+        setError("The email address from your Google account does not match the invite email.");
+        setIsLoading(false);
+        return;
+      }
+
+      await handleUserCreated(newUser);
+    } catch (err: any) {
+      console.error('Google signup error:', err);
+      if (err.code === 'auth/account-exists-with-different-credential') {
+        setError("An account with this email already exists. Please sign in instead.");
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        setError("Sign-in was cancelled.");
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError("Google Sign-In is not enabled. Please use email/password to sign up.");
+      } else {
+        setError(err.message || "Failed to sign in with Google. Please try again.");
+      }
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -118,68 +236,7 @@ const Signup: React.FC<SignupProps> = ({ user, db }) => {
 
       const newUser = userCredential.user;
 
-      // Update display name if provided
-      if (displayName.trim()) {
-        await updateProfile(newUser, {
-          displayName: displayName.trim()
-        });
-      }
-
-      // Add user to club
-      const clubRef = ref(db, `clubs/${inviteData.clubId}`);
-      const clubSnapshot = await get(clubRef);
-      const clubData = clubSnapshot.val() || {};
-
-      const members = clubData.members || [];
-      const userMember = {
-        id: newUser.uid,
-        name: displayName.trim() || newUser.displayName || newUser.email || 'New Member',
-        img: newUser.photoURL || '',
-        role: 'member'
-      };
-
-      // Check if user is already a member (shouldn't happen, but safety check)
-      if (!members.some((m: any) => m.id === newUser.uid)) {
-        members.push(userMember);
-        await update(clubRef, {
-          members: members,
-          memberCount: members.length
-        });
-      }
-
-      // Add club to user's clubs array
-      const userRef = ref(db, `users/${newUser.uid}`);
-      const userSnapshot = await get(userRef);
-      const userData = userSnapshot.val() || {};
-      const userClubs = userData.clubs || [];
-
-      if (!userClubs.includes(inviteData.clubId)) {
-        userClubs.push(inviteData.clubId);
-      }
-
-      // Set user profile data
-      const nameParts = (displayName.trim() || newUser.displayName || '').split(' ');
-      const updates: any = {
-        clubs: userClubs,
-        first_name: nameParts[0] || newUser.email?.split('@')[0] || 'User',
-      };
-
-      if (nameParts.length > 1) {
-        updates.last_name = nameParts.slice(1).join(' ');
-      }
-
-      await update(userRef, updates);
-
-      // Mark invite as accepted
-      const inviteRef = ref(db, `club_invites/${inviteData.clubId}/${inviteId}`);
-      await update(inviteRef, {
-        status: 'accepted',
-        acceptedAt: Date.now(),
-        acceptedBy: newUser.uid
-      });
-
-      // Navigate to the club page
-      navigate(`/clubs/${inviteData.clubId}`);
+      await handleUserCreated(newUser, displayName);
     } catch (err: any) {
       console.error('Signup error:', err);
       if (err.code === 'auth/email-already-in-use') {
@@ -367,6 +424,43 @@ const Signup: React.FC<SignupProps> = ({ user, db }) => {
               </div>
               
               <form onSubmit={handleSubmit} className="login-form">
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  className="google-signin-button"
+                  disabled={isLoading}
+                >
+                  <svg width="18" height="18" viewBox="0 0 18 18">
+                    <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+                    <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+                    <path fill="#FBBC05" d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.712s.102-1.172.282-1.712V4.956H.957C.348 6.174 0 7.55 0 9s.348 2.826.957 4.044l3.007-2.332z"/>
+                    <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.956L3.964 7.288C4.672 5.163 6.656 3.58 9 3.58z"/>
+                  </svg>
+                  {isLoading ? 'Signing in...' : 'Sign up with Google'}
+                </button>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  margin: '1.5rem 0',
+                  gap: '0.75rem'
+                }}>
+                  <div style={{
+                    flex: 1,
+                    height: '1px',
+                    backgroundColor: '#e5e7eb'
+                  }}></div>
+                  <span style={{
+                    color: '#6b7280',
+                    fontSize: '0.875rem'
+                  }}>or</span>
+                  <div style={{
+                    flex: 1,
+                    height: '1px',
+                    backgroundColor: '#e5e7eb'
+                  }}></div>
+                </div>
+
                 <div className="form-group">
                   <label htmlFor="displayName" className="form-label">Full Name</label>
                   <div className="input-wrapper">
