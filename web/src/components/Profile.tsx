@@ -12,6 +12,7 @@ const Profile: React.FC<ProfileProps> = ({ user, db }) => {
   const [clubsLoading, setClubsLoading] = useState(true);
   const [clubToLeave, setClubToLeave] = useState<{ id: string; name: string } | null>(null);
   const [leavingClub, setLeavingClub] = useState(false);
+  const [openSettingsMenu, setOpenSettingsMenu] = useState<string | null>(null);
 
   // Load user's clubs
   useEffect(() => {
@@ -169,6 +170,37 @@ const Profile: React.FC<ProfileProps> = ({ user, db }) => {
   const handleLeaveClubCancel = () => {
     setClubToLeave(null);
   };
+
+  const handleSettingsClick = (clubId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation when clicking settings button
+    e.preventDefault(); // Prevent any default behavior
+    setOpenSettingsMenu(openSettingsMenu === clubId ? null : clubId);
+  };
+
+  // Close settings menu when clicking outside
+  useEffect(() => {
+    if (!openSettingsMenu) return;
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      // Don't close if clicking on the settings button or dropdown
+      const target = event.target as HTMLElement;
+      const settingsMenu = target.closest('[data-settings-menu]');
+      if (settingsMenu) {
+        return;
+      }
+      setOpenSettingsMenu(null);
+    };
+    
+    // Add listener after current event cycle completes
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 0);
+    
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [openSettingsMenu]);
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
@@ -337,7 +369,7 @@ const Profile: React.FC<ProfileProps> = ({ user, db }) => {
                           cursor: "pointer",
                           transition: "all 0.2s ease",
                           boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-                          overflow: "hidden"
+                          overflow: openSettingsMenu === club.id ? "visible" : "hidden"
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.transform = "translateY(-2px)";
@@ -410,31 +442,87 @@ const Profile: React.FC<ProfileProps> = ({ user, db }) => {
                             </div>
                           )}
                           
-                          <button
-                            onClick={(e) => handleLeaveClubClick(club.id, club.name, e)}
-                            style={{
-                              width: "100%",
-                              backgroundColor: "#fff",
-                              color: "#dc3545",
-                              border: "1px solid #dc3545",
-                              borderRadius: "6px",
-                              padding: "0.5rem",
-                              fontSize: "0.875rem",
-                              fontWeight: "500",
-                              cursor: "pointer",
-                              transition: "all 0.2s ease"
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = "#dc3545";
-                              e.currentTarget.style.color = "white";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = "#fff";
-                              e.currentTarget.style.color = "#dc3545";
-                            }}
-                          >
-                            Leave Club
-                          </button>
+                          <div style={{ position: "relative" }} data-settings-menu>
+                            <button
+                              onClick={(e) => handleSettingsClick(club.id, e)}
+                              data-settings-menu
+                              style={{
+                                width: "100%",
+                                backgroundColor: "#f8f9fa",
+                                color: "#495057",
+                                border: "1px solid #dee2e6",
+                                borderRadius: "6px",
+                                padding: "0.5rem",
+                                fontSize: "0.875rem",
+                                fontWeight: "500",
+                                cursor: "pointer",
+                                transition: "all 0.2s ease",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "0.5rem"
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = "#e9ecef";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = "#f8f9fa";
+                              }}
+                            >
+                              ⚙️ Settings
+                            </button>
+                            
+                            {openSettingsMenu === club.id && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.2 }}
+                                onClick={(e) => e.stopPropagation()}
+                                data-settings-menu
+                                style={{
+                                  position: "absolute",
+                                  top: "100%",
+                                  left: 0,
+                                  right: 0,
+                                  marginTop: "0.25rem",
+                                  backgroundColor: "white",
+                                  border: "1px solid #dee2e6",
+                                  borderRadius: "6px",
+                                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                                  zIndex: 10000,
+                                  overflow: "visible",
+                                  minHeight: "auto",
+                                  visibility: "visible"
+                                }}
+                              >
+                                <button
+                                  onClick={(e) => handleLeaveClubClick(club.id, club.name, e)}
+                                  style={{
+                                    width: "100%",
+                                    backgroundColor: "#fff",
+                                    color: "#dc3545",
+                                    border: "none",
+                                    borderRadius: "0",
+                                    padding: "0.75rem 1rem",
+                                    fontSize: "0.875rem",
+                                    fontWeight: "500",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s ease",
+                                    textAlign: "left"
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#fff5f5";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#fff";
+                                  }}
+                                >
+                                  🚪 Leave Club
+                                </button>
+                              </motion.div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
