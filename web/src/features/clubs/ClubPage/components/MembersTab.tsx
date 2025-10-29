@@ -1,11 +1,110 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { User, getAuth } from 'firebase/auth';
+import { Database, ref, push, set } from 'firebase/database';
 import { Club } from '../../../../types';
 
 interface MembersTabProps {
   club: Club;
+  user: User | null;
+  db: Database;
 }
 
-const MembersTab: React.FC<MembersTabProps> = ({ club }) => {
+const MembersTab: React.FC<MembersTabProps> = ({ club, user, db }) => {
+  const [email, setEmail] = useState('');
+  const [inviting, setInviting] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Check if current user is an admin
+  const isAdmin = user && club.members?.some(
+    member => member.id === user.uid && member.role === 'admin'
+  );
+
+  const handleInvite = async () => {
+    if (!email.trim()) {
+      setMessage({ type: 'error', text: 'Please enter an email address' });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setMessage({ type: 'error', text: 'Please enter a valid email address' });
+      return;
+    }
+
+    if (!user) {
+      setMessage({ type: 'error', text: 'You must be logged in to send invites' });
+      return;
+    }
+
+    setInviting(true);
+    setMessage(null);
+
+    try {
+      const inviteEmail = email.trim();
+      
+      // Step 1: Write to Firebase that invite was created
+      const inviteRef = ref(db, `club_invites/${club.id}`);
+      const newInviteRef = push(inviteRef);
+      const inviteId = newInviteRef.key;
+      
+      if (!inviteId) {
+        throw new Error('Failed to create invite record');
+      }
+
+      // Write invite creation record
+      const inviteData = {
+        email: inviteEmail,
+        clubId: club.id,
+        clubName: club.name,
+        invitedBy: user.uid,
+        inviterName: user.displayName || user.email || 'A club admin',
+        createdAt: Date.now(),
+        status: 'pending' // Will be updated to 'sent' by Go service
+      };
+
+      await set(newInviteRef, inviteData);
+
+      // Step 2: Call Go service to send email
+      const auth = getAuth();
+      const idToken = await user.getIdToken();
+      
+      // Get the invite service URL (default to localhost for development)
+      const inviteServiceURL = process.env.REACT_APP_INVITE_SERVICE_URL || 'http://localhost:8080';
+      
+      const response = await fetch(`${inviteServiceURL}/SendClubInvite`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          email: inviteEmail,
+          clubId: club.id,
+          clubName: club.name,
+          inviterName: user.displayName || user.email || 'A club admin',
+          inviteId: inviteId // Pass the invite ID so Go service can update it
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ 
+          message: response.statusText 
+        }));
+        throw new Error(errorData.message || 'Failed to send invite email');
+      }
+
+      const result = await response.json();
+      setMessage({ type: 'success', text: `Invite sent to ${inviteEmail}` });
+      setEmail('');
+    } catch (error: any) {
+      console.error('Error sending invite:', error);
+      const errorMessage = error?.message || 'Failed to send invite. Please try again.';
+      setMessage({ type: 'error', text: errorMessage });
+    } finally {
+      setInviting(false);
+    }
+  };
   const getReadingStatus = (book: any) => {
     if (book.halfCredit) {
       return 'half';
@@ -129,6 +228,84 @@ const MembersTab: React.FC<MembersTabProps> = ({ club }) => {
           </div>
         ))}
       </div>
+
+      {/* Admin-only invite card */}
+      {isAdmin && (
+        <div style={{
+          background: '#f8f9fa',
+          borderRadius: '12px',
+          padding: '1.5rem',
+          marginTop: '1.5rem',
+          border: '1px solid #dee2e6',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+        }}>
+          <h4 style={{ 
+            fontSize: '1.2rem', 
+            fontWeight: 'bold', 
+            marginBottom: '1rem', 
+            color: '#333' 
+          }}>
+            Invite New Member
+          </h4>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter email address"
+              disabled={inviting}
+              style={{
+                flex: '1',
+                minWidth: '250px',
+                padding: '0.75rem 1rem',
+                border: '1px solid #dee2e6',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                background: 'white',
+                color: '#333',
+                outline: 'none'
+              }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleInvite();
+                }
+              }}
+            />
+            <button
+              onClick={handleInvite}
+              disabled={inviting}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: '#667eea',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: inviting ? 'not-allowed' : 'pointer',
+                opacity: inviting ? 0.7 : 1,
+                transition: 'opacity 0.2s ease',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {inviting ? 'Sending...' : 'Send Invite'}
+            </button>
+          </div>
+          {message && (
+            <div style={{
+              marginTop: '1rem',
+              padding: '0.75rem',
+              borderRadius: '6px',
+              background: message.type === 'success' ? '#f0fdf4' : '#fef2f2',
+              color: message.type === 'success' ? '#10b981' : '#dc2626',
+              border: `1px solid ${message.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+              fontSize: '0.9rem'
+            }}>
+              {message.text}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

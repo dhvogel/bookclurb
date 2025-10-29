@@ -67,7 +67,7 @@ const ClubPage: React.FC<ClubPageProps> = ({ user, db }) => {
       case 'discussions':
         return <DiscussionsTab club={club} user={user} db={db} />;
       case 'members':
-        return <MembersTab club={club} />;
+        return <MembersTab club={club} user={user} db={db} />;
       case 'books':
         return <BooksTab club={club} userId={user?.uid || ''} db={db} />;
       default:
