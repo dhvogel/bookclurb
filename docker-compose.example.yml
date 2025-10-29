@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: bookclurb-web
+    ports:
+      - "3000:8080"
+    environment:
+      - NODE_ENV=production
+      # For React apps, env vars are baked in at build time
+      # To use REACT_APP_INVITE_SERVICE_URL, you'd need to rebuild:
+      # REACT_APP_INVITE_SERVICE_URL=http://localhost:8080 npm run build
+      # Or use a runtime config approach
+    networks:
+      - bookclurb-network
+
+  invite:
+    build:
+      context: ./invite
+      dockerfile: Dockerfile
+    container_name: bookclurb-invite
+    ports:
+      - "8080:8080"
+    environment:
+      - EMAIL_USER=your-email@gmail.com
+      - EMAIL_PASSWORD=your-gmail-app-password
+      - BASE_URL=http://localhost:3000
+      - FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebase_sa_key.json
+      - PORT=8080
+    volumes:
+      - ./firebase_sa_key.json:/app/firebase_sa_key.json:ro
+    networks:
+      - bookclurb-network
+    depends_on:
+      - web
+
+networks:
+  bookclurb-network:
+    driver: bridge
+

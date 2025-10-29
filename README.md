@@ -9,16 +9,15 @@
 
 ## 🌟 Features
 
-- **Member Management**: Secure authentication for book club members
-- **Meeting Organization**: Streamlined meeting scheduling and management
-- **Reading Reflections**: Weekly reflection submissions and tracking
-- **User Profiles**: Personalized member profiles and literary preferences
-- **Real-time Updates**: Live notifications and updates
-- **Responsive Design**: Mobile-friendly interface built with React
+- **Club Management**: Create, view, and manage multiple book clubs with customizable settings
+- **Meeting Organization & Reflections**: Track scheduled meetings with reading assignments and submit weekly reflections
+- **Book Selection & Voting**: Submit book suggestions, vote using instant-runoff voting, and view live leaderboards with reading progress tracking
+- **Member Invitations**: Email-based invitations to join clubs, member role management (admin/member), and member profiles
+- **User Profiles**: Secure authentication, personal profiles, and management of all your club memberships
 
 ## 🚀 Live Demo
 
-**Production Environment**: [https://sombk-web-618324779515.us-central1.run.app](https://sombk-web-618324779515.us-central1.run.app)
+**Production Environment**: [Live Demo URL](https://sombk-web-618324779515.us-central1.run.app)
 
 ## 🛠️ Tech Stack
 
@@ -26,6 +25,17 @@
 - **Backend**: Firebase (Authentication & Database)
 - **Styling**: CSS3 with Framer Motion animations
 - **Testing**: Jest & React Testing Library
+
+## 📁 Project Structure
+
+```
+bookclurb/
+├── web/              # React frontend application
+│
+├── invite/           # Go microservice for sending club invites
+│
+└── scripts/          # Utility scripts for data management
+```
 
 ## 📋 Prerequisites
 
@@ -57,6 +67,11 @@
    ```bash
    npm start
    ```
+   
+   **Or use Docker Compose:**
+   ```bash
+   docker-compose -f docker-compose.local.yml up --build
+   ```
 
 5. **Open your browser**
    Navigate to `http://localhost:3000`
@@ -65,39 +80,22 @@
 
 #### Build Docker Image
 ```bash
-docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/moonlit-vine-119321/sombk/web:dev .
+docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/PROJECT_ID/IMAGE_NAME:tag .
 ```
 
 #### Push to Container Registry
 ```bash
-docker push us-central1-docker.pkg.dev/moonlit-vine-119321/sombk/web:dev
+docker push us-central1-docker.pkg.dev/PROJECT_ID/IMAGE_NAME:tag
 ```
 
 #### Deploy to Google Cloud Run
 ```bash
-gcloud run deploy sombk-web \
-  --image us-central1-docker.pkg.dev/moonlit-vine-119321/sombk/web:dev \
+gcloud run deploy SERVICE_NAME \
+  --image us-central1-docker.pkg.dev/PROJECT_ID/IMAGE_NAME:tag \
   --region us-central1 \
   --platform managed \
   --allow-unauthenticated
 ```
-
-<!-- ## 🎯 Roadmap
-
-### Phase 1: Enhanced Engagement
-- [ ] Push notifications for new reflections
-- [ ] Member participation tracking
-- [ ] Book rating and review system
-
-### Phase 2: Community Features
-- [ ] User profiles with literary preferences
-- [ ] Book club quiz and participation scoring
-- [ ] Lucky number submission system
-
-### Phase 3: AI Integration
-- [ ] AI-powered book recommendations
-- [ ] Reading pattern analysis
-- [ ] Personalized reading suggestions -->
 
 ## 🤝 Contributing
 

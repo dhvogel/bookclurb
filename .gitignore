@@ -11,6 +11,7 @@ web/build
 
 # misc
 .DS_Store
+.env
 .env.local
 .env.development.local
 .env.test.local
@@ -25,3 +26,7 @@ web/src/config/members.ts
 
 scripts/add_members_to_club/members.yaml
 firebase_sa_key.json
+database.rules.json
+
+# Docker compose with secrets
+docker-compose.local.yml
