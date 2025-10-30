@@ -16,7 +16,7 @@ docker push $ARTIFACT_REGISTRY/email:dev
 ## Deploy
 
 ```bash
-./deploy-cloudrun.sh --prod
+./deploy-cloudrun.sh --dev
 ```
 
 Deploys with environment variables from `.deploy-config` (Gmail credentials, base URL).

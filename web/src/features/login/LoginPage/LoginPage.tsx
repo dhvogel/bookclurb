@@ -46,6 +46,8 @@ const LoginPage: React.FC<LoginProps> = ({ setUser, user, auth, db }) => {
         setError("Google Sign-In is not enabled. Please contact support or use email/password to sign in.");
       } else if (err.code === 'auth/account-exists-with-different-credential') {
         setError("An account already exists with this email address. Please sign in with your email and password instead.");
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError("This domain is not authorized for Firebase authentication. Please contact support or use email/password to sign in.");
       } else {
         setError("Failed to sign in with Google. Please try again.");
       }

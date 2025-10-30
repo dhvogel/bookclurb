@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { Database, ref, update } from 'firebase/database';
-import { BookSubmission, Vote, Club } from '../../../../types';
+import { BookSubmission, Club } from '../../../../types';
 import BookSubmissionCard from './BookSubmissionCard';
-import VotingCard from './VotingCard';
-import LeaderboardCard from './LeaderboardCard';
 import CreatePollCard from './CreatePollCard';
-import { isPollClosed } from '../../../../utils/votingUtils';
+import RandomDrawWheel from './RandomDrawWheel';
 import { useBookVoting } from '../useBookVoting';
 
 interface BooksTabProps {
@@ -18,16 +16,15 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
   const {
     currentPoll,
     submissions,
-    votes,
     loading,
     error,
     submitBook,
-    submitVote,
-    getUserVote,
     getUserSubmissions
   } = useBookVoting({ db, clubId: club.id, userId });
 
   const [settingOnDeck, setSettingOnDeck] = useState<string | null>(null);
+  const [showWheel, setShowWheel] = useState(false);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
 
   // Check if current user is an admin
   const isAdmin = club.members?.some(
@@ -84,6 +81,8 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
       await update(clubRef, {
         onDeckBook: null
       });
+      // Clear the selected submission ID when removing on deck
+      setSelectedSubmissionId(null);
     } catch (error) {
       console.error('Failed to remove On Deck book:', error);
       alert('Failed to remove On Deck book. Please try again.');
@@ -154,15 +153,24 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
     }
   };
 
-  const handleVote = async (vote: Omit<Vote, 'id' | 'submittedAt'>) => {
-    try {
-      await submitVote(vote);
-    } catch (error) {
-      console.error('Failed to submit vote:', error);
-    }
+  // Function to show the wheel
+  const handleRandomDraw = () => {
+    if (!isAdmin || submissions.length === 0) return;
+    setShowWheel(true);
   };
 
-  const userVote = getUserVote();
+  // Function to handle when wheel selects a book
+  const handleWheelSelect = async (selectedSubmission: BookSubmission) => {
+    // Mark this submission as selected for the "On Deck" label
+    setSelectedSubmissionId(selectedSubmission.id);
+    // Set the selected book as "On Deck"
+    await handleSetOnDeck({
+      title: selectedSubmission.bookDetails.title,
+      author: selectedSubmission.bookDetails.author,
+      isbn: selectedSubmission.bookDetails.isbn,
+      coverUrl: selectedSubmission.bookDetails.coverUrl
+    });
+  };
 
   if (loading) {
     return (
@@ -174,7 +182,7 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
         textAlign: 'center'
       }}>
         <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
-        <p style={{ color: '#666' }}>Loading book voting...</p>
+        <p style={{ color: '#666' }}>Loading book submissions...</p>
       </div>
     );
   }
@@ -432,8 +440,6 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
     );
   }
 
-  const pollClosed = isPollClosed(currentPoll.closesAt);
-
   return (
     <div>
       {/* On Deck Book Card */}
@@ -664,8 +670,8 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
         )}
       </div>
 
-      {/* Book Voting System */}
-      {currentPoll.status === 'submission' && (
+      {/* Book Submission System */}
+      {currentPoll && (
         <>
           <BookSubmissionCard
             pollId={currentPoll.id}
@@ -676,66 +682,141 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
           />
 
           {submissions.length > 0 && (
-            <>
-              <VotingCard
-                pollId={currentPoll.id}
-                userId={userId}
-                submissions={submissions}
-                onVote={handleVote}
-                existingVote={userVote}
-                pollClosesAt={currentPoll.closesAt}
-                club={club}
-              />
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+              marginBottom: '1rem'
+            }}>
+              <h4 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem', color: '#333' }}>
+                📚 Submitted Books
+              </h4>
+              <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+                {submissions.length} book{submissions.length !== 1 ? 's' : ''} submitted for the next selection
+              </p>
               
-              <LeaderboardCard
-                submissions={submissions}
-                votes={votes}
-                pollClosesAt={currentPoll.closesAt}
-                isPollClosed={pollClosed}
-                isAdmin={isAdmin}
-                onSetOnDeck={handleSetOnDeck}
-                settingOnDeck={settingOnDeck}
-              />
-            </>
+              <div style={{ display: 'grid', gap: '1rem', marginBottom: '1.5rem' }}>
+                {submissions.map((submission) => {
+                  const isOnDeck = club.onDeckBook?.title === submission.bookDetails.title;
+                  return (
+                    <div
+                      key={submission.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        padding: '1rem',
+                        border: isOnDeck ? '2px solid #667eea' : '2px solid #e1e5e9',
+                        borderRadius: '8px',
+                        background: isOnDeck ? 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)' : '#f8f9fa',
+                        position: 'relative',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      {isOnDeck && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '-10px',
+                          right: '10px',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          color: 'white',
+                          padding: '0.35rem 0.75rem',
+                          borderRadius: '12px',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}>
+                          <span>📌</span>
+                          <span>On Deck</span>
+                        </div>
+                      )}
+                      {submission.bookDetails.coverUrl && (
+                        <img
+                          src={submission.bookDetails.coverUrl}
+                          alt={submission.bookDetails.title}
+                          style={{
+                            width: '60px',
+                            height: '90px',
+                            objectFit: 'cover',
+                            borderRadius: '4px'
+                          }}
+                        />
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '0.25rem', color: isOnDeck ? '#667eea' : '#333' }}>
+                          {submission.bookDetails.title}
+                        </div>
+                        <div style={{ color: '#666', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
+                          by {submission.bookDetails.author}
+                        </div>
+                        {submission.comment && (
+                          <div style={{ color: '#555', fontSize: '0.85rem', fontStyle: 'italic', marginTop: '0.5rem' }}>
+                            "{submission.comment}"
+                          </div>
+                        )}
+                        <div style={{ color: '#999', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                          Submitted by {getUserName(submission.userId)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {isAdmin && (
+                <button
+                  onClick={handleRandomDraw}
+                  disabled={settingOnDeck !== null || showWheel}
+                  style={{
+                    background: settingOnDeck !== null || showWheel 
+                      ? '#ccc' 
+                      : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '1rem 2rem',
+                    borderRadius: '12px',
+                    fontSize: '1.1rem',
+                    fontWeight: '600',
+                    cursor: settingOnDeck !== null || showWheel ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.3s ease',
+                    width: '100%',
+                    boxShadow: settingOnDeck !== null || showWheel 
+                      ? 'none' 
+                      : '0 4px 15px rgba(102, 126, 234, 0.4)',
+                    transform: settingOnDeck !== null || showWheel ? 'none' : 'translateY(0)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (settingOnDeck === null && !showWheel) {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.5)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (settingOnDeck === null && !showWheel) {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
+                    }
+                  }}
+                >
+                  {showWheel ? 'Processing...' : settingOnDeck !== null ? 'Processing...' : '🎲 Random Draw!'}
+                </button>
+              )}
+            </div>
           )}
         </>
       )}
 
-      {currentPoll.status === 'voting' && (
-        <>
-          <VotingCard
-            pollId={currentPoll.id}
-            userId={userId}
-            submissions={submissions}
-            onVote={handleVote}
-            existingVote={userVote}
-            pollClosesAt={currentPoll.closesAt}
-            club={club}
-          />
-          
-          <LeaderboardCard
-            submissions={submissions}
-            votes={votes}
-            pollClosesAt={currentPoll.closesAt}
-            isPollClosed={pollClosed}
-            isAdmin={isAdmin}
-            onSetOnDeck={handleSetOnDeck}
-            settingOnDeck={settingOnDeck}
-          />
-        </>
-      )}
-
-      {currentPoll.status === 'closed' && (
-        <LeaderboardCard
-          submissions={submissions}
-          votes={votes}
-          pollClosesAt={currentPoll.closesAt}
-          isPollClosed={true}
-          isAdmin={isAdmin}
-          onSetOnDeck={handleSetOnDeck}
-          settingOnDeck={settingOnDeck}
-        />
-      )}
+      {/* Random Draw Wheel Modal */}
+      <RandomDrawWheel
+        submissions={submissions}
+        isOpen={showWheel}
+        onClose={() => setShowWheel(false)}
+        onSelect={handleWheelSelect}
+      />
     </div>
   );
 };

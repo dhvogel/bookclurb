@@ -34,10 +34,10 @@ const CreatePollCard: React.FC<CreatePollCardProps> = ({ clubId, userId, db }) =
       marginBottom: '1rem'
     }}>
       <h4 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem', color: '#333' }}>
-        🗳️ Start New Voting Round
+        📚 Start New Submission Round
       </h4>
       <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-        Create a new poll for members to submit and vote on the next book to read.
+        Create a new round for members to submit books. Once submissions are in, admins can randomly draw the next book.
       </p>
       <button
         onClick={handleCreatePoll}
@@ -64,7 +64,7 @@ const CreatePollCard: React.FC<CreatePollCardProps> = ({ clubId, userId, db }) =
           }
         }}
       >
-        {isCreating ? 'Creating...' : 'Create Poll'}
+        {isCreating ? 'Creating...' : 'Start Submission Round'}
       </button>
     </div>
   );
