@@ -3,6 +3,7 @@ import HeaderBar from "./HeaderBar";
 import { User, getAuth, createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { Database, ref, get, update } from "firebase/database";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { getInviteServiceURL } from "../config/runtimeConfig";
 
 interface SignupProps {
   user: User | null;
@@ -56,7 +57,7 @@ const Signup: React.FC<SignupProps> = ({ user, db }) => {
       }
 
       try {
-        const inviteServiceURL = process.env.REACT_APP_INVITE_SERVICE_URL || 'http://localhost:8080';
+        const inviteServiceURL = getInviteServiceURL();
         const response = await fetch(`${inviteServiceURL}/ValidateInvite`, {
           method: 'POST',
           headers: {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, getAuth } from 'firebase/auth';
 import { Database, ref, push, set } from 'firebase/database';
 import { Club } from '../../../../types';
+import { getInviteServiceURL } from '../../../../config/runtimeConfig';
 
 interface MembersTabProps {
   club: Club;
@@ -69,8 +70,8 @@ const MembersTab: React.FC<MembersTabProps> = ({ club, user, db }) => {
       const auth = getAuth();
       const idToken = await user.getIdToken();
       
-      // Get the invite service URL (default to localhost for development)
-      const inviteServiceURL = process.env.REACT_APP_INVITE_SERVICE_URL || 'http://localhost:8080';
+      // Get the invite service URL from runtime config
+      const inviteServiceURL = getInviteServiceURL();
       
       const response = await fetch(`${inviteServiceURL}/SendClubInvite`, {
         method: 'POST',

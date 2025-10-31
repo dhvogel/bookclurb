@@ -30,3 +30,12 @@ database.rules.json
 
 # Docker compose with secrets
 docker-compose.local.yml
+
+# Runtime config files (may contain sensitive service URLs)
+web/build/config.js
+web/public/config.js
+config.js
+**/config.js
+
+# Docker entrypoint script (contains logic, but safe to commit)
+# web/docker-entrypoint.sh is intentionally NOT ignored

@@ -10,10 +10,11 @@ services:
       - "3000:8080"
     environment:
       - NODE_ENV=production
-      # For React apps, env vars are baked in at build time
-      # To use REACT_APP_INVITE_SERVICE_URL, you'd need to rebuild:
-      # REACT_APP_INVITE_SERVICE_URL=http://localhost:8080 npm run build
-      # Or use a runtime config approach
+      # Invite service URL - configured at runtime via config.js
+      # For local development:
+      - REACT_APP_INVITE_SERVICE_URL=http://localhost:8080
+      # For production, set to your production invite service URL
+      # - REACT_APP_INVITE_SERVICE_URL=https://your-invite-service-url.run.app
     networks:
       - bookclurb-network
 
@@ -41,4 +42,5 @@ services:
 networks:
   bookclurb-network:
     driver: bridge
+
 
