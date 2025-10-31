@@ -1,0 +1,22 @@
+# Deployment Configuration
+# Copy this file to .deploy-config and fill in your values
+# DO NOT commit .deploy-config to version control
+
+# Google Cloud Project ID
+PROJECT_ID=your-project-id
+# OR use: GOOGLE_CLOUD_PROJECT=your-project-id
+
+# Artifact Registry location
+# Format: REGION-docker.pkg.dev/PROJECT_ID/REPO_NAME
+ARTIFACT_REGISTRY=us-central1-docker.pkg.dev/your-project-id/your-repo-name
+
+# Invite Service URL
+# For production, use your deployed invite service URL
+REACT_APP_INVITE_SERVICE_URL=https://your-invite-service-url.run.app
+
+# Optional: Override default region
+# REGION=us-central1
+
+# Optional: Override default image tag
+# IMAGE_TAG=dev
+

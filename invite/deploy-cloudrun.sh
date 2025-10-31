@@ -102,12 +102,13 @@ fi
 
 # Build and push Docker image
 echo ""
-echo "🔨 Building Docker image..."
+echo "🔨 Building Docker image for linux/amd64..."
 cd "$(dirname "$0")"
 
 FULL_IMAGE_NAME="$IMAGE_NAME:$IMAGE_TAG"
 
-if ! docker build -t "$FULL_IMAGE_NAME" .; then
+# Build for linux/amd64 platform (required for Cloud Run, even on M1 Macs)
+if ! docker build --platform linux/amd64 -t "$FULL_IMAGE_NAME" .; then
   echo "❌ Docker build failed"
   exit 1
 fi
