@@ -67,6 +67,11 @@ export interface Club {
     author?: string;
     isbn?: string;
     coverUrl?: string;
+    progress?: {
+      percentage?: number; // 0-100
+      currentChapter?: number;
+      totalChapters?: number;
+    };
   };
   onDeckBook?: {
     title: string;
