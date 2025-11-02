@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"firebase.google.com/go"
@@ -38,17 +39,32 @@ func init() {
 		log.Fatal("FIREBASE_DATABASE_URL environment variable is required")
 	}
 
+	// Get Firebase project ID (required to match the project that issued the tokens)
+	// Default to extracting from database URL if not provided
+	firebaseProjectID := getEnv("FIREBASE_PROJECT_ID", "")
+	if firebaseProjectID == "" {
+		// Extract project ID from database URL (format: https://PROJECT_ID-default-rtdb.firebaseio.com)
+		if matches := regexp.MustCompile(`https://([^-]+)-.*\.firebaseio\.com`).FindStringSubmatch(databaseURL); len(matches) > 1 {
+			firebaseProjectID = matches[1]
+			log.Printf("Auto-detected Firebase project ID from database URL: %s", firebaseProjectID)
+		} else {
+			log.Fatal("FIREBASE_PROJECT_ID environment variable is required (or set FIREBASE_DATABASE_URL in correct format)")
+		}
+	}
+
+	// Build Firebase config with explicit project ID
+	firebaseConfig := &firebase.Config{
+		ProjectID:   firebaseProjectID,
+		DatabaseURL: databaseURL,
+	}
+
 	// Option 1: Use service account key file (for local development)
 	if _, exists := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS"); exists {
 		opt := option.WithCredentialsFile(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
-		firebaseApp, err = firebase.NewApp(ctx, &firebase.Config{
-			DatabaseURL: databaseURL,
-		}, opt)
+		firebaseApp, err = firebase.NewApp(ctx, firebaseConfig, opt)
 	} else {
 		// Option 2: Use default credentials (for Cloud Run deployment)
-		firebaseApp, err = firebase.NewApp(ctx, &firebase.Config{
-			DatabaseURL: databaseURL,
-		})
+		firebaseApp, err = firebase.NewApp(ctx, firebaseConfig)
 	}
 
 	if err != nil {
@@ -168,9 +184,9 @@ func sendClubInvite(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Require Firebase ID token for authentication
-	// Cloud Run IAM handles service-level access, Firebase handles user-level auth
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
+		log.Printf("Authentication failed: Missing Authorization header")
 		http.Error(w, "Missing Authorization header", http.StatusUnauthorized)
 		return
 	}
@@ -181,12 +197,23 @@ func sendClubInvite(w http.ResponseWriter, r *http.Request) {
 		token = authHeader[7:]
 	}
 
+	if token == "" || token == authHeader {
+		log.Printf("Authentication failed: Invalid Authorization header format (length: %d)", len(authHeader))
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+
+	log.Printf("Verifying Firebase token (token length: %d)", len(token))
+
 	// Verify the token and get user info
 	verifiedToken, err := firebaseAuth.VerifyIDToken(ctx, token)
 	if err != nil {
+		log.Printf("Firebase token verification failed: %v", err)
 		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
 	}
+
+	log.Printf("Firebase token verified successfully for user: %s", verifiedToken.UID)
 
 	userID := verifiedToken.UID
 
@@ -204,10 +231,17 @@ func sendClubInvite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if user is admin of the club
+	log.Printf("Checking if user %s is admin of club %s", userID, req.ClubID)
 	clubRef := firebaseDB.NewRef(fmt.Sprintf("clubs/%s", req.ClubID))
 	var club Club
 	if err := clubRef.Get(ctx, &club); err != nil {
-		http.Error(w, fmt.Sprintf("Club not found: %v", err), http.StatusNotFound)
+		log.Printf("Failed to access club data: %v", err)
+		// Check if it's an auth error
+		if strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "Unauthorized") {
+			http.Error(w, fmt.Sprintf("Database access denied. Service account may not have permission to read Firebase Realtime Database. Error: %v", err), http.StatusInternalServerError)
+		} else {
+			http.Error(w, fmt.Sprintf("Club not found: %v", err), http.StatusNotFound)
+		}
 		return
 	}
 

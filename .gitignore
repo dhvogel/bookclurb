@@ -34,6 +34,7 @@ docker-compose.local.yml
 # Deployment configuration files (contain secrets)
 **/.deploy-config
 .deploy-config
+.deploy-config-local
 
 # Runtime config files (may contain sensitive service URLs)
 web/build/config.js

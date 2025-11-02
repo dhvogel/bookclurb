@@ -48,19 +48,40 @@ if [ "$ENV" = "--prod" ]; then
   ENV="prod"
   if [ -z "$BASE_URL" ]; then
     echo "❌ Error: BASE_URL environment variable is required for production"
+    echo "   Set it via: export BASE_URL=https://your-web-service-url"
+    echo "   Or create $CONFIG_FILE with: BASE_URL=https://your-web-service-url"
     exit 1
   fi
 elif [ "$ENV" = "--dev" ]; then
   ENV="dev"
-  BASE_URL="${BASE_URL:-http://localhost:3000}"
+  if [ -z "$BASE_URL" ]; then
+    echo "⚠️  Warning: BASE_URL not set"
+    echo "   Set it via: export BASE_URL=https://your-web-service-url"
+    echo "   Or create $CONFIG_FILE with: BASE_URL=https://your-web-service-url"
+    echo "   Example: BASE_URL=https://bookclurb-web-xxxxx.run.app"
+    read -p "   Enter web service URL (or press Enter to use localhost:3000): " BASE_URL_INPUT
+    if [ -n "$BASE_URL_INPUT" ]; then
+      BASE_URL="$BASE_URL_INPUT"
+    else
+      BASE_URL="http://localhost:3000"
+      echo "   Using default: $BASE_URL"
+    fi
+  fi
 else
   echo "Usage: $0 [--prod|--dev]"
+  exit 1
+fi
+
+# Validate BASE_URL is set
+if [ -z "$BASE_URL" ]; then
+  echo "❌ Error: BASE_URL is required"
   exit 1
 fi
 
 echo "🚀 Deploying $SERVICE_NAME to Cloud Run (Environment: $ENV)"
 echo "📍 Project: $PROJECT_ID"
 echo "🌍 Region: $REGION"
+echo "🌐 Base URL: $BASE_URL"
 echo ""
 
 # Check if gcloud is installed
@@ -133,26 +154,45 @@ if [ -z "$FIREBASE_DATABASE_URL" ]; then
   exit 1
 fi
 
-ENV_VARS="EMAIL_USER=$EMAIL_USER,EMAIL_PASSWORD=$EMAIL_PASSWORD,BASE_URL=$BASE_URL,FIREBASE_DATABASE_URL=$FIREBASE_DATABASE_URL"
+# Get Firebase project ID (extract from database URL if not set)
+if [ -z "$FIREBASE_PROJECT_ID" ]; then
+  # Try to extract from FIREBASE_DATABASE_URL (format: https://PROJECT_ID-default-rtdb.firebaseio.com)
+  FIREBASE_PROJECT_ID=$(echo "$FIREBASE_DATABASE_URL" | sed -n 's|https://\([^-]*\)-.*\.firebaseio\.com|\1|p')
+  if [ -z "$FIREBASE_PROJECT_ID" ]; then
+    echo "⚠️  Warning: Could not extract FIREBASE_PROJECT_ID from FIREBASE_DATABASE_URL"
+    echo "   Please set FIREBASE_PROJECT_ID in .deploy-config (e.g., FIREBASE_PROJECT_ID=sombk-firebase-free)"
+    read -p "   Enter Firebase project ID: " FIREBASE_PROJECT_ID
+  else
+    echo "✅ Auto-detected Firebase project ID: $FIREBASE_PROJECT_ID"
+  fi
+fi
 
-# Determine authentication mode
-# Set IAM_MODE=iam in .deploy-config or environment to enable IAM authentication
-# When IAM_MODE=iam, the IAM policy from iam-policy.yaml will be applied automatically
-IAM_MODE="${IAM_MODE:-unauthenticated}"
-if [ "$IAM_MODE" = "iam" ]; then
-  AUTH_FLAG="--no-allow-unauthenticated"
-  echo "🔒 Using IAM authentication (restricted access)"
-  echo "📝 IAM policy from iam-policy.yaml will be applied automatically after deployment"
-else
-  AUTH_FLAG="--allow-unauthenticated"
-  echo "🌐 Allowing unauthenticated access (Firebase token verification required)"
+if [ -z "$FIREBASE_PROJECT_ID" ]; then
+  echo "❌ Error: FIREBASE_PROJECT_ID is required"
+  exit 1
+fi
+
+ENV_VARS="EMAIL_USER=$EMAIL_USER,EMAIL_PASSWORD=$EMAIL_PASSWORD,BASE_URL=$BASE_URL,FIREBASE_DATABASE_URL=$FIREBASE_DATABASE_URL,FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID"
+
+echo "🌐 Allowing unauthenticated access (Firebase token verification required)"
+
+# Check if service account is set and provide guidance
+if [ -n "$SERVICE_ACCOUNT" ]; then
+  echo ""
+  echo "📋 Using service account: $SERVICE_ACCOUNT"
+  echo "⚠️  Ensure this service account has Firebase Realtime Database Admin role"
+  echo "   Grant permissions with:"
+  echo "   gcloud projects add-iam-policy-binding sombk-firebase-free \\"
+  echo "     --member=\"serviceAccount:$SERVICE_ACCOUNT\" \\"
+  echo "     --role=\"roles/firebase.admin\""
+  echo ""
 fi
 
 gcloud run deploy "$SERVICE_NAME" \
   --image "$FULL_IMAGE_NAME" \
   --platform managed \
   --region "$REGION" \
-  $AUTH_FLAG \
+  --allow-unauthenticated \
   --memory 256Mi \
   --timeout 60 \
   --max-instances 10 \
@@ -174,74 +214,9 @@ SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" \
 echo ""
 echo "🔗 Service URL: $SERVICE_URL/SendClubInvite"
 echo ""
-
-# Apply IAM policy automatically on every deploy
-POLICY_FILE="$(dirname "$0")/iam-policy.yaml"
-if [ -f "$POLICY_FILE" ]; then
-  echo "📋 Applying IAM policy from $POLICY_FILE..."
-  echo "📍 Service: $SERVICE_NAME"
-  echo "📍 Project: $PROJECT_ID"
-  echo "🌍 Region: $REGION"
-  echo ""
-  # Temporarily disable set -e to handle errors gracefully
-  set +e
-  
-  # Get current etag to avoid concurrent modification warnings
-  TEMP_POLICY=$(mktemp)
-  gcloud run services get-iam-policy "$SERVICE_NAME" \
-    --region="$REGION" \
-    --project="$PROJECT_ID" \
-    --format=yaml > "$TEMP_POLICY" 2>/dev/null
-  
-  # Extract etag if it exists
-  if [ -f "$TEMP_POLICY" ] && grep -q "^etag:" "$TEMP_POLICY"; then
-    ETAG=$(grep "^etag:" "$TEMP_POLICY" | sed 's/etag: *//' | tr -d '"' | tr -d "'")
-    # Create temporary policy file with etag
-    TEMP_WITH_ETAG=$(mktemp)
-    {
-      echo "etag: $ETAG"
-      grep -v "^#" "$POLICY_FILE" | grep -v "^$"
-    } > "$TEMP_WITH_ETAG"
-    POLICY_TO_APPLY="$TEMP_WITH_ETAG"
-  else
-    POLICY_TO_APPLY="$POLICY_FILE"
-  fi
-  
-  # Apply the policy
-  gcloud run services set-iam-policy "$SERVICE_NAME" \
-    --region="$REGION" \
-    --project="$PROJECT_ID" \
-    "$POLICY_TO_APPLY"
-  IAM_EXIT_CODE=$?
-  
-  # Cleanup temp files
-  rm -f "$TEMP_POLICY" "$TEMP_WITH_ETAG" 2>/dev/null
-  
-  set -e
-  if [ $IAM_EXIT_CODE -eq 0 ]; then
-    echo ""
-    echo "✅ IAM policy applied successfully!"
-    echo ""
-  else
-    echo ""
-    echo "⚠️  Warning: Failed to apply IAM policy (exit code: $IAM_EXIT_CODE)"
-    echo "   You may need to apply it manually: ./apply-iam.sh"
-    echo ""
-  fi
-else
-  echo "⚠️  Warning: IAM policy file not found: $POLICY_FILE"
-  echo "   Skipping IAM policy application"
-  echo ""
-fi
-
-if [ "$IAM_MODE" = "iam" ]; then
-  echo "🔒 IAM Authentication Enabled"
-else
-  echo "📝 Update your frontend:"
-  echo "   export REACT_APP_INVITE_SERVICE_URL=$SERVICE_URL"
-  echo ""
-  echo "💡 Security: Service requires Firebase ID token in Authorization header"
-  echo "   Cloud Run IAM is not enabled - using Firebase auth only"
-fi
+echo "📝 Update your frontend:"
+echo "   export REACT_APP_INVITE_SERVICE_URL=$SERVICE_URL"
+echo ""
+echo "💡 Security: Service requires Firebase ID token in Authorization header"
 echo ""
 

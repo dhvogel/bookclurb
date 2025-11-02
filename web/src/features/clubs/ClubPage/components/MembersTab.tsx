@@ -70,8 +70,13 @@ const MembersTab: React.FC<MembersTabProps> = ({ club, user, db }) => {
       const auth = getAuth();
       const idToken = await user.getIdToken();
       
+      // Debug logging
+      console.log('Getting invite service URL...');
+      console.log('Firebase token obtained:', idToken ? 'Yes' : 'No', idToken ? `(length: ${idToken.length})` : '');
+      
       // Get the invite service URL from runtime config
       const inviteServiceURL = getInviteServiceURL();
+      console.log('Invite service URL:', inviteServiceURL);
       
       const response = await fetch(`${inviteServiceURL}/SendClubInvite`, {
         method: 'POST',
@@ -89,9 +94,14 @@ const MembersTab: React.FC<MembersTabProps> = ({ club, user, db }) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ 
-          message: response.statusText 
-        }));
+        const errorText = await response.text();
+        console.error('Invite service error response:', errorText);
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { message: errorText || response.statusText };
+        }
         throw new Error(errorData.message || 'Failed to send invite email');
       }
 
