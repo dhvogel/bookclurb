@@ -94,6 +94,7 @@ export interface Club {
     avatar?: string;
     img?: string;
     role?: 'admin' | 'member';
+    joinedAt?: string; // ISO timestamp of when the member joined the club
     bookData?: Array<{
       title: string;
       read: boolean;

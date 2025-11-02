@@ -116,24 +116,34 @@ const MembersTab: React.FC<MembersTabProps> = ({ club, user, db }) => {
       setInviting(false);
     }
   };
-  const getReadingStatus = (book: any) => {
-    if (book.halfCredit) {
-      return 'half';
-    }
-    return book.read ? 'read' : 'not-read';
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'read':
-        return '#10b981';
-      case 'half':
-        return '#f59e0b';
-      case 'not-read':
-        return '#ef4444';
-      default:
-        return '#6b7280';
-    }
+  // Get books the club has read, with read status for a specific member
+  // Only shows books completed after the member joined (or all books if no join date)
+  const getBooksForMember = (member: { id?: string; joinedAt?: string }) => {
+    if (!club.booksRead || !member.id) return [];
+    
+    const memberJoinedAt = member.joinedAt ? new Date(member.joinedAt) : null;
+    
+    // Filter books: if member has join date, only show books completed after they joined
+    // If no join date, show all books (for backwards compatibility)
+    const filteredBooks = club.booksRead.filter(book => {
+      if (!memberJoinedAt) {
+        // No join date - show all books
+        return true;
+      }
+      // Only show books that were completed after the member joined
+      if (!book.completedAt) {
+        // Book has no completion date - include it (may be ongoing)
+        return true;
+      }
+      const bookCompletedAt = new Date(book.completedAt);
+      return bookCompletedAt >= memberJoinedAt;
+    });
+    
+    // Return filtered books with their read status
+    return filteredBooks.map(book => ({
+      ...book,
+      isRead: book.readBy && book.readBy.includes(member.id!)
+    }));
   };
 
   return (
@@ -206,35 +216,49 @@ const MembersTab: React.FC<MembersTabProps> = ({ club, user, db }) => {
             
             {/* Book Reading Badges */}
             <div style={{ marginTop: '0.5rem' }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                {member.bookData?.map((book) => {
-                  const status = getReadingStatus(book);
+              {(() => {
+                const books = getBooksForMember(member);
+                if (books.length === 0) {
                   return (
-                    <div
-                      key={book.title}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '12px',
-                        fontSize: '0.7rem',
-                        fontWeight: '500',
-                        background: status === 'read' ? '#f0fdf4' : 
-                                  status === 'half' ? '#fffbeb' : '#fef2f2',
-                        color: getStatusColor(status),
-                        border: `1px solid ${status === 'read' ? '#bbf7d0' : 
-                                         status === 'half' ? '#fed7aa' : '#fecaca'}`,
-                        maxWidth: '120px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {book.title}
+                    <div style={{ 
+                      fontSize: '0.8rem', 
+                      color: '#999', 
+                      fontStyle: 'italic' 
+                    }}>
+                      No books since joining
                     </div>
                   );
-                })}
-              </div>
+                }
+                return (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                    {books.map((book) => {
+                      const isRead = book.isRead;
+                      return (
+                        <div
+                          key={book.title}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: '12px',
+                            fontSize: '0.7rem',
+                            fontWeight: '500',
+                            background: isRead ? '#f0fdf4' : '#fef2f2',
+                            color: isRead ? '#10b981' : '#ef4444',
+                            border: `1px solid ${isRead ? '#bbf7d0' : '#fecaca'}`,
+                            maxWidth: '120px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {book.title}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         ))}

@@ -121,7 +121,8 @@ const Signup: React.FC<SignupProps> = ({ user, db }) => {
       id: newUser.uid,
       name: displayNameValue?.trim() || newUser.displayName || newUser.email || 'New Member',
       img: newUser.photoURL || '',
-      role: 'member'
+      role: 'member',
+      joinedAt: new Date().toISOString()
     };
 
     // Check if user is already a member (shouldn't happen, but safety check)

@@ -4,6 +4,7 @@ import { BookSubmission, Club } from '../../../../types';
 import BookSubmissionCard from './BookSubmissionCard';
 import CreatePollCard from './CreatePollCard';
 import RandomDrawWheel from './RandomDrawWheel';
+import EditBookReadersModal from './EditBookReadersModal';
 import { useBookVoting } from '../useBookVoting';
 
 interface BooksTabProps {
@@ -25,6 +26,8 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
   const [settingOnDeck, setSettingOnDeck] = useState<string | null>(null);
   const [showWheel, setShowWheel] = useState(false);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
+  const [editingBookIndex, setEditingBookIndex] = useState<number | null>(null);
+  const [savingBookReaders, setSavingBookReaders] = useState(false);
 
   // Check if current user is an admin
   const isAdmin = club.members?.some(
@@ -170,6 +173,34 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
       isbn: selectedSubmission.bookDetails.isbn,
       coverUrl: selectedSubmission.bookDetails.coverUrl
     });
+  };
+
+  // Function to handle updating who read a book
+  const handleUpdateBookReaders = async (bookIndex: number, readBy: string[]) => {
+    if (!club.booksRead || bookIndex < 0 || bookIndex >= club.booksRead.length) {
+      return;
+    }
+
+    setSavingBookReaders(true);
+    try {
+      const clubRef = ref(db, `clubs/${club.id}`);
+      const updatedBooksRead = [...club.booksRead];
+      updatedBooksRead[bookIndex] = {
+        ...updatedBooksRead[bookIndex],
+        readBy: readBy
+      };
+      
+      await update(clubRef, {
+        booksRead: updatedBooksRead
+      });
+      
+      setEditingBookIndex(null);
+    } catch (error) {
+      console.error('Failed to update book readers:', error);
+      alert('Failed to update book readers. Please try again.');
+    } finally {
+      setSavingBookReaders(false);
+    }
   };
 
   if (loading) {
@@ -355,25 +386,55 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                     
                     {/* Book Details */}
                     <div style={{ flex: 1 }}>
-                      <h4 style={{ 
-                        fontSize: '1.2rem', 
-                        fontWeight: '600', 
-                        marginBottom: '0.5rem', 
-                        color: '#333',
-                        margin: '0 0 0.5rem 0'
-                      }}>
-                        {book.title}
-                      </h4>
-                      {book.author && (
-                        <p style={{ 
-                          color: '#666', 
-                          marginBottom: '0.5rem',
-                          fontSize: '0.9rem',
-                          margin: '0 0 0.5rem 0'
-                        }}>
-                          by {book.author}
-                        </p>
-                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ 
+                            fontSize: '1.2rem', 
+                            fontWeight: '600', 
+                            marginBottom: '0.5rem', 
+                            color: '#333',
+                            margin: '0 0 0.5rem 0'
+                          }}>
+                            {book.title}
+                          </h4>
+                          {book.author && (
+                            <p style={{ 
+                              color: '#666', 
+                              marginBottom: '0.5rem',
+                              fontSize: '0.9rem',
+                              margin: '0 0 0.5rem 0'
+                            }}>
+                              by {book.author}
+                            </p>
+                          )}
+                        </div>
+                        {isAdmin && (
+                          <button
+                            onClick={() => setEditingBookIndex(index)}
+                            style={{
+                              padding: '0.4rem 0.8rem',
+                              fontSize: '0.8rem',
+                              fontWeight: '500',
+                              background: '#667eea',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              transition: 'background-color 0.2s ease',
+                              marginLeft: '1rem',
+                              whiteSpace: 'nowrap'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#5568d3';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = '#667eea';
+                            }}
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </div>
                       
                       {/* Read By Section */}
                       <div style={{ marginBottom: '0.5rem' }}>
@@ -591,25 +652,55 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                   
                   {/* Book Details */}
                   <div style={{ flex: 1 }}>
-                    <h4 style={{ 
-                      fontSize: '1.2rem', 
-                      fontWeight: '600', 
-                      marginBottom: '0.5rem', 
-                      color: '#333',
-                      margin: '0 0 0.5rem 0'
-                    }}>
-                      {book.title}
-                    </h4>
-                    {book.author && (
-                      <p style={{ 
-                        color: '#666', 
-                        marginBottom: '0.5rem',
-                        fontSize: '0.9rem',
-                        margin: '0 0 0.5rem 0'
-                      }}>
-                        by {book.author}
-                      </p>
-                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ 
+                          fontSize: '1.2rem', 
+                          fontWeight: '600', 
+                          marginBottom: '0.5rem', 
+                          color: '#333',
+                          margin: '0 0 0.5rem 0'
+                        }}>
+                          {book.title}
+                        </h4>
+                        {book.author && (
+                          <p style={{ 
+                            color: '#666', 
+                            marginBottom: '0.5rem',
+                            fontSize: '0.9rem',
+                            margin: '0 0 0.5rem 0'
+                          }}>
+                            by {book.author}
+                          </p>
+                        )}
+                      </div>
+                      {isAdmin && (
+                        <button
+                          onClick={() => setEditingBookIndex(index)}
+                          style={{
+                            padding: '0.4rem 0.8rem',
+                            fontSize: '0.8rem',
+                            fontWeight: '500',
+                            background: '#667eea',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s ease',
+                            marginLeft: '1rem',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#5568d3';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#667eea';
+                          }}
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
                     
                     {/* Read By Section */}
                     <div style={{ marginBottom: '0.5rem' }}>
@@ -817,6 +908,18 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
         onClose={() => setShowWheel(false)}
         onSelect={handleWheelSelect}
       />
+
+      {/* Edit Book Readers Modal */}
+      {editingBookIndex !== null && club.booksRead && club.booksRead[editingBookIndex] && (
+        <EditBookReadersModal
+          book={club.booksRead[editingBookIndex]}
+          club={club}
+          isOpen={true}
+          saving={savingBookReaders}
+          onClose={() => setEditingBookIndex(null)}
+          onSave={(readBy) => handleUpdateBookReaders(editingBookIndex, readBy)}
+        />
+      )}
     </div>
   );
 };
