@@ -17,7 +17,7 @@
 
 ## 🚀 Live Demo
 
-**Production Environment**: [Live Demo URL](https://sombk-web-618324779515.us-central1.run.app)
+**Production Environment**: [Live Demo URL](https://bookclurb-web-z726b2uvfa-uc.a.run.app)
 
 ## 🛠️ Tech Stack
 
