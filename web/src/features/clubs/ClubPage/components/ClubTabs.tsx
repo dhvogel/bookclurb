@@ -1,15 +1,25 @@
 import React from 'react';
+import { Club } from '../../../../types';
+import { User } from 'firebase/auth';
 
 interface ClubTabsProps {
-  activeTab: 'overview' | 'members' | 'books';
-  setActiveTab: (tab: 'overview' | 'members' | 'books') => void;
+  activeTab: 'overview' | 'members' | 'books' | 'settings';
+  setActiveTab: (tab: 'overview' | 'members' | 'books' | 'settings') => void;
+  club: Club;
+  user: User | null;
 }
 
-const ClubTabs: React.FC<ClubTabsProps> = ({ activeTab, setActiveTab }) => {
+const ClubTabs: React.FC<ClubTabsProps> = ({ activeTab, setActiveTab, club, user }) => {
+  // Check if current user is an admin
+  const isAdmin = user && club.members?.some(
+    member => member.id === user.uid && member.role === 'admin'
+  );
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'members', label: 'Members', icon: '👥' },
-    { id: 'books', label: 'Books', icon: '📚' }
+    { id: 'books', label: 'Books', icon: '📚' },
+    ...(isAdmin ? [{ id: 'settings', label: 'Settings', icon: '⚙️' }] : [])
   ];
 
   return (
@@ -26,7 +36,7 @@ const ClubTabs: React.FC<ClubTabsProps> = ({ activeTab, setActiveTab }) => {
       {tabs.map((tab) => (
         <button
           key={tab.id}
-          onClick={() => setActiveTab(tab.id as any)}
+          onClick={() => setActiveTab(tab.id as 'overview' | 'members' | 'books' | 'settings')}
           style={{
             flex: 1,
             padding: '0.75rem 0.25rem',

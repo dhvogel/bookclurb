@@ -10,6 +10,7 @@ import ClubTabs from './components/ClubTabs';
 import OverviewTab from './components/OverviewTab';
 import MembersTab from './components/MembersTab';
 import BooksTab from './components/BooksTab';
+import SettingsTab from './components/SettingsTab';
 
 interface ClubPageProps {
   user: User | null;
@@ -19,7 +20,7 @@ interface ClubPageProps {
 const ClubPage: React.FC<ClubPageProps> = ({ user, db }) => {
   const navigate = useNavigate();
   const { club, loading } = useClubData({ db, user });
-  const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'books'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'books' | 'settings'>('overview');
 
   if (loading) {
     return (
@@ -67,6 +68,8 @@ const ClubPage: React.FC<ClubPageProps> = ({ user, db }) => {
         return <MembersTab club={club} user={user} db={db} />;
       case 'books':
         return <BooksTab club={club} userId={user?.uid || ''} db={db} />;
+      case 'settings':
+        return <SettingsTab club={club} user={user} db={db} />;
       default:
         return <OverviewTab club={club} user={user} db={db} />;
     }
@@ -75,11 +78,11 @@ const ClubPage: React.FC<ClubPageProps> = ({ user, db }) => {
   return (
     <>
       <HeaderBar user={user} db={db} />
-      <div style={{ marginTop: '80px', minHeight: 'calc(100vh - 80px)', background: '#f8f9fa' }}>
+      <div style={{ marginTop: '60px', minHeight: 'calc(100vh - 60px)', background: '#f8f9fa' }}>
         <ClubHeader club={club} />
         
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }} className="club-page-container">
-          <ClubTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+          <ClubTabs activeTab={activeTab} setActiveTab={setActiveTab} club={club} user={user} />
           
           <AnimatePresence mode="wait">
             <motion.div

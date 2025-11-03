@@ -76,7 +76,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
   const member = user && user.email ? emailToMember[user.email] : undefined;
 
   return (
-    <div
+      <div
       style={{
         position: "fixed",
         top: 0,
@@ -92,10 +92,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         zIndex: 1000,
         minHeight: "60px",
         flexWrap: "nowrap",
-        overflow: "visible",
+        overflow: "hidden",
+        boxSizing: "border-box",
       }}
     >
-      <h1 style={{ margin: 0, fontSize: "clamp(1.2rem, 2.5vw, 1.8rem)", letterSpacing: "1px", flexShrink: 0 }}>
+      <h1 style={{ margin: 0, fontSize: "clamp(1.2rem, 2.5vw, 1.8rem)", letterSpacing: "1px", flexShrink: 1, minWidth: 0, marginRight: "clamp(0.5rem, 1.5vw, 1rem)" }}>
         <a href="/" style={{ color: "inherit", textDecoration: "none" }}>
           <span
             style={{
@@ -177,10 +178,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         style={{ 
           display: "flex", 
           alignItems: "center", 
-          gap: "clamp(0.5rem, 1.5vw, 1rem)",
-          flexShrink: 1,
+          gap: "clamp(0.5rem, 1.2vw, 0.8rem)",
+          flexShrink: 0,
           minWidth: 0,
-          overflow: "hidden"
+          overflow: "visible",
         }}
       >
         <a
@@ -260,7 +261,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
               display: "flex",
               alignItems: "center",
               padding: "0.2rem",
-              marginRight: "clamp(0.5rem, 2vw, 1.5em)",
               borderRadius: "50%",
               background:
                 location.pathname === "/profile"
@@ -298,7 +298,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
                   location.pathname === "/login"
                     ? "rgba(255, 255, 255, 0.2)"
                     : "transparent",
-                padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
+                padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.5rem, 1.5vw, 1rem)",
                 borderRadius: "8px",
                 textDecoration: "none",
                 fontWeight: location.pathname === "/login" ? "600" : "400",
