@@ -1,14 +1,13 @@
 import React from 'react';
 
 interface ClubTabsProps {
-  activeTab: 'overview' | 'discussions' | 'members' | 'books';
-  setActiveTab: (tab: 'overview' | 'discussions' | 'members' | 'books') => void;
+  activeTab: 'overview' | 'members' | 'books';
+  setActiveTab: (tab: 'overview' | 'members' | 'books') => void;
 }
 
 const ClubTabs: React.FC<ClubTabsProps> = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: '📊' },
-    { id: 'discussions', label: 'Discussions', icon: '💬' },
     { id: 'members', label: 'Members', icon: '👥' },
     { id: 'books', label: 'Books', icon: '📚' }
   ];

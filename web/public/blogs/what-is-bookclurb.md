@@ -20,5 +20,5 @@ BookClurb aims deepen the experience of book club. An entrypoint to this is buil
 
 ## Why open-source?
 
-It is important that this project remains open-source (repository [here](https://github.com/dhvogel/bookclurb)). Of course, it gives me internet cred. But more importantly, it allows anyone to contribute back the rituals of their book club. I can only develop for the rituals of my book club, and maybe a couple friends. But by opening this up to the internet community, any club can contribute theirs.
+It is important that this project remains open-source (repository [here](https://github.com/dhvogel/bookclurb)). Alright, it gives me internet cred. But more importantly, it allows anyone to contribute back the rituals of their book club. I can only develop for the rituals of my book club, and maybe a couple friends. But by opening this up to the internet community, any club can contribute theirs. So this is my call to action: please contribute!
 

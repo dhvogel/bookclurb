@@ -8,7 +8,6 @@ import { useClubData } from './useClubData';
 import ClubHeader from './components/ClubHeader';
 import ClubTabs from './components/ClubTabs';
 import OverviewTab from './components/OverviewTab';
-import DiscussionsTab from './components/DiscussionsTab';
 import MembersTab from './components/MembersTab';
 import BooksTab from './components/BooksTab';
 
@@ -20,7 +19,7 @@ interface ClubPageProps {
 const ClubPage: React.FC<ClubPageProps> = ({ user, db }) => {
   const navigate = useNavigate();
   const { club, loading } = useClubData({ db, user });
-  const [activeTab, setActiveTab] = useState<'overview' | 'discussions' | 'members' | 'books'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'books'>('overview');
 
   if (loading) {
     return (
@@ -64,8 +63,6 @@ const ClubPage: React.FC<ClubPageProps> = ({ user, db }) => {
     switch (activeTab) {
       case 'overview':
         return <OverviewTab club={club} user={user} db={db} />;
-      case 'discussions':
-        return <DiscussionsTab club={club} user={user} db={db} />;
       case 'members':
         return <MembersTab club={club} user={user} db={db} />;
       case 'books':
