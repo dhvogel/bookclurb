@@ -112,6 +112,50 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
+  // Auto-generate schedule when pagesPerWeek is set and currentBook exists but has no schedule
+  useEffect(() => {
+    const rituals = (club as any).rituals;
+    const pagesPerWeek = rituals?.progressTracking?.pagesPerWeek;
+    const hasCurrentBook = club.currentBook !== undefined && club.currentBook !== null;
+    const hasNoSchedule = !club.currentBook?.schedule || club.currentBook.schedule.length === 0;
+    const bookTotalChapters = club.currentBook?.progress?.totalChapters || totalChapters;
+
+    if (pagesPerWeek && hasCurrentBook && hasNoSchedule && bookTotalChapters && bookTotalChapters > 0 && isAdmin) {
+      // Estimate pages per chapter (default: 12 pages per chapter)
+      const estimatedPagesPerChapter = 12;
+      const chaptersPerWeek = Math.max(1, Math.round(pagesPerWeek / estimatedPagesPerChapter));
+      
+      // Generate schedule starting from today
+      const schedule: Array<{ date: string; chapter: number }> = [];
+      const startDate = new Date();
+      startDate.setHours(0, 0, 0, 0);
+      
+      let currentChapter = 1;
+      let currentDate = new Date(startDate);
+      
+      // Generate weekly milestones
+      while (currentChapter <= bookTotalChapters) {
+        const milestoneChapter = Math.min(currentChapter + chaptersPerWeek - 1, bookTotalChapters);
+        schedule.push({
+          date: currentDate.toISOString().split('T')[0],
+          chapter: milestoneChapter
+        });
+        
+        currentChapter = milestoneChapter + 1;
+        // Move to next week
+        currentDate.setDate(currentDate.getDate() + 7);
+      }
+      
+      // Save the generated schedule
+      if (schedule.length > 0) {
+        const clubRef = ref(db, `clubs/${club.id}/currentBook/schedule`);
+        set(clubRef, schedule).catch((error) => {
+          console.error('Failed to auto-generate schedule:', error);
+        });
+      }
+    }
+  }, [club.currentBook, club.id, (club as any).rituals?.progressTracking?.pagesPerWeek, isAdmin, db, totalChapters]);
+
   const handleBookSelect = (book: GoogleBooksVolume) => {
     setSelectedBook(book);
     setSearchQuery('');
@@ -1230,6 +1274,99 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                   </div>
                 </>
               )}
+              </div>
+            )}
+
+            {/* Reading Schedule Display */}
+            {club.currentBook?.schedule && club.currentBook.schedule.length > 0 && (
+              <div style={{ marginTop: '1.5rem' }}>
+                <h4 style={{ 
+                  fontSize: '1rem', 
+                  fontWeight: '600', 
+                  color: '#333',
+                  marginBottom: '1rem'
+                }}>
+                  📅 Reading Schedule
+                </h4>
+                <div style={{
+                  background: '#f8f9fa',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                  maxHeight: '300px',
+                  overflowY: 'auto'
+                }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {club.currentBook.schedule.map((entry, index) => {
+                      const entryDate = new Date(entry.date);
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      const isPast = entryDate < today;
+                      const isToday = entryDate.toDateString() === today.toDateString();
+                      
+                      return (
+                        <div
+                          key={index}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '0.75rem',
+                            background: isToday ? '#e0f2fe' : isPast ? '#f1f5f9' : 'white',
+                            borderRadius: '6px',
+                            border: isToday ? '2px solid #667eea' : '1px solid #e1e5e9',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          <div>
+                            <div style={{ 
+                              fontSize: '0.85rem', 
+                              color: '#666',
+                              marginBottom: '0.25rem'
+                            }}>
+                              {entryDate.toLocaleDateString('en-US', {
+                                weekday: 'short',
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </div>
+                            <div style={{ 
+                              fontSize: '0.9rem', 
+                              fontWeight: '600',
+                              color: isToday ? '#667eea' : '#333'
+                            }}>
+                              Read through Chapter {entry.chapter}
+                            </div>
+                          </div>
+                          {isToday && (
+                            <span style={{
+                              padding: '0.25rem 0.5rem',
+                              background: '#667eea',
+                              color: 'white',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600'
+                            }}>
+                              Today
+                            </span>
+                          )}
+                          {isPast && !isToday && (
+                            <span style={{
+                              padding: '0.25rem 0.5rem',
+                              background: '#94a3b8',
+                              color: 'white',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600'
+                            }}>
+                              Past
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
             
