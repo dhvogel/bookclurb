@@ -7,7 +7,7 @@ import { db } from "./firebaseConfig"; // make sure this runs before using any F
 import { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import Clubs from './components/Clubs';
-import { ClubPage, ProfilePage, LoginPage } from './features';
+import { ClubPage, ProfilePage, LoginPage, BlogList, BlogPost } from './features';
 
 function App() {
   const [user, setUser] = useState<User | null>(null); // Parent holds the state
@@ -29,6 +29,8 @@ function App() {
         <Route path="/signup" element={<Signup user={user} db={db} />} />
         <Route path="/clubs" element={<Clubs user={user} db={db} />} />
         <Route path="/clubs/:clubId" element={<ClubPage user={user} db={db} />} />
+        <Route path="/blog" element={<BlogList user={user} db={db} />} />
+        <Route path="/blog/:slug" element={<BlogPost user={user} db={db} />} />
       </Routes>
     </BrowserRouter>
   );

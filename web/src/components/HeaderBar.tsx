@@ -6,6 +6,7 @@ import { HeaderBarProps } from "../types";
 const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
   const location = useLocation();
   const isClubs = location.pathname === "/clubs";
+  const isBlog = location.pathname === "/blog" || location.pathname.startsWith("/blog/");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState<boolean>(false);
 
   // Close mobile menu when clicking outside
@@ -185,20 +186,72 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         <a
           href="/clubs"
           style={{
-            color: isClubs ? "#FFD700" : "white",
-            background: isClubs ? "rgba(255,255,255,0.08)" : "transparent",
+            color: isClubs ? "white" : "rgba(255, 255, 255, 0.85)",
+            background: isClubs 
+              ? "rgba(255, 255, 255, 0.2)" 
+              : "transparent",
             padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
             borderRadius: "8px",
             textDecoration: "none",
-            fontWeight: isClubs ? "bold" : "normal",
+            fontWeight: isClubs ? "600" : "400",
             fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
             letterSpacing: "0.5px",
-            transition: "background 0.2s, color 0.2s",
+            transition: "all 0.3s ease",
             whiteSpace: "nowrap",
             flexShrink: 0,
+            border: isClubs ? "1px solid rgba(255, 255, 255, 0.4)" : "1px solid transparent",
+            boxShadow: isClubs 
+              ? "0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)" 
+              : "none",
+            position: "relative",
+          }}
+          onMouseEnter={(e) => {
+            if (!isClubs) {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isClubs) {
+              e.currentTarget.style.background = "transparent";
+            }
           }}
         >
           Clubs
+        </a>
+        <a
+          href="/blog"
+          style={{
+            color: isBlog ? "white" : "rgba(255, 255, 255, 0.85)",
+            background: isBlog 
+              ? "rgba(255, 255, 255, 0.2)" 
+              : "transparent",
+            padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: isBlog ? "600" : "400",
+            fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
+            letterSpacing: "0.5px",
+            transition: "all 0.3s ease",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+            border: isBlog ? "1px solid rgba(255, 255, 255, 0.4)" : "1px solid transparent",
+            boxShadow: isBlog 
+              ? "0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)" 
+              : "none",
+            position: "relative",
+          }}
+          onMouseEnter={(e) => {
+            if (!isBlog) {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isBlog) {
+              e.currentTarget.style.background = "transparent";
+            }
+          }}
+        >
+          Blog
         </a>
         {user ? (
           <a
@@ -211,9 +264,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
               borderRadius: "50%",
               background:
                 location.pathname === "/profile"
-                  ? "rgba(255,255,255,0.08)"
+                  ? "rgba(255, 255, 255, 0.2)"
                   : "transparent",
-              border: "2px solid #FFD700",
+              border: location.pathname === "/profile" ? "2px solid rgba(255, 255, 255, 0.5)" : "2px solid rgba(255, 255, 255, 0.3)",
               transition: "background 0.2s, border 0.2s",
               position: "relative",
               flexShrink: 0,
@@ -240,20 +293,34 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
           <a
               href="/login"
               style={{
-                color: location.pathname === "/login" ? "#FFD700" : "white",
+                color: location.pathname === "/login" ? "white" : "rgba(255, 255, 255, 0.85)",
                 background:
                   location.pathname === "/login"
-                    ? "rgba(255,255,255,0.08)"
+                    ? "rgba(255, 255, 255, 0.2)"
                     : "transparent",
                 padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
                 borderRadius: "8px",
                 textDecoration: "none",
-                fontWeight: location.pathname === "/login" ? "bold" : "normal",
+                fontWeight: location.pathname === "/login" ? "600" : "400",
                 fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
                 letterSpacing: "0.5px",
-                transition: "background 0.2s, color 0.2s",
+                transition: "all 0.3s ease",
                 whiteSpace: "nowrap",
                 flexShrink: 0,
+                border: location.pathname === "/login" ? "1px solid rgba(255, 255, 255, 0.4)" : "1px solid transparent",
+                boxShadow: location.pathname === "/login"
+                  ? "0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
+                  : "none",
+              }}
+              onMouseEnter={(e) => {
+                if (location.pathname !== "/login") {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (location.pathname !== "/login") {
+                  e.currentTarget.style.background = "transparent";
+                }
               }}
             >
               Login
@@ -282,37 +349,93 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         <a
           href="/clubs"
           style={{
-            color: isClubs ? "#FFD700" : "white",
-            background: isClubs ? "rgba(255,255,255,0.08)" : "transparent",
+            color: isClubs ? "white" : "rgba(255, 255, 255, 0.85)",
+            background: isClubs 
+              ? "rgba(255, 255, 255, 0.2)" 
+              : "transparent",
             padding: "0.75rem 1rem",
             borderRadius: "8px",
             textDecoration: "none",
-            fontWeight: isClubs ? "bold" : "normal",
+            fontWeight: isClubs ? "600" : "400",
             fontSize: "1.1rem",
             letterSpacing: "0.5px",
-            transition: "background 0.2s, color 0.2s",
+            transition: "all 0.3s ease",
             marginBottom: "0.5rem",
+            border: isClubs ? "1px solid rgba(255, 255, 255, 0.4)" : "1px solid transparent",
+            boxShadow: isClubs 
+              ? "0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)" 
+              : "none",
           }}
           onClick={() => setIsMobileMenuOpen(false)}
+          onMouseEnter={(e) => {
+            if (!isClubs) {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isClubs) {
+              e.currentTarget.style.background = "transparent";
+            }
+          }}
         >
           Clubs
+        </a>
+        <a
+          href="/blog"
+          style={{
+            color: isBlog ? "white" : "rgba(255, 255, 255, 0.85)",
+            background: isBlog 
+              ? "rgba(255, 255, 255, 0.2)" 
+              : "transparent",
+            padding: "0.75rem 1rem",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: isBlog ? "600" : "400",
+            fontSize: "1.1rem",
+            letterSpacing: "0.5px",
+            transition: "all 0.3s ease",
+            marginBottom: "0.5rem",
+            border: isBlog ? "1px solid rgba(255, 255, 255, 0.4)" : "1px solid transparent",
+            boxShadow: isBlog 
+              ? "0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)" 
+              : "none",
+          }}
+          onClick={() => setIsMobileMenuOpen(false)}
+          onMouseEnter={(e) => {
+            if (!isBlog) {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isBlog) {
+              e.currentTarget.style.background = "transparent";
+            }
+          }}
+        >
+          Blog
         </a>
         {user ? (
           <a
             href="/profile"
             style={{
-              color: location.pathname === "/profile" ? "#FFD700" : "white",
-              background: location.pathname === "/profile" ? "rgba(255,255,255,0.08)" : "transparent",
+              color: location.pathname === "/profile" ? "white" : "rgba(255, 255, 255, 0.85)",
+              background: location.pathname === "/profile" 
+                ? "rgba(255, 255, 255, 0.2)" 
+                : "transparent",
               padding: "0.75rem 1rem",
               borderRadius: "8px",
               textDecoration: "none",
-              fontWeight: location.pathname === "/profile" ? "bold" : "normal",
+              fontWeight: location.pathname === "/profile" ? "600" : "400",
               fontSize: "1.1rem",
               letterSpacing: "0.5px",
-              transition: "background 0.2s, color 0.2s",
+              transition: "all 0.3s ease",
               display: "flex",
               alignItems: "center",
               gap: "0.5rem",
+              border: location.pathname === "/profile" ? "1px solid rgba(255, 255, 255, 0.4)" : "1px solid transparent",
+              boxShadow: location.pathname === "/profile"
+                ? "0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
+                : "none",
             }}
             onClick={() => setIsMobileMenuOpen(false)}
           >
@@ -329,20 +452,36 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
             />
           </a>
         ) : (
-          <a
+              <a
               href="/login"
               style={{
-                color: location.pathname === "/login" ? "#FFD700" : "white",
-                background: location.pathname === "/login" ? "rgba(255,255,255,0.08)" : "transparent",
+                color: location.pathname === "/login" ? "white" : "rgba(255, 255, 255, 0.85)",
+                background: location.pathname === "/login" 
+                  ? "rgba(255, 255, 255, 0.2)" 
+                  : "transparent",
                 padding: "0.75rem 1rem",
                 borderRadius: "8px",
                 textDecoration: "none",
-                fontWeight: location.pathname === "/login" ? "bold" : "normal",
+                fontWeight: location.pathname === "/login" ? "600" : "400",
                 fontSize: "1.1rem",
                 letterSpacing: "0.5px",
-                transition: "background 0.2s, color 0.2s",
+                transition: "all 0.3s ease",
+                border: location.pathname === "/login" ? "1px solid rgba(255, 255, 255, 0.4)" : "1px solid transparent",
+                boxShadow: location.pathname === "/login"
+                  ? "0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
+                  : "none",
               }}
               onClick={() => setIsMobileMenuOpen(false)}
+              onMouseEnter={(e) => {
+                if (location.pathname !== "/login") {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (location.pathname !== "/login") {
+                  e.currentTarget.style.background = "transparent";
+                }
+              }}
             >
               Login
             </a>
