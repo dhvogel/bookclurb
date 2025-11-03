@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import HeaderBar from "./HeaderBar";
+import HeaderBar from "../../../components/HeaderBar";
 import { User } from "firebase/auth";
 import { Database } from "firebase/database";
 
@@ -9,7 +9,7 @@ interface HomeProps {
   db: Database;
 }
 
-const Home: React.FC<HomeProps> = ({ user, db }) => {
+const HomePage: React.FC<HomeProps> = ({ user, db }) => {
   const navigate = useNavigate();
 
   const tools = [
@@ -443,4 +443,5 @@ const Home: React.FC<HomeProps> = ({ user, db }) => {
   );
 };
 
-export default Home;
+export default HomePage;
+
