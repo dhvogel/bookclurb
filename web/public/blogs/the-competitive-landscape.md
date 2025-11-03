@@ -16,7 +16,7 @@ There are a number of products out there that already help to facilitate book cl
 
 The problem is that bookclubs.com is not completely free-to-use. Features such as chat which is advertised on their home page ("Stay connected with chat"), is actually a premium feature that costs $65 per year per club. Same with a group photo album. A true freemium model would have these features be free to use up until a certain point.
 
-In addition, bookclubs.com is closed source. All feature work goes through the bookclubs.com tech team, as opposed to facilitating contributions from the book club community. This is important because there are many different kinds of book clubs who may have different needs. For example a club devoted to 18th-century history may have different needs than a club that is a support group for survivors of sexual assault. These may require different features that those clubs know best. With an open-source framework like BookClurb, these teams can just contribute these features back directly, without having to go through the bookclubs.com prioritization process.
+In addition, bookclubs.com is closed source. All feature work goes through the bookclubs.com tech team, as opposed to facilitating contributions from the book club community. This is important because there are many different kinds of book clubs who may have different needs. For example a club devoted to 18th-century history may have different needs than a club that is a recovery support group. These may require different features that those clubs know best. With an open-source framework like BookClurb, these teams can just contribute these features back directly, without having to go through the bookclubs.com prioritization process.
 
 2. Bookum
 
