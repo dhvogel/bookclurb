@@ -15,6 +15,9 @@ COPY . .
 # Build the TypeScript React app
 RUN npm run build
 
+# Verify that the blogs directory was copied to the build folder
+RUN test -d /app/build/blogs || (echo "Error: blogs directory not found in build" && exit 1)
+
 # Stage 2: Serve the build with a static server
 FROM nginx:alpine
 
