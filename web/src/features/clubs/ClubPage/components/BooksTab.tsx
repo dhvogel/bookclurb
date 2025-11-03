@@ -5,6 +5,7 @@ import BookSubmissionCard from './BookSubmissionCard';
 import CreatePollCard from './CreatePollCard';
 import RandomDrawWheel from './RandomDrawWheel';
 import EditBookReadersModal from './EditBookReadersModal';
+import StarRating from './StarRating';
 import { useBookVoting } from '../useBookVoting';
 
 interface BooksTabProps {
@@ -28,6 +29,8 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
   const [editingBookIndex, setEditingBookIndex] = useState<number | null>(null);
   const [savingBookReaders, setSavingBookReaders] = useState(false);
+  const [savingRatings, setSavingRatings] = useState<Record<number, boolean>>({});
+  const [showSubmissions, setShowSubmissions] = useState(true);
 
   // Check if current user is an admin
   const isAdmin = club.members?.some(
@@ -201,6 +204,63 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
     } finally {
       setSavingBookReaders(false);
     }
+  };
+
+  // Function to calculate average rating for a book
+  const calculateAverageRating = (ratings?: Record<string, number>): number => {
+    if (!ratings || Object.keys(ratings).length === 0) {
+      return 0;
+    }
+    const ratingValues = Object.values(ratings);
+    const sum = ratingValues.reduce((acc, val) => acc + val, 0);
+    return sum / ratingValues.length;
+  };
+
+  // Function to handle rating changes
+  const handleRatingChange = async (bookIndex: number, rating: number) => {
+    if (!club.booksRead || bookIndex < 0 || bookIndex >= club.booksRead.length) {
+      return;
+    }
+
+    setSavingRatings(prev => ({ ...prev, [bookIndex]: true }));
+    try {
+      const clubRef = ref(db, `clubs/${club.id}`);
+      const updatedBooksRead = [...club.booksRead];
+      const currentRatings = updatedBooksRead[bookIndex].ratings || {};
+      
+      updatedBooksRead[bookIndex] = {
+        ...updatedBooksRead[bookIndex],
+        ratings: {
+          ...currentRatings,
+          [userId]: rating
+        }
+      };
+      
+      await update(clubRef, {
+        booksRead: updatedBooksRead
+      });
+    } catch (error) {
+      console.error('Failed to update rating:', error);
+      alert('Failed to save rating. Please try again.');
+    } finally {
+      setSavingRatings(prev => ({ ...prev, [bookIndex]: false }));
+    }
+  };
+
+  // Get user's current rating for a book
+  const getUserRating = (book: { ratings?: Record<string, number> }): number => {
+    if (!book.ratings || !userId) {
+      return 0;
+    }
+    return book.ratings[userId] || 0;
+  };
+
+  // Check if the current user has read the book
+  const hasUserReadBook = (book: { readBy: string[] }): boolean => {
+    if (!userId || !book.readBy) {
+      return false;
+    }
+    return book.readBy.includes(userId);
   };
 
   if (loading) {
@@ -470,13 +530,80 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                       {book.completedAt && (
                         <div style={{ 
                           fontSize: '0.8rem', 
-                          color: '#666' 
+                          color: '#666',
+                          marginBottom: '0.5rem'
                         }}>
                           Completed: {new Date(book.completedAt).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric'
                           })}
+                        </div>
+                      )}
+                      
+                      {/* Rating Section */}
+                      {(hasUserReadBook(book) || (book.ratings && Object.keys(book.ratings).length > 0)) && (
+                        <div style={{ 
+                          marginTop: '0.75rem',
+                          padding: '0.75rem',
+                          background: '#ffffff',
+                          borderRadius: '6px',
+                          border: '1px solid #e9ecef'
+                        }}>
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '1rem',
+                            flexWrap: 'wrap'
+                          }}>
+                            {hasUserReadBook(book) && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#666' }}>
+                                  Your rating:
+                                </span>
+                                {savingRatings[index] ? (
+                                  <span style={{ fontSize: '0.8rem', color: '#666' }}>Saving...</span>
+                                ) : (
+                                  <StarRating
+                                    rating={getUserRating(book)}
+                                    onRatingChange={(rating) => handleRatingChange(index, rating)}
+                                    size="small"
+                                  />
+                                )}
+                              </div>
+                            )}
+                            {book.ratings && Object.keys(book.ratings).length > 0 && (
+                              <>
+                                {hasUserReadBook(book) && (
+                                  <div style={{ width: '1px', height: '20px', background: '#e9ecef' }} />
+                                )}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#666' }}>
+                                    Average:
+                                  </span>
+                                  <StarRating
+                                    rating={calculateAverageRating(book.ratings)}
+                                    readOnly={true}
+                                    size="small"
+                                  />
+                                  <span style={{ 
+                                    fontSize: '0.85rem', 
+                                    color: '#666',
+                                    marginLeft: '0.25rem'
+                                  }}>
+                                    ({calculateAverageRating(book.ratings).toFixed(1)})
+                                  </span>
+                                  <span style={{ 
+                                    fontSize: '0.75rem', 
+                                    color: '#999',
+                                    marginLeft: '0.5rem'
+                                  }}>
+                                    ({Object.keys(book.ratings).length} rating{Object.keys(book.ratings).length !== 1 ? 's' : ''})
+                                  </span>
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -736,13 +863,80 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                     {book.completedAt && (
                       <div style={{ 
                         fontSize: '0.8rem', 
-                        color: '#666' 
+                        color: '#666',
+                        marginBottom: '0.5rem'
                       }}>
                         Completed: {new Date(book.completedAt).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
                         })}
+                      </div>
+                    )}
+                    
+                    {/* Rating Section */}
+                    {(hasUserReadBook(book) || (book.ratings && Object.keys(book.ratings).length > 0)) && (
+                      <div style={{ 
+                        marginTop: '0.75rem',
+                        padding: '0.75rem',
+                        background: '#ffffff',
+                        borderRadius: '6px',
+                        border: '1px solid #e9ecef'
+                      }}>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '1rem',
+                          flexWrap: 'wrap'
+                        }}>
+                          {hasUserReadBook(book) && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#666' }}>
+                                Your rating:
+                              </span>
+                              {savingRatings[index] ? (
+                                <span style={{ fontSize: '0.8rem', color: '#666' }}>Saving...</span>
+                              ) : (
+                                <StarRating
+                                  rating={getUserRating(book)}
+                                  onRatingChange={(rating) => handleRatingChange(index, rating)}
+                                  size="small"
+                                />
+                              )}
+                            </div>
+                          )}
+                          {book.ratings && Object.keys(book.ratings).length > 0 && (
+                            <>
+                              {hasUserReadBook(book) && (
+                                <div style={{ width: '1px', height: '20px', background: '#e9ecef' }} />
+                              )}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#666' }}>
+                                  Average:
+                                </span>
+                                <StarRating
+                                  rating={calculateAverageRating(book.ratings)}
+                                  readOnly={true}
+                                  size="small"
+                                />
+                                <span style={{ 
+                                  fontSize: '0.85rem', 
+                                  color: '#666',
+                                  marginLeft: '0.25rem'
+                                }}>
+                                  ({calculateAverageRating(book.ratings).toFixed(1)})
+                                </span>
+                                <span style={{ 
+                                  fontSize: '0.75rem', 
+                                  color: '#999',
+                                  marginLeft: '0.5rem'
+                                }}>
+                                  ({Object.keys(book.ratings).length} rating{Object.keys(book.ratings).length !== 1 ? 's' : ''})
+                                </span>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -764,15 +958,67 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
       {/* Book Submission System */}
       {currentPoll && (
         <>
-          <BookSubmissionCard
-            pollId={currentPoll.id}
-            userId={userId}
-            onSubmission={handleBookSubmission}
-            existingSubmissions={submissions}
-            maxSubmissions={2}
-          />
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '1rem 1.5rem',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+            marginBottom: '1rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <h4 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#333', margin: 0 }}>
+              Next Book Voting
+            </h4>
+            <button
+              onClick={() => setShowSubmissions(!showSubmissions)}
+              style={{
+                padding: '0.5rem 1rem',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                background: showSubmissions ? '#dc3545' : '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = '0.9';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = '1';
+              }}
+            >
+              {showSubmissions ? (
+                <>
+                  <span>Hide</span>
+                  <span>▼</span>
+                </>
+              ) : (
+                <>
+                  <span>Show</span>
+                  <span>▶</span>
+                </>
+              )}
+            </button>
+          </div>
 
-          {submissions.length > 0 && (
+          {showSubmissions && (
+            <>
+              <BookSubmissionCard
+                pollId={currentPoll.id}
+                userId={userId}
+                onSubmission={handleBookSubmission}
+                existingSubmissions={submissions}
+                maxSubmissions={2}
+              />
+
+              {submissions.length > 0 && (
             <div style={{
               background: 'white',
               borderRadius: '12px',
@@ -897,6 +1143,8 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                 </button>
               )}
             </div>
+          )}
+            </>
           )}
         </>
       )}

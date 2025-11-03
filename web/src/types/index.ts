@@ -72,6 +72,10 @@ export interface Club {
       currentChapter?: number;
       totalChapters?: number;
     };
+    schedule?: Array<{
+      date: string;
+      chapter: number;
+    }>;
   };
   onDeckBook?: {
     title: string;
@@ -87,6 +91,7 @@ export interface Club {
     coverUrl?: string;
     readBy: string[]; // Array of member names who read this book
     completedAt?: string; // When the club finished reading this book
+    ratings?: Record<string, number>; // Map of userId to rating (1-5)
   }>;
   members?: Array<{
     id: string;
@@ -116,6 +121,12 @@ export interface Club {
     date: string;
     status: 'upcoming' | 'past' | 'current';
     reflections?: Array<{
+      userId: string;
+      userName: string;
+      reflection: string;
+      timestamp: number;
+    }>;
+    archivedReflections?: Array<{
       userId: string;
       userName: string;
       reflection: string;

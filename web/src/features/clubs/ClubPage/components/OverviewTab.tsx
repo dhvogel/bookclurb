@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
-import { Database, ref, update } from 'firebase/database';
+import { Database, ref, update, set } from 'firebase/database';
 import { Club, GoogleBooksVolume } from '../../../../types';
 
 interface OverviewTabProps {
@@ -28,6 +28,11 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
   const [selectedBook, setSelectedBook] = useState<GoogleBooksVolume | null>(null);
   const [addingBook, setAddingBook] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleEntries, setScheduleEntries] = useState<Array<{
+    date: string;
+    chapter: number;
+  }>>([]);
 
   // Check if current user is an admin
   const isAdmin = user && club.members?.some(
@@ -223,6 +228,34 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
     setSelectedBook(null);
     setSearchQuery('');
     setSearchResults([]);
+  };
+
+  const handleSaveSchedule = async () => {
+    if (!isAdmin || !club.currentBook) return;
+
+    try {
+      const clubRef = ref(db, `clubs/${club.id}/currentBook/schedule`);
+      await set(clubRef, scheduleEntries);
+      setShowScheduleModal(false);
+      alert('Schedule saved successfully!');
+    } catch (error) {
+      console.error('Failed to save schedule:', error);
+      alert('Failed to save schedule. Please try again.');
+    }
+  };
+
+  const handleAddScheduleEntry = () => {
+    setScheduleEntries([...scheduleEntries, { date: '', chapter: 1 }]);
+  };
+
+  const handleRemoveScheduleEntry = (index: number) => {
+    setScheduleEntries(scheduleEntries.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateScheduleEntry = (index: number, field: 'date' | 'chapter', value: string | number) => {
+    const updated = [...scheduleEntries];
+    updated[index] = { ...updated[index], [field]: value };
+    setScheduleEntries(updated);
   };
 
   return (
@@ -661,6 +694,43 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                         >
                           <span>✏️</span>
                           <span>Edit Progress</span>
+                        </button>
+                        <div style={{
+                          height: '1px',
+                          background: '#e1e5e9',
+                          margin: '0'
+                        }} />
+                        <button
+                          onClick={() => {
+                            setShowScheduleModal(true);
+                            setShowSettingsMenu(false);
+                            // Load existing schedule if available
+                            if (club.currentBook?.schedule) {
+                              setScheduleEntries(club.currentBook.schedule);
+                            } else {
+                              setScheduleEntries([]);
+                            }
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '0.75rem 1rem',
+                            fontSize: '0.9rem',
+                            fontWeight: '500',
+                            background: 'transparent',
+                            color: '#333',
+                            border: 'none',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <span>📅</span>
+                          <span>Set Schedule</span>
                         </button>
                       </div>
                     </>
@@ -1175,6 +1245,203 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
             `}</style>
           </div>
         )}
+
+      {/* Schedule Modal */}
+      {showScheduleModal && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1rem'
+            }}
+            onClick={() => setShowScheduleModal(false)}
+          >
+            <div
+              style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '2rem',
+                maxWidth: '600px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#333' }}>
+                Set Reading Schedule
+              </h3>
+              <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                Create a reading schedule for "{club.currentBook?.title}". Add dates and chapters to keep the club on track.
+              </p>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                {scheduleEntries.map((entry, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      padding: '1rem',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      marginBottom: '1rem',
+                      background: '#f9fafb'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#374151' }}>
+                        Entry {index + 1}
+                      </span>
+                      <button
+                        onClick={() => handleRemoveScheduleEntry(index)}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                          fontSize: '1.2rem',
+                          padding: '0.25rem 0.5rem'
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#374151', marginBottom: '0.25rem' }}>
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          value={entry.date}
+                          onChange={(e) => handleUpdateScheduleEntry(index, 'date', e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            fontSize: '0.9rem'
+                          }}
+                        />
+                      </div>
+                      <div style={{ flex: '0 0 120px' }}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#374151', marginBottom: '0.25rem' }}>
+                          Read to Chapter
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max={totalChapters || 999}
+                          value={entry.chapter || ''}
+                          onChange={(e) => handleUpdateScheduleEntry(index, 'chapter', parseInt(e.target.value) || 1)}
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            fontSize: '0.9rem'
+                          }}
+                        />
+                      </div>
+                    </div>
+                    {totalChapters > 0 && (
+                      <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#6b7280' }}>
+                        {entry.chapter > 0 ? (
+                          <span>
+                            ~{Math.round((entry.chapter / totalChapters) * 100)}% of book
+                          </span>
+                        ) : (
+                          <span>Set chapter to see progress</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {scheduleEntries.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
+                    No schedule entries yet. Click "Add Entry" to create one.
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                <button
+                  onClick={handleAddScheduleEntry}
+                  style={{
+                    background: '#f3f4f6',
+                    color: '#374151',
+                    border: '1px solid #d1d5db',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                >
+                  + Add Entry
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setShowScheduleModal(false)}
+                  style={{
+                    background: 'transparent',
+                    color: '#666',
+                    border: '2px solid #e1e5e9',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa';
+                    e.currentTarget.style.borderColor = '#d1d5db';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.borderColor = '#e1e5e9';
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveSchedule}
+                  style={{
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'opacity 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                >
+                  Save Schedule
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

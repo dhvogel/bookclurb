@@ -21,6 +21,12 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
   const [expandedMeeting, setExpandedMeeting] = React.useState<string | null>(null);
   const [savedReflections, setSavedReflections] = React.useState<Set<string>>(new Set());
   const [collapsedMeetings, setCollapsedMeetings] = React.useState<Set<string>>(new Set());
+  const [archiving, setArchiving] = React.useState<boolean>(false);
+
+  // Check if current user is an admin
+  const isAdmin = user && club.members?.some(
+    member => member.id === user.uid && member.role === 'admin'
+  );
 
   // Load user reflections from club.meetings structure
   React.useEffect(() => {
@@ -140,6 +146,75 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
     setShowModal(true);
   };
 
+  // Function to archive reflections for old book and create new ones for new book
+  const handleArchiveAndCreateNew = async () => {
+    if (!isAdmin || !club.currentBook) {
+      alert('Only admins can perform this action, and a current book must be set.');
+      return;
+    }
+
+    const newBook = club.onDeckBook;
+    if (!newBook) {
+      alert('Please set an "On Deck" book before archiving reflections. The new book will use the On Deck book.');
+      return;
+    }
+
+    if (!window.confirm(`Archive reflections for "${club.currentBook.title}" and create new meetings for "${newBook.title}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setArchiving(true);
+    try {
+      const currentBookTitle = club.currentBook.title;
+      const updatedMeetings = [...(club.meetings || [])];
+
+      // Find and archive reflections for meetings matching the old book
+      updatedMeetings.forEach(meeting => {
+        if (meeting.reading === currentBookTitle && meeting.reflections && meeting.reflections.length > 0) {
+          // Archive reflections by moving them to archivedReflections and clearing reflections
+          meeting.archivedReflections = meeting.reflections;
+          meeting.reflections = [];
+        }
+      });
+
+      // Create new meetings for the new book
+      // Create a default meeting for the new book
+      const newMeetingId = `meeting_${Date.now()}`;
+      const newMeeting = {
+        id: newMeetingId,
+        time: club.nextMeeting?.timestamp 
+          ? new Date(club.nextMeeting.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+          : 'TBD',
+        reading: newBook.title,
+        date: club.nextMeeting?.timestamp
+          ? new Date(club.nextMeeting.timestamp).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+          : new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        status: 'upcoming' as const,
+        reflections: [] as Array<{
+          userId: string;
+          userName: string;
+          reflection: string;
+          timestamp: number;
+        }>
+      };
+
+      updatedMeetings.push(newMeeting);
+
+      // Save to Firebase
+      const clubRef = ref(db, `clubs/${club.id}`);
+      await update(clubRef, {
+        meetings: updatedMeetings
+      });
+
+      alert(`Successfully archived reflections for "${currentBookTitle}" and created a new meeting for "${newBook.title}".`);
+    } catch (error) {
+      console.error('Error archiving reflections:', error);
+      alert('Failed to archive reflections and create new meetings. Please try again.');
+    } finally {
+      setArchiving(false);
+    }
+  };
+
   // Use meetings from club data, fallback to empty array if not available
   const meetings = club?.meetings || [];
 
@@ -209,7 +284,7 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
         marginBottom: '2rem',
         boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{ 
             background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
@@ -421,6 +496,54 @@ const DiscussionsTab: React.FC<DiscussionsTabProps> = ({ club, user, db }) => {
           );
         })}
       </div>
+
+      {/* Admin Archive Button - Bottom of Page */}
+      {isAdmin && club.currentBook && (
+        <div style={{
+          marginTop: '2rem',
+          paddingTop: '1.5rem',
+          borderTop: '1px solid #e5e7eb',
+          textAlign: 'center'
+        }}>
+          <button
+            type="button"
+            style={{
+              background: 'transparent',
+              color: '#6b7280',
+              padding: '0.5rem 1rem',
+              borderRadius: '6px',
+              border: '1px solid #e5e7eb',
+              cursor: archiving ? 'not-allowed' : 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: '400',
+              transition: 'all 0.2s ease',
+              opacity: archiving ? 0.5 : 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+            disabled={archiving}
+            onMouseOver={(e) => {
+              if (!archiving) {
+                e.currentTarget.style.borderColor = '#d1d5db';
+                e.currentTarget.style.color = '#374151';
+                e.currentTarget.style.background = '#f9fafb';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!archiving) {
+                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.color = '#6b7280';
+                e.currentTarget.style.background = 'transparent';
+              }
+            }}
+            onClick={handleArchiveAndCreateNew}
+          >
+            <span style={{ fontSize: '0.75rem' }}>{archiving ? '⏳' : '📦'}</span>
+            <span>{archiving ? 'Archiving...' : 'Archive reflections for old book & start new'}</span>
+          </button>
+        </div>
+      )}
       
       {showModal && (
         <ReflectionModal
