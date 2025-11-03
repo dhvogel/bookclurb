@@ -6,7 +6,7 @@ author: Dan Vogel
 
 # What is BookClurb?
 
-Right now, BookClurb is a set of open-source tools that make it easier to administer a book club. Keeping a book club going is hard work. It requires consistently doing the reading, figuring out a time to meet, selecting the next book in a way that is fair, and dealing with the myriad issues that arise in long term relationships. While this work is rewarding, book club administrators can benefit from a set of tools that are specially made to help them with their task. In addition, these tools have the potential to introduce new rituals to the book club (such as rating books on close-out and new book selection processes) that deepen the experience.
+BookClurb is a set of open-source tools that make it easier to administer a book club. Keeping a book club going is hard work. It requires consistently doing the reading, figuring out a time to meet, selecting the next book in a way that is fair, and all of the other give and take that comes with managing a group. While this work is rewarding, book club administrators can benefit from a set of tools that are specially made to help them with their task. In addition, these tools have the potential to introduce new rituals to the book club (such as rating books on close-out and new book selection processes) that deepen the experience.
 
 ## Where is BookClurb going?
 
