@@ -66,4 +66,3 @@ const AccountInfo: React.FC<AccountInfoProps> = ({ user }) => {
 };
 
 export default AccountInfo;
-

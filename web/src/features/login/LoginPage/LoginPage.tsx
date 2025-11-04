@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import HeaderBar from "../../../components/HeaderBar";
-import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, Auth, signOut } from "firebase/auth";
-import { Database, ref, get } from "firebase/database";
+import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, Auth } from "firebase/auth";
+import { Database, ref, get, update } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import { LoginProps } from "../../../types";
 
@@ -27,15 +27,21 @@ const LoginPage: React.FC<LoginProps> = ({ setUser, user, auth, db }) => {
       const userSnapshot = await get(userRef);
       
       if (!userSnapshot.exists()) {
-        // User doesn't exist in database - this is a new account
-        // Sign them out and show error
-        await signOut(auth);
-        setError("New accounts can only be created with an invite link. Please use your invite link to sign up.");
-        setIsLoading(false);
-        return;
+        // User doesn't exist in database - create their profile
+        const nameParts = (signedInUser.displayName || '').split(' ');
+        const updates: any = {
+          clubs: [],
+          first_name: nameParts[0] || signedInUser.email?.split('@')[0] || 'User',
+        };
+
+        if (nameParts.length > 1) {
+          updates.last_name = nameParts.slice(1).join(' ');
+        }
+
+        await update(userRef, updates);
       }
 
-      // User exists - allow sign in
+      // User exists or was just created - allow sign in
       setUser(signedInUser);
       navigate("/profile");
     } catch (err: any) {

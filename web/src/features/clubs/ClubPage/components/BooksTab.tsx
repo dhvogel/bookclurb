@@ -542,7 +542,7 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                       )}
                       
                       {/* Rating Section */}
-                      {(hasUserReadBook(book) || (book.ratings && Object.keys(book.ratings).length > 0)) && (
+                      {((club as any).rituals?.bookCloseOut?.enableRating) && (hasUserReadBook(book) || (book.ratings && Object.keys(book.ratings).length > 0)) && (
                         <div style={{ 
                           marginTop: '0.75rem',
                           padding: '0.75rem',
@@ -875,7 +875,7 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                     )}
                     
                     {/* Rating Section */}
-                    {(hasUserReadBook(book) || (book.ratings && Object.keys(book.ratings).length > 0)) && (
+                    {((club as any).rituals?.bookCloseOut?.enableRating) && (hasUserReadBook(book) || (book.ratings && Object.keys(book.ratings).length > 0)) && (
                       <div style={{ 
                         marginTop: '0.75rem',
                         padding: '0.75rem',

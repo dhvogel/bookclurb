@@ -67,14 +67,16 @@ export interface Club {
     author?: string;
     isbn?: string;
     coverUrl?: string;
+    pageCount?: number;
     progress?: {
       percentage?: number; // 0-100
-      currentChapter?: number;
-      totalChapters?: number;
+      currentPages?: number;
+      totalPages?: number;
     };
     schedule?: Array<{
       date: string;
-      chapter: number;
+      pages?: number;
+      chapter?: number;
     }>;
   };
   onDeckBook?: {
@@ -186,5 +188,6 @@ export interface GoogleBooksVolume {
     };
     description?: string;
     publishedDate?: string;
+    pageCount?: number;
   };
 }

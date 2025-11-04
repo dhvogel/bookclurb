@@ -26,7 +26,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
   const [changingRoles, setChangingRoles] = useState<Record<string, boolean>>({});
 
   // Rituals state
-  const [bookSelectionMethod, setBookSelectionMethod] = useState<'random' | 'each-person-chooses' | 'ranked-choice'>(
+  const [bookSelectionMethod, setBookSelectionMethod] = useState<'random' | 'ranked-choice'>(
     (club as any).rituals?.bookSelectionMethod || 'random'
   );
   const [enableReflections, setEnableReflections] = useState(
@@ -35,9 +35,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
   const [enableDiscussionQuestions, setEnableDiscussionQuestions] = useState(
     (club as any).rituals?.progressTracking?.enableDiscussionQuestions || false
   );
-  const [pagesPerWeek, setPagesPerWeek] = useState<string>(
-    (club as any).rituals?.progressTracking?.pagesPerWeek?.toString() || ''
-  );
   const [enableRating, setEnableRating] = useState(
     (club as any).rituals?.bookCloseOut?.enableRating || false
   );
@@ -45,6 +42,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
     (club as any).rituals?.bookCloseOut?.enableReflection || false
   );
   const [savingRituals, setSavingRituals] = useState(false);
+  const [savedRituals, setSavedRituals] = useState(false);
 
   // Reset form when club data changes
   useEffect(() => {
@@ -54,7 +52,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
     setBookSelectionMethod((club as any).rituals?.bookSelectionMethod || 'random');
     setEnableReflections((club as any).rituals?.progressTracking?.enableReflections || false);
     setEnableDiscussionQuestions((club as any).rituals?.progressTracking?.enableDiscussionQuestions || false);
-    setPagesPerWeek((club as any).rituals?.progressTracking?.pagesPerWeek?.toString() || '');
     setEnableRating((club as any).rituals?.bookCloseOut?.enableRating || false);
     setEnableCloseOutReflection((club as any).rituals?.bookCloseOut?.enableReflection || false);
   }, [club]);
@@ -120,6 +117,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
 
   const handleSaveRituals = async () => {
     setSavingRituals(true);
+    setSavedRituals(false);
     setMessage(null);
 
     try {
@@ -128,8 +126,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
         bookSelectionMethod,
         progressTracking: {
           enableReflections,
-          enableDiscussionQuestions,
-          pagesPerWeek: pagesPerWeek ? parseInt(pagesPerWeek, 10) : null
+          enableDiscussionQuestions
         },
         bookCloseOut: {
           enableRating,
@@ -138,14 +135,19 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
       };
 
       await update(clubRef, { rituals });
+      setSavingRituals(false);
+      setSavedRituals(true);
       setMessage({ type: 'success', text: 'Rituals saved successfully!' });
-      setTimeout(() => setMessage(null), 3000);
+      setTimeout(() => {
+        setMessage(null);
+        setSavedRituals(false);
+      }, 3000);
     } catch (error) {
       console.error('Failed to save rituals:', error);
+      setSavingRituals(false);
+      setSavedRituals(false);
       setMessage({ type: 'error', text: 'Failed to save rituals. Please try again.' });
       setTimeout(() => setMessage(null), 3000);
-    } finally {
-      setSavingRituals(false);
     }
   };
 
@@ -234,23 +236,25 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
           }}>
             Club Name *
           </label>
-          <input
-            type="text"
-            value={clubName}
-            onChange={(e) => setClubName(e.target.value)}
-            placeholder="Enter club name"
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              border: '2px solid #e1e5e9',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              outline: 'none',
-              transition: 'border-color 0.2s'
-            }}
-            onFocus={(e) => e.target.style.borderColor = '#667eea'}
-            onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
-          />
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <input
+              type="text"
+              value={clubName}
+              onChange={(e) => setClubName(e.target.value)}
+              placeholder="Enter club name"
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                border: '2px solid #e1e5e9',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                outline: 'none',
+                transition: 'border-color 0.2s'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#667eea'}
+              onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
+            />
+          </div>
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
@@ -263,25 +267,27 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
           }}>
             Description
           </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe your book club..."
-            rows={4}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              border: '2px solid #e1e5e9',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              outline: 'none',
-              transition: 'border-color 0.2s',
-              resize: 'vertical',
-              fontFamily: 'inherit'
-            }}
-            onFocus={(e) => e.target.style.borderColor = '#667eea'}
-            onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
-          />
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe your book club..."
+              rows={4}
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                border: '2px solid #e1e5e9',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                outline: 'none',
+                transition: 'border-color 0.2s',
+                resize: 'vertical',
+                fontFamily: 'inherit'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#667eea'}
+              onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
+            />
+          </div>
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
@@ -434,7 +440,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
                 name="bookSelectionMethod"
                 value="random"
                 checked={bookSelectionMethod === 'random'}
-                onChange={(e) => setBookSelectionMethod(e.target.value as 'random' | 'each-person-chooses' | 'ranked-choice')}
+                onChange={(e) => setBookSelectionMethod(e.target.value as 'random' | 'ranked-choice')}
                 style={{
                   width: '18px',
                   height: '18px',
@@ -442,41 +448,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
                 }}
               />
               <span style={{ fontSize: '0.95rem', color: '#333' }}>Random</span>
-            </label>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              cursor: 'pointer',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s',
-              backgroundColor: bookSelectionMethod === 'each-person-chooses' ? '#f0f4ff' : 'transparent'
-            }}
-            onMouseEnter={(e) => {
-              if (bookSelectionMethod !== 'each-person-chooses') {
-                e.currentTarget.style.backgroundColor = '#f8f9fa';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (bookSelectionMethod !== 'each-person-chooses') {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }
-            }}
-            >
-              <input
-                type="radio"
-                name="bookSelectionMethod"
-                value="each-person-chooses"
-                checked={bookSelectionMethod === 'each-person-chooses'}
-                onChange={(e) => setBookSelectionMethod(e.target.value as 'random' | 'each-person-chooses' | 'ranked-choice')}
-                style={{
-                  width: '18px',
-                  height: '18px',
-                  cursor: 'pointer'
-                }}
-              />
-              <span style={{ fontSize: '0.95rem', color: '#333' }}>Each person gets to choose</span>
             </label>
             <label style={{
               display: 'flex',
@@ -504,7 +475,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
                 name="bookSelectionMethod"
                 value="ranked-choice"
                 checked={bookSelectionMethod === 'ranked-choice'}
-                onChange={(e) => setBookSelectionMethod(e.target.value as 'random' | 'each-person-chooses' | 'ranked-choice')}
+                onChange={(e) => setBookSelectionMethod(e.target.value as 'random' | 'ranked-choice')}
                 style={{
                   width: '18px',
                   height: '18px',
@@ -545,34 +516,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
             >
               <input
                 type="checkbox"
-                checked={enableReflections}
-                onChange={(e) => setEnableReflections(e.target.checked)}
-                style={{
-                  width: '18px',
-                  height: '18px',
-                  cursor: 'pointer'
-                }}
-              />
-              <span style={{ fontSize: '0.95rem', color: '#333' }}>Reflections for each reading</span>
-            </label>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              cursor: 'pointer',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f8f9fa';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-            >
-              <input
-                type="checkbox"
                 checked={enableDiscussionQuestions}
                 onChange={(e) => setEnableDiscussionQuestions(e.target.checked)}
                 style={{
@@ -583,33 +526,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
               />
               <span style={{ fontSize: '0.95rem', color: '#333' }}>Discussion questions for the reading</span>
             </label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem' }}>
-              <label style={{ 
-                fontSize: '0.95rem', 
-                color: '#333',
-                whiteSpace: 'nowrap'
-              }}>
-                Number of pages the club reads a week:
-              </label>
-              <input
-                type="number"
-                value={pagesPerWeek}
-                onChange={(e) => setPagesPerWeek(e.target.value)}
-                placeholder="e.g., 50"
-                min="0"
-                style={{
-                  width: '120px',
-                  padding: '0.5rem',
-                  border: '2px solid #e1e5e9',
-                  borderRadius: '8px',
-                  fontSize: '0.95rem',
-                  outline: 'none',
-                  transition: 'border-color 0.2s'
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
-              />
-            </div>
           </div>
         </div>
 
@@ -652,34 +568,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
               />
               <span style={{ fontSize: '0.95rem', color: '#333' }}>Rating</span>
             </label>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              cursor: 'pointer',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f8f9fa';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-            >
-              <input
-                type="checkbox"
-                checked={enableCloseOutReflection}
-                onChange={(e) => setEnableCloseOutReflection(e.target.checked)}
-                style={{
-                  width: '18px',
-                  height: '18px',
-                  cursor: 'pointer'
-                }}
-              />
-              <span style={{ fontSize: '0.95rem', color: '#333' }}>Reflection</span>
-            </label>
           </div>
         </div>
 
@@ -710,7 +598,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
               }
             }}
           >
-            {savingRituals ? 'Saving...' : 'Save Rituals'}
+            {savingRituals ? 'Saving...' : savedRituals ? 'Saved!' : 'Save Rituals'}
           </button>
         </div>
       </div>

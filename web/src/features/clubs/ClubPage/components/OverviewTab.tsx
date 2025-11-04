@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { User } from 'firebase/auth';
 import { Database, ref, update, set } from 'firebase/database';
 import { Club, GoogleBooksVolume } from '../../../../types';
+import OnDeckBookCard from './OnDeckBookCard';
+import ReadingProgressTracker, { ReadingProgressTrackerRef } from './ReadingProgressTracker';
+import ReadingScheduleDisplay from './ReadingScheduleDisplay';
 
 interface OverviewTabProps {
   club: Club;
@@ -10,15 +13,6 @@ interface OverviewTabProps {
 }
 
 const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [currentChapter, setCurrentChapter] = useState<number>(
-    club.currentBook?.progress?.currentChapter ?? 0
-  );
-  const [totalChapters, setTotalChapters] = useState<number>(
-    club.currentBook?.progress?.totalChapters || 24
-  );
-  
   // State for adding/changing a book
   const [showAddBook, setShowAddBook] = useState(false);
   const [showChangeBook, setShowChangeBook] = useState(false);
@@ -31,55 +25,18 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleEntries, setScheduleEntries] = useState<Array<{
     date: string;
-    chapter: number;
+    pages?: number;
+    chapter?: number;
   }>>([]);
+  const [trackingMode, setTrackingMode] = useState<'pages' | 'chapters'>('pages');
+  const [totalValue, setTotalValue] = useState<number | undefined>(undefined);
+  
+  const progressTrackerRef = useRef<ReadingProgressTrackerRef>(null);
 
   // Check if current user is an admin
   const isAdmin = user && club.members?.some(
     member => member.id === user.uid && member.role === 'admin'
   );
-
-  // Calculate percentage from chapters, or use stored percentage
-  const progressPercentage = club.currentBook?.progress?.percentage !== undefined
-    ? club.currentBook.progress.percentage
-    : totalChapters > 0
-      ? Math.round((currentChapter / totalChapters) * 100)
-      : 0;
-
-  const progressPercentageForDisplay = totalChapters > 0
-    ? Math.round((currentChapter / totalChapters) * 100)
-    : progressPercentage;
-
-  const handleSave = async () => {
-    if (!isAdmin || !club.currentBook) return;
-
-    setSaving(true);
-    try {
-      const percentage = totalChapters > 0
-        ? Math.round((currentChapter / totalChapters) * 100)
-        : progressPercentage;
-
-      const clubRef = ref(db, `clubs/${club.id}/currentBook/progress`);
-      await update(clubRef, {
-        currentChapter,
-        totalChapters,
-        percentage
-      });
-
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Failed to save progress:', error);
-      alert('Failed to save progress. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setCurrentChapter(club.currentBook?.progress?.currentChapter ?? 0);
-    setTotalChapters(club.currentBook?.progress?.totalChapters || 24);
-    setIsEditing(false);
-  };
 
   // Search for books
   const searchBooks = async (query: string) => {
@@ -112,49 +69,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  // Auto-generate schedule when pagesPerWeek is set and currentBook exists but has no schedule
-  useEffect(() => {
-    const rituals = (club as any).rituals;
-    const pagesPerWeek = rituals?.progressTracking?.pagesPerWeek;
-    const hasCurrentBook = club.currentBook !== undefined && club.currentBook !== null;
-    const hasNoSchedule = !club.currentBook?.schedule || club.currentBook.schedule.length === 0;
-    const bookTotalChapters = club.currentBook?.progress?.totalChapters || totalChapters;
-
-    if (pagesPerWeek && hasCurrentBook && hasNoSchedule && bookTotalChapters && bookTotalChapters > 0 && isAdmin) {
-      // Estimate pages per chapter (default: 12 pages per chapter)
-      const estimatedPagesPerChapter = 12;
-      const chaptersPerWeek = Math.max(1, Math.round(pagesPerWeek / estimatedPagesPerChapter));
-      
-      // Generate schedule starting from today
-      const schedule: Array<{ date: string; chapter: number }> = [];
-      const startDate = new Date();
-      startDate.setHours(0, 0, 0, 0);
-      
-      let currentChapter = 1;
-      let currentDate = new Date(startDate);
-      
-      // Generate weekly milestones
-      while (currentChapter <= bookTotalChapters) {
-        const milestoneChapter = Math.min(currentChapter + chaptersPerWeek - 1, bookTotalChapters);
-        schedule.push({
-          date: currentDate.toISOString().split('T')[0],
-          chapter: milestoneChapter
-        });
-        
-        currentChapter = milestoneChapter + 1;
-        // Move to next week
-        currentDate.setDate(currentDate.getDate() + 7);
-      }
-      
-      // Save the generated schedule
-      if (schedule.length > 0) {
-        const clubRef = ref(db, `clubs/${club.id}/currentBook/schedule`);
-        set(clubRef, schedule).catch((error) => {
-          console.error('Failed to auto-generate schedule:', error);
-        });
-      }
-    }
-  }, [club.currentBook, club.id, (club as any).rituals?.progressTracking?.pagesPerWeek, isAdmin, db, totalChapters]);
 
   const handleBookSelect = (book: GoogleBooksVolume) => {
     setSelectedBook(book);
@@ -182,6 +96,9 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
       }
       if (selectedBook.volumeInfo.imageLinks?.thumbnail) {
         bookData.coverUrl = selectedBook.volumeInfo.imageLinks.thumbnail.replace('http:', 'https:');
+      }
+      if (selectedBook.volumeInfo.pageCount) {
+        bookData.pageCount = selectedBook.volumeInfo.pageCount;
       }
 
       await update(clubRef, {
@@ -248,6 +165,9 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
       if (selectedBook.volumeInfo.imageLinks?.thumbnail) {
         bookData.coverUrl = selectedBook.volumeInfo.imageLinks.thumbnail.replace('http:', 'https:');
       }
+      if (selectedBook.volumeInfo.pageCount) {
+        bookData.pageCount = selectedBook.volumeInfo.pageCount;
+      }
 
       updates.currentBook = bookData;
 
@@ -278,8 +198,25 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
     if (!isAdmin || !club.currentBook) return;
 
     try {
-      const clubRef = ref(db, `clubs/${club.id}/currentBook/schedule`);
-      await set(clubRef, scheduleEntries);
+      const clubRef = ref(db, `clubs/${club.id}/currentBook`);
+      const updates: any = {
+        schedule: scheduleEntries
+      };
+      
+      // Save total pages or chapters based on tracking mode
+      if (trackingMode === 'pages' && totalValue) {
+        updates.progress = {
+          ...club.currentBook.progress,
+          totalPages: totalValue
+        };
+      } else if (trackingMode === 'chapters' && totalValue) {
+        updates.progress = {
+          ...club.currentBook.progress,
+          totalChapters: totalValue
+        };
+      }
+      
+      await update(clubRef, updates);
       setShowScheduleModal(false);
       alert('Schedule saved successfully!');
     } catch (error) {
@@ -289,72 +226,31 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
   };
 
   const handleAddScheduleEntry = () => {
-    setScheduleEntries([...scheduleEntries, { date: '', chapter: 1 }]);
+    setScheduleEntries([...scheduleEntries, { date: '', pages: undefined, chapter: undefined }]);
   };
 
   const handleRemoveScheduleEntry = (index: number) => {
     setScheduleEntries(scheduleEntries.filter((_, i) => i !== index));
   };
 
-  const handleUpdateScheduleEntry = (index: number, field: 'date' | 'chapter', value: string | number) => {
+  const handleUpdateScheduleEntry = (index: number, field: 'date' | 'pages' | 'chapter', value: string | number | undefined) => {
     const updated = [...scheduleEntries];
+    if (field === 'date') {
+      // Date is required, always set it
+      updated[index] = { ...updated[index], date: value as string };
+    } else if (value === undefined || value === '' || (typeof value === 'number' && value === 0)) {
+      // Remove the field if it's undefined, empty, or 0
+      const { [field]: _, ...rest } = updated[index];
+      updated[index] = rest as any;
+    } else {
     updated[index] = { ...updated[index], [field]: value };
+    }
     setScheduleEntries(updated);
   };
 
   return (
     <div>
-        {/* On Deck Book */}
-        {club.onDeckBook && (
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
-            border: '2px solid #667eea',
-            borderRadius: '12px',
-            padding: '2rem',
-            marginBottom: '2rem',
-            boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '1.5rem' }}>📌</span>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#333', margin: 0 }}>
-                On Deck
-              </h3>
-            </div>
-            <div style={{ display: 'flex', gap: '1.5rem' }}>
-              {club.onDeckBook.coverUrl && (
-                <img
-                  src={club.onDeckBook.coverUrl}
-                  alt={club.onDeckBook.title}
-                  style={{
-                    width: '120px',
-                    height: '180px',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                    objectFit: 'cover'
-                  }}
-                />
-              )}
-              <div style={{ flex: 1 }}>
-                <h4 style={{ fontSize: '1.3rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#333' }}>
-                  {club.onDeckBook.title}
-                </h4>
-                {club.onDeckBook.author && (
-                  <p style={{ color: '#666', marginBottom: '1rem', fontSize: '1rem' }}>
-                    by {club.onDeckBook.author}
-                  </p>
-                )}
-                <p style={{ 
-                  color: '#667eea', 
-                  fontSize: '0.9rem', 
-                  fontStyle: 'italic',
-                  margin: 0
-                }}>
-                  Next up for the club!
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+      <OnDeckBookCard club={club} />
 
         {/* Current Book */}
         {!club.currentBook && (
@@ -627,160 +523,35 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
             boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#333', margin: 0 }}>
                 Current Book
               </h3>
-              {isAdmin && !isEditing && !showChangeBook && (
-                <div style={{ position: 'relative' }}>
+                {isAdmin && !showChangeBook && (
                   <button
-                    onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+                    onClick={() => setShowChangeBook(true)}
                     style={{
-                      padding: '0.5rem',
-                      fontSize: '1rem',
-                      fontWeight: '600',
-                      background: '#e9ecef',
-                      color: '#6c757d',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '2.5rem',
-                      height: '2.5rem'
+                      padding: '0.3rem 0.5rem',
+                      fontSize: '0.7rem',
+                            fontWeight: '500',
+                      background: '#f0f0f0',
+                      color: '#666',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '4px',
+                            cursor: 'pointer',
+                      transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dee2e6'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#e0e0e0';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#f0f0f0';
+                    }}
                   >
-                    <span>⚙️</span>
-                  </button>
-                  
-                  {showSettingsMenu && (
-                    <>
-                      <div
-                        style={{
-                          position: 'fixed',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          zIndex: 100
-                        }}
-                        onClick={() => setShowSettingsMenu(false)}
-                      />
-                      <div style={{
-                        position: 'absolute',
-                        top: '100%',
-                        right: 0,
-                        marginTop: '0.5rem',
-                        background: 'white',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                        border: '1px solid #e1e5e9',
-                        zIndex: 101,
-                        minWidth: '180px',
-                        overflow: 'hidden'
-                      }}>
-                        <button
-                          onClick={() => {
-                            setShowChangeBook(true);
-                            setShowSettingsMenu(false);
-                          }}
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem 1rem',
-                            fontSize: '0.9rem',
-                            fontWeight: '500',
-                            background: 'transparent',
-                            color: '#333',
-                            border: 'none',
-                            textAlign: 'left',
-                            cursor: 'pointer',
-                            transition: 'background-color 0.2s',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        >
-                          <span>📚</span>
-                          <span>Change Book</span>
+                    Change Book
                         </button>
-                        <div style={{
-                          height: '1px',
-                          background: '#e1e5e9',
-                          margin: '0'
-                        }} />
-                        <button
-                          onClick={() => {
-                            setIsEditing(true);
-                            setShowSettingsMenu(false);
-                          }}
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem 1rem',
-                            fontSize: '0.9rem',
-                            fontWeight: '500',
-                            background: 'transparent',
-                            color: '#333',
-                            border: 'none',
-                            textAlign: 'left',
-                            cursor: 'pointer',
-                            transition: 'background-color 0.2s',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        >
-                          <span>✏️</span>
-                          <span>Edit Progress</span>
-                        </button>
-                        <div style={{
-                          height: '1px',
-                          background: '#e1e5e9',
-                          margin: '0'
-                        }} />
-                        <button
-                          onClick={() => {
-                            setShowScheduleModal(true);
-                            setShowSettingsMenu(false);
-                            // Load existing schedule if available
-                            if (club.currentBook?.schedule) {
-                              setScheduleEntries(club.currentBook.schedule);
-                            } else {
-                              setScheduleEntries([]);
-                            }
-                          }}
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem 1rem',
-                            fontSize: '0.9rem',
-                            fontWeight: '500',
-                            background: 'transparent',
-                            color: '#333',
-                            border: 'none',
-                            textAlign: 'left',
-                            cursor: 'pointer',
-                            transition: 'background-color 0.2s',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        >
-                          <span>📅</span>
-                          <span>Set Schedule</span>
-                        </button>
-                      </div>
-                    </>
                   )}
                 </div>
-              )}
             </div>
             <div style={{ display: 'flex', gap: '1.5rem' }}>
               {club.currentBook.coverUrl && (
@@ -833,6 +604,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         style={{
                           width: '100%',
+                          maxWidth: '600px',
                           padding: '0.75rem',
                           border: '2px solid #e1e5e9',
                           borderRadius: '8px',
@@ -846,6 +618,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                     {searchQuery && (
                       <div style={{
                         maxHeight: '300px',
+                        maxWidth: '600px',
                         overflowY: 'auto',
                         border: '1px solid #e1e5e9',
                         borderRadius: '8px',
@@ -1035,351 +808,139 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
               </div>
             )}
             
-            {/* Reading Progress Tracker - Full Width */}
+            {/* Reading Progress Tracker */}
             {!showChangeBook && (
-              <div style={{ marginTop: '1.5rem' }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                marginBottom: '1rem'
-              }}>
-                <span style={{ fontSize: '1rem', fontWeight: '600', color: '#333' }}>
-                  Reading Progress
-                </span>
-                <span style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: 'bold', 
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
-                }}>
-                  {progressPercentageForDisplay}%
-                </span>
-              </div>
-
-              {isEditing ? (
-                <div style={{ 
-                  padding: '1.5rem', 
-                  background: '#f8f9fa', 
-                  borderRadius: '8px',
-                  marginBottom: '1rem'
-                }}>
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ 
-                      display: 'block', 
-                      fontSize: '0.9rem', 
-                      fontWeight: '600', 
-                      color: '#333',
-                      marginBottom: '0.5rem'
-                    }}>
-                      Current Chapter
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max={totalChapters || 1000}
-                      value={currentChapter}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (isNaN(value)) {
-                          setCurrentChapter(0);
-                        } else {
-                          setCurrentChapter(Math.max(0, Math.min(value, totalChapters || 1000)));
-                        }
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        fontSize: '1rem',
-                        border: '2px solid #ddd',
-                        borderRadius: '6px',
-                        outline: 'none',
-                        transition: 'border-color 0.2s'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                      onBlur={(e) => e.target.style.borderColor = '#ddd'}
-                    />
-                  </div>
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ 
-                      display: 'block', 
-                      fontSize: '0.9rem', 
-                      fontWeight: '600', 
-                      color: '#333',
-                      marginBottom: '0.5rem'
-                    }}>
-                      Total Chapters
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={totalChapters}
-                      onChange={(e) => {
-                        const total = Math.max(1, parseInt(e.target.value) || 1);
-                        setTotalChapters(total);
-                        if (currentChapter > total) {
-                          setCurrentChapter(total);
-                        }
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        fontSize: '1rem',
-                        border: '2px solid #ddd',
-                        borderRadius: '6px',
-                        outline: 'none',
-                        transition: 'border-color 0.2s'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                      onBlur={(e) => e.target.style.borderColor = '#ddd'}
-                    />
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    gap: '0.75rem', 
-                    justifyContent: 'flex-end' 
-                  }}>
-                    <button
-                      onClick={handleCancel}
-                      disabled={saving}
-                      style={{
-                        padding: '0.75rem 1.5rem',
-                        fontSize: '0.9rem',
-                        fontWeight: '600',
-                        background: '#f0f0f0',
-                        color: '#333',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: saving ? 'not-allowed' : 'pointer',
-                        opacity: saving ? 0.6 : 1,
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => !saving && (e.currentTarget.style.backgroundColor = '#e0e0e0')}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      style={{
-                        padding: '0.75rem 1.5rem',
-                        fontSize: '0.9rem',
-                        fontWeight: '600',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: saving ? 'not-allowed' : 'pointer',
-                        opacity: saving ? 0.6 : 1,
-                        transition: 'opacity 0.2s'
-                      }}
-                      onMouseEnter={(e) => !saving && (e.currentTarget.style.opacity = '0.9')}
-                      onMouseLeave={(e) => e.currentTarget.style.opacity = saving ? '0.6' : '1'}
-                    >
-                      {saving ? 'Saving...' : 'Save'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {/* Progress Bar Container - allows circle to overflow */}
-                  <div style={{ 
-                    position: 'relative',
-                    padding: '4px 0',
-                    marginBottom: '0.75rem'
-                  }}>
-                    {/* Progress Bar - Redesigned */}
-                    <div style={{
-                      width: '100%',
-                      height: '12px',
-                      backgroundColor: '#f0f0f5',
-                      borderRadius: '20px',
-                      overflow: 'hidden',
-                      position: 'relative',
-                      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.06)'
-                    }}>
-                      {/* Completed chapters */}
-                      <div style={{
-                        width: `${Math.min(progressPercentageForDisplay, 100)}%`,
-                        height: '100%',
-                        background: 'linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%)',
-                        backgroundSize: '200% 100%',
-                        borderRadius: progressPercentageForDisplay >= 100 ? '20px' : '20px 0 0 20px',
-                        transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                        position: 'relative',
-                        boxShadow: '0 0 20px rgba(102, 126, 234, 0.4)',
-                        animation: 'shimmer 3s ease-in-out infinite'
-                      }} />
-                      
-                      {/* Remaining chapters */}
-                      {progressPercentageForDisplay < 100 && (
-                        <div style={{
-                          position: 'absolute',
-                          left: `${progressPercentageForDisplay}%`,
-                          width: `${100 - progressPercentageForDisplay}%`,
-                          height: '100%',
-                          background: 'linear-gradient(90deg, rgba(255,107,107,0.3) 0%, rgba(255,142,142,0.4) 100%)',
-                          borderRadius: '0 20px 20px 0',
-                          borderLeft: '1px solid rgba(255,107,107,0.2)'
-                        }} />
-                      )}
-                    </div>
-                    
-                    {/* Progress Indicator - Glowing dot at current position - positioned outside the bar */}
-                    {progressPercentageForDisplay >= 0 && progressPercentageForDisplay < 100 && (
-                      <div style={{
-                        position: 'absolute',
-                        left: `${Math.max(progressPercentageForDisplay, 0)}%`,
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: '20px',
-                        height: '20px',
-                        backgroundColor: '#764ba2',
-                        borderRadius: '50%',
-                        boxShadow: '0 0 0 3px white, 0 0 0 5px rgba(118, 75, 162, 0.3), 0 2px 8px rgba(118, 75, 162, 0.4)',
-                        zIndex: 10,
-                        border: '2px solid white'
-                      }} />
-                    )}
-                  </div>
-                  
-                  {/* Chapter Info */}
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    fontSize: '0.85rem',
-                    color: '#666',
-                    padding: '0 0.25rem'
-                  }}>
-                    <span style={{ fontWeight: '500', color: '#764ba2' }}>
-                      {totalChapters > 0 ? (
-                        currentChapter === 0 ? (
-                          <>Just starting!</>
-                        ) : (
-                          <>Chapter {currentChapter}</>
-                        )
-                      ) : (
-                        <>Progress: {progressPercentageForDisplay}%</>
-                      )}
-                    </span>
-                    {totalChapters > 0 && (
-                      <span style={{ color: '#999' }}>
-                        of {totalChapters} chapter{totalChapters !== 1 ? 's' : ''}
-                      </span>
-                    )}
-                  </div>
-                </>
-              )}
-              </div>
+              <ReadingProgressTracker
+                ref={progressTrackerRef}
+                club={club}
+                isAdmin={!!isAdmin}
+                onSave={async (currentPages, totalPages) => {
+                  if (!isAdmin || !club.currentBook) return;
+                  const percentage = totalPages > 0
+                    ? Math.round((currentPages / totalPages) * 100)
+                    : (club.currentBook?.progress?.percentage ?? 0);
+                  const clubRef = ref(db, `clubs/${club.id}/currentBook/progress`);
+                  await update(clubRef, {
+                    currentPages,
+                    totalPages,
+                    percentage
+                  });
+                }}
+              />
             )}
 
             {/* Reading Schedule Display */}
-            {club.currentBook?.schedule && club.currentBook.schedule.length > 0 && (
-              <div style={{ marginTop: '1.5rem' }}>
-                <h4 style={{ 
-                  fontSize: '1rem', 
-                  fontWeight: '600', 
-                  color: '#333',
-                  marginBottom: '1rem'
-                }}>
-                  📅 Reading Schedule
-                </h4>
-                <div style={{
-                  background: '#f8f9fa',
-                  borderRadius: '8px',
-                  padding: '1rem',
-                  maxHeight: '300px',
-                  overflowY: 'auto'
-                }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    {club.currentBook.schedule.map((entry, index) => {
-                      const entryDate = new Date(entry.date);
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      const isPast = entryDate < today;
-                      const isToday = entryDate.toDateString() === today.toDateString();
-                      
-                      return (
-                        <div
-                          key={index}
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '0.75rem',
-                            background: isToday ? '#e0f2fe' : isPast ? '#f1f5f9' : 'white',
-                            borderRadius: '6px',
-                            border: isToday ? '2px solid #667eea' : '1px solid #e1e5e9',
-                            transition: 'all 0.2s'
-                          }}
-                        >
-                          <div>
-                            <div style={{ 
-                              fontSize: '0.85rem', 
-                              color: '#666',
-                              marginBottom: '0.25rem'
-                            }}>
-                              {entryDate.toLocaleDateString('en-US', {
-                                weekday: 'short',
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric'
-                              })}
-                            </div>
-                            <div style={{ 
-                              fontSize: '0.9rem', 
-                              fontWeight: '600',
-                              color: isToday ? '#667eea' : '#333'
-                            }}>
-                              Read through Chapter {entry.chapter}
-                            </div>
-                          </div>
-                          {isToday && (
-                            <span style={{
-                              padding: '0.25rem 0.5rem',
-                              background: '#667eea',
-                              color: 'white',
-                              borderRadius: '12px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600'
-                            }}>
-                              Today
-                            </span>
-                          )}
-                          {isPast && !isToday && (
-                            <span style={{
-                              padding: '0.25rem 0.5rem',
-                              background: '#94a3b8',
-                              color: 'white',
-                              borderRadius: '12px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600'
-                            }}>
-                              Past
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            <style>{`
-              @keyframes shimmer {
-                0%, 100% {
-                  background-position: 0% 50%;
+            <ReadingScheduleDisplay 
+              club={club} 
+              isAdmin={!!isAdmin}
+              onOpenScheduleModal={() => {
+                setShowScheduleModal(true);
+                // Load existing schedule if available
+                if (club.currentBook?.schedule) {
+                  setScheduleEntries(club.currentBook.schedule);
+                  // Determine tracking mode from existing entries
+                  const hasPages = club.currentBook.schedule.some(e => e.pages);
+                  const hasChapters = club.currentBook.schedule.some(e => e.chapter);
+                  if (hasPages) {
+                    setTrackingMode('pages');
+                    setTotalValue(club.currentBook.progress?.totalPages);
+                  } else if (hasChapters) {
+                    setTrackingMode('chapters');
+                    const progress = club.currentBook.progress as any;
+                    setTotalValue(progress?.totalChapters);
+                  }
+                        } else {
+                  setScheduleEntries([]);
+                  // Default to pages, use pageCount if available
+                  setTrackingMode('pages');
+                  setTotalValue(club.currentBook?.pageCount);
                 }
-                50% {
-                  background-position: 100% 50%;
+              }}
+              onMarkCompleted={async (entryIndex, pages, chapter, isUnmarking = false) => {
+                if (!isAdmin || !club.currentBook) return;
+                
+                // Determine if tracking by chapters
+                const schedule = club.currentBook.schedule || [];
+                const hasChapters = schedule.some(e => e.chapter);
+                const hasPages = schedule.some(e => e.pages);
+                const trackingByChapters = hasChapters && !hasPages;
+                
+                // Get the correct total based on tracking mode
+                let totalPages = 0;
+                if (trackingByChapters) {
+                  const progress = club.currentBook.progress as any;
+                  const totalChapters = progress?.totalChapters;
+                  if (totalChapters) {
+                    totalPages = totalChapters * 12; // Convert to pages for calculation
+                  } else {
+                    totalPages = club.currentBook.pageCount || 300;
+                  }
+                } else {
+                  totalPages = club.currentBook.progress?.totalPages ?? club.currentBook.pageCount ?? 300;
                 }
-              }
-            `}</style>
+                
+                if (isUnmarking) {
+                  // Find the previous meeting's target
+                  let newCurrentPages = 0;
+                  const schedule = club.currentBook.schedule || [];
+                  
+                  // Look for previous meetings
+                  for (let i = entryIndex - 1; i >= 0; i--) {
+                    const prevEntry = schedule[i];
+                    if (prevEntry) {
+                      if (prevEntry.pages && prevEntry.pages > 0) {
+                        newCurrentPages = prevEntry.pages;
+                        break;
+                      } else if (prevEntry.chapter) {
+                        newCurrentPages = prevEntry.chapter * 12;
+                        break;
+                      }
+                    }
+                  }
+                  // If no previous meeting found, set to 0
+                  
+                  const percentage = totalPages > 0
+                    ? Math.round((newCurrentPages / totalPages) * 100)
+                    : 0;
+                  
+                  // Update Firebase
+                  const clubRef = ref(db, `clubs/${club.id}/currentBook/progress`);
+                  await update(clubRef, {
+                    currentPages: newCurrentPages,
+                    totalPages,
+                    percentage
+                  });
+                } else {
+                  // Calculate the target pages based on what's set
+                  let targetPages = 0;
+                  if (pages && pages > 0) {
+                    targetPages = pages;
+                  } else if (chapter) {
+                    // Estimate 12 pages per chapter
+                    targetPages = chapter * 12;
+                  } else {
+                    return; // No target set, can't mark as completed
+                  }
+                  
+                  // Update progress to the target pages (or keep current if already higher)
+                  const currentPages = club.currentBook.progress?.currentPages ?? 0;
+                  const newCurrentPages = Math.max(currentPages, targetPages);
+                  
+                  // Calculate percentage
+                  const percentage = totalPages > 0
+                    ? Math.round((newCurrentPages / totalPages) * 100)
+                    : (club.currentBook.progress?.percentage ?? 0);
+                  
+                  // Update Firebase
+                  const clubRef = ref(db, `clubs/${club.id}/currentBook/progress`);
+                  await update(clubRef, {
+                    currentPages: newCurrentPages,
+                    totalPages,
+                    percentage
+                  });
+                }
+              }}
+            />
           </div>
         )}
 
@@ -1419,8 +980,75 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                 Set Reading Schedule
               </h3>
               <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                Create a reading schedule for "{club.currentBook?.title}". Add dates and chapters to keep the club on track.
+                Create a reading schedule for "{club.currentBook?.title}". Add dates and targets to keep the club on track.
               </p>
+
+              {/* Tracking Mode Selector */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                  Track by
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => setTrackingMode('pages')}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      background: trackingMode === 'pages' ? '#667eea' : '#f0f0f0',
+                      color: trackingMode === 'pages' ? 'white' : '#666',
+                      border: '1px solid',
+                      borderColor: trackingMode === 'pages' ? '#667eea' : '#e0e0e0',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Pages
+                  </button>
+                  <button
+                    onClick={() => setTrackingMode('chapters')}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      background: trackingMode === 'chapters' ? '#667eea' : '#f0f0f0',
+                      color: trackingMode === 'chapters' ? 'white' : '#666',
+                      border: '1px solid',
+                      borderColor: trackingMode === 'chapters' ? '#667eea' : '#e0e0e0',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Chapters
+                  </button>
+                </div>
+              </div>
+
+              {/* Total Input */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                  Total {trackingMode === 'pages' ? 'Pages' : 'Chapters'}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={totalValue || ''}
+                  onChange={(e) => setTotalValue(e.target.value ? parseInt(e.target.value) : undefined)}
+                  style={{
+                    width: '100%',
+                    maxWidth: '200px',
+                    padding: '0.5rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    height: '38px',
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder={`Enter total ${trackingMode}`}
+                />
+              </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
                 {scheduleEntries.map((entry, index) => (
@@ -1436,7 +1064,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                       <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#374151' }}>
-                        Entry {index + 1}
+                        Meeting {index + 1}
                       </span>
                       <button
                         onClick={() => handleRemoveScheduleEntry(index)}
@@ -1452,9 +1080,9 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                         ×
                       </button>
                     </div>
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                       <div style={{ flex: 1 }}>
-                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#374151', marginBottom: '0.25rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
                           Date
                         </label>
                         <input
@@ -1466,46 +1094,67 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                             padding: '0.5rem',
                             border: '1px solid #d1d5db',
                             borderRadius: '6px',
-                            fontSize: '0.9rem'
+                            fontSize: '0.9rem',
+                            height: '38px',
+                            boxSizing: 'border-box'
                           }}
                         />
                       </div>
-                      <div style={{ flex: '0 0 120px' }}>
-                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#374151', marginBottom: '0.25rem' }}>
-                          Read to Chapter
+                      <div style={{ flex: '0 0 140px' }}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                          Through {trackingMode === 'pages' ? 'Page' : 'Chapter'}
                         </label>
                         <input
                           type="number"
-                          min="1"
-                          max={totalChapters || 999}
-                          value={entry.chapter || ''}
-                          onChange={(e) => handleUpdateScheduleEntry(index, 'chapter', parseInt(e.target.value) || 1)}
+                          min="0"
+                          max={totalValue || 9999}
+                          value={trackingMode === 'pages' ? (entry.pages || '') : (entry.chapter || '')}
+                          onChange={(e) => {
+                            const value = e.target.value ? parseInt(e.target.value) : undefined;
+                            if (trackingMode === 'pages') {
+                              handleUpdateScheduleEntry(index, 'pages', value);
+                              // Clear chapter when setting pages
+                              if (value) {
+                                const updated = [...scheduleEntries];
+                                const { chapter: _, ...rest } = updated[index];
+                                updated[index] = rest as any;
+                                setScheduleEntries(updated);
+                              }
+                            } else {
+                              handleUpdateScheduleEntry(index, 'chapter', value);
+                              // Clear pages when setting chapter
+                              if (value) {
+                                const updated = [...scheduleEntries];
+                                const { pages: _, ...rest } = updated[index];
+                                updated[index] = rest as any;
+                                setScheduleEntries(updated);
+                              }
+                            }
+                          }}
                           style={{
                             width: '100%',
                             padding: '0.5rem',
                             border: '1px solid #d1d5db',
                             borderRadius: '6px',
-                            fontSize: '0.9rem'
+                            fontSize: '0.9rem',
+                            height: '38px',
+                            boxSizing: 'border-box'
                           }}
                         />
                       </div>
                     </div>
-                    {totalChapters > 0 && (
+                    {totalValue && ((trackingMode === 'pages' && entry.pages) || (trackingMode === 'chapters' && entry.chapter)) && (
                       <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#6b7280' }}>
-                        {entry.chapter > 0 ? (
                           <span>
-                            ~{Math.round((entry.chapter / totalChapters) * 100)}% of book
+                          ~{Math.round((((trackingMode === 'pages' ? entry.pages : entry.chapter) || 0) / totalValue) * 100)}% of book
                           </span>
-                        ) : (
-                          <span>Set chapter to see progress</span>
-                        )}
                       </div>
                     )}
                   </div>
                 ))}
                 {scheduleEntries.length === 0 && (
                   <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
-                    No schedule entries yet. Click "Add Entry" to create one.
+                    No schedule entries yet. Click "Add Meeting" to create one.
                   </div>
                 )}
               </div>
@@ -1527,7 +1176,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                   onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
                   onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
                 >
-                  + Add Entry
+                  + Add Meeting
                 </button>
               </div>
 
