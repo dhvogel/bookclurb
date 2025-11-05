@@ -30,6 +30,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
   }>>([]);
   const [trackingMode, setTrackingMode] = useState<'pages' | 'chapters'>('pages');
   const [totalValue, setTotalValue] = useState<number | undefined>(undefined);
+  // Track raw input values for number fields to allow typing
+  const [rawInputValues, setRawInputValues] = useState<Record<string, string>>({});
   
   const progressTrackerRef = useRef<ReadingProgressTrackerRef>(null);
 
@@ -218,6 +220,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
       
       await update(clubRef, updates);
       setShowScheduleModal(false);
+      setRawInputValues({}); // Clear raw input values when modal closes
       alert('Schedule saved successfully!');
     } catch (error) {
       console.error('Failed to save schedule:', error);
@@ -231,6 +234,18 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
 
   const handleRemoveScheduleEntry = (index: number) => {
     setScheduleEntries(scheduleEntries.filter((_, i) => i !== index));
+    // Clear raw input values for removed entry and shift indices
+    setRawInputValues(prev => {
+      const next = { ...prev };
+      // Remove all entries for this index and above, then shift
+      Object.keys(next).forEach(key => {
+        const keyIndex = parseInt(key.split('-')[0]);
+        if (keyIndex >= index) {
+          delete next[key];
+        }
+      });
+      return next;
+    });
   };
 
   const handleUpdateScheduleEntry = (index: number, field: 'date' | 'pages' | 'chapter', value: string | number | undefined) => {
@@ -977,7 +992,10 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
               justifyContent: 'center',
               padding: '1rem'
             }}
-            onClick={() => setShowScheduleModal(false)}
+            onClick={() => {
+              setShowScheduleModal(false);
+              setRawInputValues({}); // Clear raw input values when modal closes
+            }}
           >
             <div
               style={{
@@ -1006,7 +1024,10 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
-                    onClick={() => setTrackingMode('pages')}
+                    onClick={() => {
+                      setTrackingMode('pages');
+                      setRawInputValues({}); // Clear raw input values when tracking mode changes
+                    }}
                     style={{
                       padding: '0.5rem 1rem',
                       fontSize: '0.9rem',
@@ -1023,7 +1044,10 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                     Pages
                   </button>
                   <button
-                    onClick={() => setTrackingMode('chapters')}
+                    onClick={() => {
+                      setTrackingMode('chapters');
+                      setRawInputValues({}); // Clear raw input values when tracking mode changes
+                    }}
                     style={{
                       padding: '0.5rem 1rem',
                       fontSize: '0.9rem',
@@ -1124,28 +1148,64 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                           type="number"
                           min="0"
                           max={totalValue || 9999}
-                          value={trackingMode === 'pages' ? (entry.pages || '') : (entry.chapter || '')}
+                          value={rawInputValues[`${index}-${trackingMode}`] ?? (trackingMode === 'pages' ? (entry.pages ?? '') : (entry.chapter ?? ''))}
                           onChange={(e) => {
-                            const value = e.target.value ? parseInt(e.target.value) : undefined;
-                            if (trackingMode === 'pages') {
-                              handleUpdateScheduleEntry(index, 'pages', value);
-                              // Clear chapter when setting pages
-                              if (value) {
-                                const updated = [...scheduleEntries];
-                                const { chapter: _, ...rest } = updated[index];
-                                updated[index] = rest as any;
-                                setScheduleEntries(updated);
-                              }
-                            } else {
-                              handleUpdateScheduleEntry(index, 'chapter', value);
-                              // Clear pages when setting chapter
-                              if (value) {
-                                const updated = [...scheduleEntries];
-                                const { pages: _, ...rest } = updated[index];
-                                updated[index] = rest as any;
-                                setScheduleEntries(updated);
+                            const inputValue = e.target.value;
+                            const inputKey = `${index}-${trackingMode}`;
+                            
+                            // Store raw input value for immediate display
+                            setRawInputValues(prev => ({
+                              ...prev,
+                              [inputKey]: inputValue
+                            }));
+                            
+                            const updated = [...scheduleEntries];
+                            
+                            // Parse the input value, handling empty strings and invalid input
+                            let numValue: number | undefined = undefined;
+                            if (inputValue !== '' && inputValue != null) {
+                              const parsed = parseInt(inputValue, 10);
+                              if (!isNaN(parsed) && parsed >= 0) {
+                                numValue = parsed;
                               }
                             }
+                            
+                            if (trackingMode === 'pages') {
+                              if (inputValue === '' || numValue === undefined) {
+                                // Clear pages field when empty or invalid
+                                const { pages: _, chapter: __, ...rest } = updated[index];
+                                updated[index] = { ...rest };
+                              } else {
+                                // Update pages with valid number
+                                updated[index] = { ...updated[index], pages: numValue };
+                                // Clear chapter when setting pages
+                                const { chapter: _, ...rest } = updated[index];
+                                updated[index] = rest as any;
+                              }
+                            } else {
+                              if (inputValue === '' || numValue === undefined) {
+                                // Clear chapter field when empty or invalid
+                                const { chapter: _, pages: __, ...rest } = updated[index];
+                                updated[index] = { ...rest };
+                              } else {
+                                // Update chapter with valid number
+                                updated[index] = { ...updated[index], chapter: numValue };
+                                // Clear pages when setting chapter
+                                const { pages: _, ...rest } = updated[index];
+                                updated[index] = rest as any;
+                              }
+                            }
+                            
+                            setScheduleEntries(updated);
+                          }}
+                          onBlur={(e) => {
+                            // Clear raw input value on blur, let the actual value take over
+                            const inputKey = `${index}-${trackingMode}`;
+                            setRawInputValues(prev => {
+                              const next = { ...prev };
+                              delete next[inputKey];
+                              return next;
+                            });
                           }}
                           style={{
                             width: '100%',
@@ -1198,7 +1258,10 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
 
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
                 <button
-                  onClick={() => setShowScheduleModal(false)}
+                  onClick={() => {
+                    setShowScheduleModal(false);
+                    setRawInputValues({}); // Clear raw input values when modal closes
+                  }}
                   style={{
                     background: 'transparent',
                     color: '#666',
