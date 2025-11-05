@@ -95,6 +95,7 @@ export interface Club {
     readBy: string[]; // Array of member names who read this book
     completedAt?: string; // When the club finished reading this book
     ratings?: Record<string, number>; // Map of userId to rating (1-5)
+    reviews?: Record<string, string>; // Map of userId to review text
   }>;
   members?: Array<{
     id: string;

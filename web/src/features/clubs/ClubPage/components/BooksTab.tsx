@@ -31,6 +31,9 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
   const [savingBookReaders, setSavingBookReaders] = useState(false);
   const [savingRatings, setSavingRatings] = useState<Record<number, boolean>>({});
   const [showSubmissions, setShowSubmissions] = useState(false);
+  const [editingReviewIndex, setEditingReviewIndex] = useState<number | null>(null);
+  const [reviewText, setReviewText] = useState<string>('');
+  const [savingReviews, setSavingReviews] = useState<Record<number, boolean>>({});
 
   // Check if current user is an admin
   const isAdmin = club.members?.some(
@@ -240,10 +243,118 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
         booksRead: updatedBooksRead
       });
     } catch (error) {
-      console.error('Failed to update rating:', error);
+      console.error('Failed to save rating:', error);
       alert('Failed to save rating. Please try again.');
     } finally {
       setSavingRatings(prev => ({ ...prev, [bookIndex]: false }));
+    }
+  };
+
+  // Function to handle review changes
+  const handleReviewSave = async (bookIndex: number) => {
+    if (!club.booksRead || bookIndex < 0 || bookIndex >= club.booksRead.length) {
+      return;
+    }
+
+    setSavingReviews(prev => ({ ...prev, [bookIndex]: true }));
+    try {
+      const clubRef = ref(db, `clubs/${club.id}`);
+      const updatedBooksRead = [...club.booksRead];
+      const currentReviews = updatedBooksRead[bookIndex].reviews || {};
+      
+      // If review text is empty, remove the review
+      if (reviewText.trim() === '') {
+        const { [userId]: _, ...rest } = currentReviews;
+        
+        if (Object.keys(rest).length > 0) {
+          // If there are other reviews, keep the reviews property with remaining reviews
+          updatedBooksRead[bookIndex] = {
+            ...updatedBooksRead[bookIndex],
+            reviews: rest
+          };
+        } else {
+          // If no reviews left, remove the reviews property entirely by omitting it
+          const { reviews: _, ...bookWithoutReviews } = updatedBooksRead[bookIndex];
+          updatedBooksRead[bookIndex] = bookWithoutReviews as any;
+        }
+      } else {
+        updatedBooksRead[bookIndex] = {
+          ...updatedBooksRead[bookIndex],
+          reviews: {
+            ...currentReviews,
+            [userId]: reviewText.trim()
+          }
+        };
+      }
+      
+      await update(clubRef, {
+        booksRead: updatedBooksRead
+      });
+      
+      setEditingReviewIndex(null);
+      setReviewText('');
+    } catch (error) {
+      console.error('Failed to save review:', error);
+      alert('Failed to save review. Please try again.');
+    } finally {
+      setSavingReviews(prev => ({ ...prev, [bookIndex]: false }));
+    }
+  };
+
+  // Function to start editing a review
+  const handleStartEditReview = (bookIndex: number) => {
+    if (!club.booksRead || bookIndex < 0 || bookIndex >= club.booksRead.length) {
+      return;
+    }
+    const book = club.booksRead[bookIndex];
+    const existingReview = book.reviews?.[userId] || '';
+    setReviewText(existingReview);
+    setEditingReviewIndex(bookIndex);
+  };
+
+  // Function to delete a review
+  const handleDeleteReview = async (bookIndex: number) => {
+    if (!club.booksRead || bookIndex < 0 || bookIndex >= club.booksRead.length) {
+      return;
+    }
+
+    // Confirm deletion
+    if (!window.confirm('Are you sure you want to delete your review?')) {
+      return;
+    }
+
+    setSavingReviews(prev => ({ ...prev, [bookIndex]: true }));
+    try {
+      const clubRef = ref(db, `clubs/${club.id}`);
+      const updatedBooksRead = [...club.booksRead];
+      const currentReviews = updatedBooksRead[bookIndex].reviews || {};
+      
+      // Remove the user's review
+      const { [userId]: _, ...rest } = currentReviews;
+      
+      if (Object.keys(rest).length > 0) {
+        // If there are other reviews, keep the reviews property with remaining reviews
+        updatedBooksRead[bookIndex] = {
+          ...updatedBooksRead[bookIndex],
+          reviews: rest
+        };
+      } else {
+        // If no reviews left, remove the reviews property entirely by omitting it
+        const { reviews: _, ...bookWithoutReviews } = updatedBooksRead[bookIndex];
+        updatedBooksRead[bookIndex] = bookWithoutReviews as any;
+      }
+      
+      await update(clubRef, {
+        booksRead: updatedBooksRead
+      });
+      
+      setEditingReviewIndex(null);
+      setReviewText('');
+    } catch (error) {
+      console.error('Failed to delete review:', error);
+      alert('Failed to delete review. Please try again.');
+    } finally {
+      setSavingReviews(prev => ({ ...prev, [bookIndex]: false }));
     }
   };
 
@@ -935,6 +1046,237 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                         </div>
                       </div>
                     )}
+                    
+                    {/* Reviews Section */}
+                    <div style={{ 
+                      marginTop: '0.75rem',
+                      padding: '0.75rem',
+                      background: '#ffffff',
+                      borderRadius: '6px',
+                      border: '1px solid #e9ecef'
+                    }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        marginBottom: '0.5rem'
+                      }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#333' }}>
+                          Reviews
+                        </span>
+                        {editingReviewIndex !== index && (
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            {book.reviews?.[userId] && (
+                              <button
+                                onClick={() => handleDeleteReview(index)}
+                                disabled={savingReviews[index]}
+                                style={{
+                                  padding: '0.25rem 0.5rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '500',
+                                  background: 'transparent',
+                                  color: '#dc3545',
+                                  border: '1px solid #dc3545',
+                                  borderRadius: '4px',
+                                  cursor: savingReviews[index] ? 'not-allowed' : 'pointer',
+                                  transition: 'all 0.2s',
+                                  opacity: savingReviews[index] ? 0.6 : 1
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!savingReviews[index]) {
+                                    e.currentTarget.style.background = '#dc3545';
+                                    e.currentTarget.style.color = 'white';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!savingReviews[index]) {
+                                    e.currentTarget.style.background = 'transparent';
+                                    e.currentTarget.style.color = '#dc3545';
+                                  }
+                                }}
+                              >
+                                {savingReviews[index] ? 'Deleting...' : 'Delete Review'}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleStartEditReview(index)}
+                              style={{
+                                padding: '0.25rem 0.5rem',
+                                fontSize: '0.75rem',
+                                fontWeight: '500',
+                                background: 'transparent',
+                                color: '#667eea',
+                                border: '1px solid #667eea',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#667eea';
+                                e.currentTarget.style.color = 'white';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.color = '#667eea';
+                              }}
+                            >
+                              {book.reviews?.[userId] ? 'Edit Review' : 'Write Review'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* User's own review editing */}
+                      {editingReviewIndex === index && (
+                        <div style={{ marginBottom: '0.75rem', marginLeft: '0.5rem', marginRight: '0.5rem' }}>
+                          <textarea
+                            value={reviewText}
+                            onChange={(e) => setReviewText(e.target.value)}
+                            placeholder="Share your thoughts about this book..."
+                            style={{
+                              width: '100%',
+                              minHeight: '100px',
+                              padding: '0.75rem',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '6px',
+                              fontSize: '0.9rem',
+                              fontFamily: 'inherit',
+                              resize: 'vertical',
+                              outline: 'none',
+                              transition: 'border-color 0.2s',
+                              boxSizing: 'border-box'
+                            }}
+                            onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                          />
+                          <div style={{ 
+                            display: 'flex', 
+                            gap: '0.5rem', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginTop: '0.5rem'
+                          }}>
+                            <button
+                              onClick={() => handleDeleteReview(index)}
+                              disabled={savingReviews[index]}
+                              style={{
+                                padding: '0.5rem 1rem',
+                                fontSize: '0.85rem',
+                                fontWeight: '500',
+                                background: 'transparent',
+                                color: '#dc3545',
+                                border: '1px solid #dc3545',
+                                borderRadius: '6px',
+                                cursor: savingReviews[index] ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.2s',
+                                opacity: savingReviews[index] ? 0.6 : 1
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!savingReviews[index]) {
+                                  e.currentTarget.style.background = '#dc3545';
+                                  e.currentTarget.style.color = 'white';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!savingReviews[index]) {
+                                  e.currentTarget.style.background = 'transparent';
+                                  e.currentTarget.style.color = '#dc3545';
+                                }
+                              }}
+                            >
+                              {savingReviews[index] ? 'Deleting...' : 'Delete Review'}
+                            </button>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <button
+                                onClick={() => {
+                                  setEditingReviewIndex(null);
+                                  setReviewText('');
+                                }}
+                                disabled={savingReviews[index]}
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  fontSize: '0.85rem',
+                                  fontWeight: '500',
+                                  background: 'transparent',
+                                  color: '#666',
+                                  border: '1px solid #d1d5db',
+                                  borderRadius: '6px',
+                                  cursor: savingReviews[index] ? 'not-allowed' : 'pointer',
+                                  transition: 'all 0.2s',
+                                  opacity: savingReviews[index] ? 0.6 : 1
+                                }}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => handleReviewSave(index)}
+                                disabled={savingReviews[index]}
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  fontSize: '0.85rem',
+                                  fontWeight: '500',
+                                  background: savingReviews[index] ? '#ccc' : '#667eea',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: savingReviews[index] ? 'not-allowed' : 'pointer',
+                                  transition: 'opacity 0.2s',
+                                  opacity: savingReviews[index] ? 0.7 : 1
+                                }}
+                              >
+                                {savingReviews[index] ? 'Saving...' : 'Save Review'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Display existing reviews */}
+                      {book.reviews && Object.keys(book.reviews).length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          {Object.entries(book.reviews)
+                            .filter(([reviewerId]) => editingReviewIndex !== index || reviewerId !== userId)
+                            .map(([reviewerId, reviewText]) => (
+                            <div 
+                              key={reviewerId}
+                              style={{
+                                padding: '0.75rem',
+                                background: reviewerId === userId ? '#f0f4ff' : '#f8f9fa',
+                                borderRadius: '6px',
+                                border: reviewerId === userId ? '1px solid #667eea' : '1px solid #e9ecef'
+                              }}
+                            >
+                              <div style={{ 
+                                fontSize: '0.75rem', 
+                                fontWeight: '600', 
+                                color: '#667eea',
+                                marginBottom: '0.25rem'
+                              }}>
+                                {reviewerId === userId ? 'Your Review' : getUserName(reviewerId)}
+                              </div>
+                              <div style={{ 
+                                fontSize: '0.9rem', 
+                                color: '#333',
+                                lineHeight: '1.5',
+                                whiteSpace: 'pre-wrap'
+                              }}>
+                                {reviewText}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ 
+                          fontSize: '0.85rem', 
+                          color: '#999', 
+                          fontStyle: 'italic',
+                          textAlign: 'center',
+                          padding: '0.5rem'
+                        }}>
+                          No reviews yet. Be the first to share your thoughts!
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
