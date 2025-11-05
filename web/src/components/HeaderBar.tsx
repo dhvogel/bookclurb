@@ -255,6 +255,34 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         >
           Blog
         </a>
+        <a
+          href="https://forms.gle/kXAQCacwepZiBWJg8"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: "rgba(255, 255, 255, 0.85)",
+            background: "transparent",
+            padding: "clamp(0.3rem, 1vw, 0.5rem) clamp(0.6rem, 2vw, 1.2rem)",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: "400",
+            fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
+            letterSpacing: "0.5px",
+            transition: "all 0.3s ease",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+            border: "1px solid transparent",
+            position: "relative",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+          }}
+        >
+          Feedback
+        </a>
         {user ? (
           <a
             href="/profile"
@@ -437,6 +465,33 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
           }}
         >
           Blog
+        </a>
+        <a
+          href="https://forms.gle/YOUR_FORM_ID_HERE"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: "rgba(255, 255, 255, 0.85)",
+            background: "transparent",
+            padding: "0.75rem 1rem",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: "400",
+            fontSize: "1.1rem",
+            letterSpacing: "0.5px",
+            transition: "all 0.3s ease",
+            marginBottom: "0.5rem",
+            border: "1px solid transparent",
+          }}
+          onClick={() => setIsMobileMenuOpen(false)}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+          }}
+        >
+          Feedback
         </a>
         {user ? (
           <a

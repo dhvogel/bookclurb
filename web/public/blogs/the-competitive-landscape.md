@@ -28,4 +28,13 @@ However, Bookum, like bookclubs.com is also closed source and not true freemium 
 
 Goodreads is Amazon-owned and the world's largest site for readers and book recommendations. It's mainly used for cataloguing one's personal reading collection and writing reviews for books. There are some social features, such as "Books My Friends Are Reading", but, like Bookum, the emphasis is really on individual book tracking and individual review contributions. 
 
-It would be great, for example, to hook into the Goodreads system, but Goodreads famously [shut down its API](https://debugger.medium.com/goodreads-is-retiring-its-current-api-and-book-loving-developers-arent-happy-11ed764dd95), making it more of a closed system. 
+It would be great, for example, to hook into the Goodreads system, but Goodreads famously [shut down its API](https://debugger.medium.com/goodreads-is-retiring-its-current-api-and-book-loving-developers-arent-happy-11ed764dd95), making it more of a closed system. An open-source alternative called [Hardcover](https://hardcover.app) has popped up, and maybe this is an opportunity for integration. 
+
+4. Other open-source book club management projects
+
+This idea of an open-source book club management app has been tried several times by [TSPARR](https://github.com/TSPARR/hardcover_bookclub), [danielksato](https://github.com/danielksato/BookClub), [christywchen](https://github.com/christywchen/the-book-nook), 
+[omurilolima](https://github.com/omurilolima/book-club), and probably others. 
+
+Most haven't seen development in years except for TSPARR/hardcover_bookclub, which has been dormant for two months but prior to that seemed to put in real effort to marketing it as a product (for example, see the reddit post seven months ago [here](https://www.reddit.com/r/selfhosted/comments/1jkevyi/hardcover_bookclub_a_selfhosted_bookclub_app_that)).
+
+One possible explanation for why no prior open-source book club management projects have succeeded is that they were developed in the pre-AI era. Now that AI has driven down development cost, it may be worth revisiting a problem that is a clear problem, but perhaps not a big enough problem to hire an entire development team to solve. BookClurb is a test of this theory.
