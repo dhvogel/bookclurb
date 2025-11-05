@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Database, ref, onValue, update } from 'firebase/database';
+import { Database, ref, onValue, update, get } from 'firebase/database';
 import HeaderBar from './HeaderBar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ClubsProps, Club } from '../types';
@@ -115,12 +115,15 @@ interface ClubCardProps {
   club: Club;
   onClubClick: (clubId: string) => void;
   onLongPress: (clubId: string, event: React.MouseEvent) => void;
+  onJoinClub?: (clubId: string, event: React.MouseEvent) => void;
   user: any;
   isPrivate?: boolean;
+  isMember?: boolean;
 }
 
-const ClubCard: React.FC<ClubCardProps> = ({ club, onClubClick, onLongPress, user, isPrivate = false }) => {
+const ClubCard: React.FC<ClubCardProps> = ({ club, onClubClick, onLongPress, onJoinClub, user, isPrivate = false, isMember = false }) => {
   const isPrivateClub = isPrivate || club.isPublic === false || club.isPublic === undefined;
+  const isPublicClub = club.isPublic === true && !isPrivate && !isMember;
   
   return (
     <motion.div
@@ -136,6 +139,9 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, onClubClick, onLongPress, use
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
         position: 'relative',
         opacity: isPrivateClub && !user ? 0.8 : 1,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
       }}
       onClick={() => onClubClick(club.id)}
       onContextMenu={(e) => onLongPress(club.id, e)}
@@ -240,7 +246,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, onClubClick, onLongPress, use
       </div>
 
       {/* Club Content */}
-      <div style={{ padding: '1.5rem', minHeight: '200px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {/* Next Meeting Info */}
         <div style={{ marginBottom: '1rem', minHeight: '48px' }}>
           <div style={{ 
@@ -425,17 +431,53 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, onClubClick, onLongPress, use
           );
         })()}
 
-        {/* Member Count */}
+        {/* Member Count and Button Container - ensures consistent bottom spacing */}
         <div style={{ 
-          fontSize: '0.9rem', 
-          color: '#666',
+          marginTop: 'auto',
           display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          marginTop: 'auto'
+          flexDirection: 'column',
+          gap: '0.75rem'
         }}>
-          <span>👥</span>
-          <span>{club.memberCount} member{club.memberCount === 1 ? '' : 's'}</span>
+          {/* Member Count */}
+          <div style={{ 
+            fontSize: '0.9rem', 
+            color: '#666',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span>👥</span>
+            <span>{club.memberCount} member{club.memberCount === 1 ? '' : 's'}</span>
+          </div>
+
+          {/* Join Club Button - only show for public clubs user is not a member of */}
+          {isPublicClub && user && onJoinClub && (
+            <button
+              onClick={(e) => onJoinClub(club.id, e)}
+              style={{
+                padding: '0.5rem 1rem',
+                fontSize: '0.85rem',
+                fontWeight: '500',
+                background: 'transparent',
+                color: '#667eea',
+                border: '1px solid #667eea',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                width: '100%',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#667eea';
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = '#667eea';
+              }}
+            >
+              Join Club
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
@@ -824,6 +866,75 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
     setShowMenu(true);
   };
 
+  const handleJoinClub = async (clubId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent card click
+    
+    if (!user || !db) {
+      return;
+    }
+
+    // Check if user is already a member
+    const isAlreadyMember = clubs.some(c => c.id === clubId);
+    if (isAlreadyMember) {
+      alert('You are already a member of this club!');
+      return;
+    }
+
+    try {
+      // Get club data
+      const clubRef = ref(db, `clubs/${clubId}`);
+      const clubSnapshot = await get(clubRef);
+      const clubData = clubSnapshot.val();
+
+      if (!clubData) {
+        alert('Club not found');
+        return;
+      }
+
+      // Check if club is public
+      if (clubData.isPublic !== true) {
+        alert('This club is private. You need an invitation to join.');
+        return;
+      }
+
+      // Add user to club's members array
+      const members = clubData.members || [];
+      const userMember = {
+        id: user.uid,
+        name: user.displayName || user.email || 'New Member',
+        img: user.photoURL || '',
+        role: 'member',
+        joinedAt: new Date().toISOString()
+      };
+
+      // Check if user is already a member (double-check)
+      if (!members.some((m: any) => m.id === user.uid)) {
+        members.push(userMember);
+        await update(clubRef, {
+          members: members,
+          memberCount: members.length
+        });
+      }
+
+      // Add club to user's clubs array
+      const userRef = ref(db, `users/${user.uid}`);
+      const userSnapshot = await get(userRef);
+      const userData = userSnapshot.val() || {};
+      const userClubs = userData.clubs || [];
+      
+      if (!userClubs.includes(clubId)) {
+        userClubs.push(clubId);
+        await update(userRef, { clubs: userClubs });
+      }
+
+      // Navigate to the club page
+      navigate(`/clubs/${clubId}`);
+    } catch (error) {
+      console.error('Error joining club:', error);
+      alert('Failed to join club. Please try again.');
+    }
+  };
+
   const handleMenuAction = async (action: string) => {
     if (!selectedClubId || !user || !db) return;
 
@@ -963,6 +1074,7 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                     onClubClick={handleClubClick}
                     onLongPress={handleLongPress}
                     user={user}
+                    isMember={true}
                   />
                 ))}
 
@@ -1053,7 +1165,9 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                       club={club}
                       onClubClick={handleClubClick}
                       onLongPress={handleLongPress}
+                      onJoinClub={handleJoinClub}
                       user={user}
+                      isMember={false}
                     />
                   ))}
 
