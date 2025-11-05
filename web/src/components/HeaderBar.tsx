@@ -92,7 +92,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         zIndex: 1000,
         minHeight: "60px",
         flexWrap: "nowrap",
-        overflow: "hidden",
+        overflow: "visible",
         boxSizing: "border-box",
       }}
     >
@@ -146,28 +146,32 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
       {/* Mobile hamburger menu button */}
       <button
         className="mobile-menu-btn"
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           console.log('Hamburger clicked, current state:', isMobileMenuOpen);
           setIsMobileMenuOpen(!isMobileMenuOpen);
         }}
         style={{
-          display: "none",
           background: "none",
           border: "none",
           color: "white",
           fontSize: "1.5rem",
-          marginRight: "3rem",
+          padding: "0.5rem",
           cursor: "pointer",
           borderRadius: "4px",
           transition: "background 0.2s",
           flexShrink: 0,
           zIndex: 1001,
+          display: "none",
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.background = "rgba(255,255,255,0.1)";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.background = "none";
+        }}
+        onTouchStart={(e) => {
+          e.stopPropagation();
         }}
       >
         ☰
@@ -381,23 +385,24 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
       </nav>
 
       {/* Mobile navigation menu */}
-      <div
-        className="mobile-nav"
-        style={{
-          display: isMobileMenuOpen ? "flex" : "none",
-          position: "absolute",
-          top: "100%",
-          left: 0,
-          right: 0,
-          background: "linear-gradient(90deg, #00356B 0%, #00509E 100%)",
-          flexDirection: "column",
-          padding: "1rem",
-          boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-          zIndex: 1000,
-          maxHeight: "calc(100vh - 60px)",
-          overflowY: "auto",
-        }}
-      >
+      {isMobileMenuOpen && (
+        <div
+          className="mobile-nav"
+          style={{
+            display: "flex",
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            background: "linear-gradient(90deg, #00356B 0%, #00509E 100%)",
+            flexDirection: "column",
+            padding: "1rem",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+            zIndex: 1001,
+            maxHeight: "calc(100vh - 60px)",
+            overflowY: "auto",
+          }}
+        >
         <a
           href="/clubs"
           style={{
@@ -467,7 +472,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
           Blog
         </a>
         <a
-          href="https://forms.gle/YOUR_FORM_ID_HERE"
+          href="https://forms.gle/kXAQCacwepZiBWJg8"
           target="_blank"
           rel="noopener noreferrer"
           style={{
@@ -590,7 +595,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
               Login
             </a>
         )}
-      </div>
+        </div>
+      )}
 
       <style>
         {`
