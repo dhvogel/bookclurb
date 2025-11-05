@@ -23,3 +23,9 @@ In addition, bookclubs.com is closed source. All feature work goes through the b
 Bookum is a newer mobile-first book club app that I believe has done a great job adding a social element to its product, creating its own podcasts ("Authors Talk" and "Creators Talk"), and posting snipits of these to its instagram account. I feel that where Bookclubs.com is more moms-oriented, Bookum is more millenial- and gen-z-oriented, with this social element and a flashier UI, which includes a twitter-style feed for the personal home page.
 
 However, Bookum, like bookclubs.com is also closed source and not true freemium as creating a club requires entering payment details. In general, I get the feeling that the focus is not as much on the club as it is on the individual. As of 11/3 the "Clubs" page only lists fifteen available clubs, and four of them have one member. The twitter feed and "top readers on Bookum" side panel are cool innovations, but they are focused on the individual, the feed shows the individual's social network and "top readers" shows individual accomplishments. It is just a different focus than both bookclubs.com and BookClurb.
+
+3. Goodreads.com
+
+Goodreads is Amazon-owned and the world's largest site for readers and book recommendations. It's mainly used for cataloguing one's personal reading collection and writing reviews for books. There are some social features, such as "Books My Friends Are Reading", but, like Bookum, the emphasis is really on individual book tracking and individual review contributions. 
+
+It would be great, for example, to hook into the Goodreads system, but Goodreads famously [shut down its API](https://debugger.medium.com/goodreads-is-retiring-its-current-api-and-book-loving-developers-arent-happy-11ed764dd95), making it more of a closed system. 
