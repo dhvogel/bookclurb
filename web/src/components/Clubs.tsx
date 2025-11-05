@@ -7,6 +7,109 @@ import { ClubsProps, Club } from '../types';
 import { extractClubBooksRead } from '../utils/bookUtils';
 import CreateClubModal from './CreateClubModal';
 
+// Helper function to calculate average rating for a book
+const calculateAverageRating = (ratings?: Record<string, number>): number => {
+  if (!ratings || Object.keys(ratings).length === 0) {
+    return 0;
+  }
+  const ratingValues = Object.values(ratings);
+  const sum = ratingValues.reduce((acc, val) => acc + val, 0);
+  return sum / ratingValues.length;
+};
+
+// Helper function to get highest and lowest rated books
+const getRatedBooks = (club: Club) => {
+  if (!club.booksRead || club.booksRead.length === 0) {
+    return { highest: null, lowest: null };
+  }
+
+  const ratedBooks = club.booksRead
+    .filter(book => book.ratings && Object.keys(book.ratings).length > 0)
+    .map(book => ({
+      ...book,
+      averageRating: calculateAverageRating(book.ratings)
+    }));
+
+  if (ratedBooks.length === 0) {
+    return { highest: null, lowest: null };
+  }
+
+  const highest = ratedBooks.reduce((max, book) => 
+    book.averageRating > max.averageRating ? book : max
+  );
+  
+  const lowest = ratedBooks.reduce((min, book) => 
+    book.averageRating < min.averageRating ? book : min
+  );
+
+  return { highest, lowest };
+};
+
+// Helper function to get the next upcoming meeting from reading schedule (same source as Reading Schedule display)
+const getNextMeeting = (club: Club) => {
+  if (!club.currentBook?.schedule || club.currentBook.schedule.length === 0) {
+    return null;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Find upcoming schedule entries (same logic as ReadingScheduleDisplay)
+  const upcomingEntries = club.currentBook.schedule
+    .map(entry => {
+      // Parse date string as local date to avoid timezone issues (same as ReadingScheduleDisplay)
+      const [year, month, day] = entry.date.split('-').map(Number);
+      const entryDate = new Date(year, month - 1, day);
+      entryDate.setHours(0, 0, 0, 0);
+      
+      return {
+        ...entry,
+        parsedDate: entryDate
+      };
+    })
+    .filter(entry => entry.parsedDate >= today)
+    .sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime());
+
+  return upcomingEntries.length > 0 ? upcomingEntries[0] : null;
+};
+
+// Format schedule entry for display (same format as Reading Schedule)
+const formatScheduleEntry = (entry: any) => {
+  if (!entry) return 'No upcoming meeting';
+  
+  // Format date the same way as ReadingScheduleDisplay
+  if (entry.parsedDate) {
+    return entry.parsedDate.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+  
+  return entry.date || 'No upcoming meeting';
+};
+
+// Format reading assignment (same format as Reading Schedule)
+const formatReadingAssignment = (entry: any) => {
+  if (!entry) return '';
+  
+  // Determine display text based on what's set (same logic as ReadingScheduleDisplay)
+  let displayText = '';
+  if (entry.pages && entry.pages > 0) {
+    displayText = `Read through page ${entry.pages}`;
+    if (entry.chapter) {
+      displayText += ` (through chapter ${entry.chapter})`;
+    }
+  } else if (entry.chapter) {
+    displayText = `Through Chapter ${entry.chapter}`;
+  } else {
+    displayText = 'No reading target set';
+  }
+  
+  return displayText;
+};
+
 const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
   const navigate = useNavigate();
   const [clubs, setClubs] = useState<Club[]>([]);
@@ -94,6 +197,8 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                       booksRead: clubData.booksRead,
                       members: clubData.members,
                       recentActivity: clubData.recentActivity,
+                      isPublic: clubData.isPublic,
+                      meetings: clubData.meetings,
                     });
                   } else {
                     resolve(null); // User is not a member
@@ -135,8 +240,13 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
         const clubsData = snapshot.val();
         
         if (clubsData) {
-          // Get a few clubs for exploration (limit to 6)
+          // Filter and get public clubs only (isPublic === true or undefined for backward compatibility)
           const publicClubs = Object.entries(clubsData)
+            .filter(([clubId, clubData]: [string, any]) => {
+              // Only show clubs that are explicitly marked as public
+              // For backward compatibility, treat undefined as private
+              return clubData.isPublic === true;
+            })
             .slice(0, 6)
             .map(([clubId, clubData]: [string, any]) => {
               // Calculate member count from members object
@@ -156,6 +266,8 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                 booksRead: clubData.booksRead,
                 members: clubData.members,
                 recentActivity: clubData.recentActivity,
+                isPublic: clubData.isPublic,
+                meetings: clubData.meetings,
               };
             });
           clearTimeout(timeoutId);
@@ -276,26 +388,6 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
     setSelectedClubId(null);
   };
 
-  const formatNextMeeting = (nextMeeting?: Club['nextMeeting']) => {
-    if (!nextMeeting) return 'No upcoming meeting';
-    
-    try {
-      const date = new Date(nextMeeting.timestamp);
-      const formattedDate = date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
-      });
-      const formattedTime = date.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true 
-      });
-      return `${formattedDate} ${formattedTime}`;
-    } catch (error) {
-      return 'Invalid meeting date';
-    }
-  };
 
 
   if (loading) {
@@ -336,6 +428,7 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
               </div>
               {user && (
                 <button
+                  data-tour="create-club-button"
                   onClick={() => setShowCreateModal(true)}
                   style={{
                     padding: '0.75rem 1.5rem',
@@ -440,14 +533,72 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                         color: 'white',
                       }}
                     >
-                      <h3 style={{ 
-                        fontSize: '1.3rem', 
-                        fontWeight: 'bold', 
-                        margin: '0',
-                        textShadow: '0 1px 3px rgba(0,0,0,0.5)'
-                      }}>
-                        {club.name}
-                      </h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <h3 style={{ 
+                          fontSize: '1.3rem', 
+                          fontWeight: 'bold', 
+                          margin: '0',
+                          textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                          flex: 1
+                        }}>
+                          {club.name}
+                        </h3>
+                        {club.isPublic === false && (
+                          <span 
+                            title="Private Club"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '20px',
+                              height: '20px',
+                              opacity: 0.9
+                            }}
+                          >
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                          </span>
+                        )}
+                        {club.isPublic === true && (
+                          <span 
+                            title="Public Club"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '20px',
+                              height: '20px',
+                              opacity: 0.9
+                            }}
+                          >
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M2 12h20" />
+                              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -470,7 +621,42 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                         wordWrap: 'break-word',
                         overflowWrap: 'break-word'
                       }}>
-                        {formatNextMeeting(club.nextMeeting)}
+                        {(() => {
+                          const nextEntry = getNextMeeting(club);
+                          if (nextEntry) {
+                            const readingText = formatReadingAssignment(nextEntry);
+                            return (
+                              <div>
+                                <div>{formatScheduleEntry(nextEntry)}</div>
+                                {readingText && (
+                                  <div style={{
+                                    fontSize: '0.85rem',
+                                    color: '#666',
+                                    fontWeight: '400',
+                                    marginTop: '0.25rem'
+                                  }}>
+                                    {readingText}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                          // Fallback to old nextMeeting format if no schedule
+                          if (club.nextMeeting) {
+                            try {
+                              const date = new Date(club.nextMeeting.timestamp);
+                              return date.toLocaleDateString('en-US', { 
+                                weekday: 'short',
+                                month: 'short', 
+                                day: 'numeric',
+                                year: 'numeric'
+                              });
+                            } catch (error) {
+                              return 'No upcoming meeting';
+                            }
+                          }
+                          return 'No upcoming meeting';
+                        })()}
                       </div>
                     </div>
 
@@ -522,6 +708,85 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                         </>
                       )}
                     </div>
+
+                    {/* Highest and Lowest Rated Books */}
+                    {(() => {
+                      const { highest, lowest } = getRatedBooks(club);
+                      if (!highest && !lowest) return null;
+                      
+                      return (
+                        <div style={{ marginBottom: '1rem' }}>
+                          {highest && (
+                            <div style={{ marginBottom: '0.5rem' }}>
+                              <div style={{ 
+                                fontSize: '0.85rem', 
+                                color: '#666', 
+                                marginBottom: '0.25rem',
+                                fontWeight: '500'
+                              }}>
+                                ⭐ Highest Rated
+                              </div>
+                              <div style={{ 
+                                fontSize: '0.9rem', 
+                                color: '#333',
+                                fontWeight: '500',
+                                wordWrap: 'break-word',
+                                overflowWrap: 'break-word'
+                              }}>
+                                {highest.title}
+                                {highest.author && (
+                                  <span style={{ color: '#666', fontWeight: 'normal' }}>
+                                    {' '}by {highest.author}
+                                  </span>
+                                )}
+                                <span style={{ 
+                                  color: '#10b981', 
+                                  fontWeight: '600',
+                                  marginLeft: '0.5rem',
+                                  fontSize: '0.85rem'
+                                }}>
+                                  {highest.averageRating.toFixed(1)}★
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                          {lowest && highest?.title !== lowest?.title && (
+                            <div>
+                              <div style={{ 
+                                fontSize: '0.85rem', 
+                                color: '#666', 
+                                marginBottom: '0.25rem',
+                                fontWeight: '500'
+                              }}>
+                                📉 Lowest Rated
+                              </div>
+                              <div style={{ 
+                                fontSize: '0.9rem', 
+                                color: '#333',
+                                fontWeight: '500',
+                                wordWrap: 'break-word',
+                                overflowWrap: 'break-word'
+                              }}>
+                                {lowest.title}
+                                {lowest.author && (
+                                  <span style={{ color: '#666', fontWeight: 'normal' }}>
+                                    {' '}by {lowest.author}
+                                  </span>
+                                )}
+                                <span style={{ 
+                                  color: '#ef4444', 
+                                  fontWeight: '600',
+                                  marginLeft: '0.5rem',
+                                  fontSize: '0.85rem'
+                                }}>
+                                  {lowest.averageRating.toFixed(1)}★
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Member Count */}
                     <div style={{ 

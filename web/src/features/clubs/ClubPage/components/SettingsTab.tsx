@@ -19,6 +19,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
   const [clubName, setClubName] = useState(club.name || '');
   const [description, setDescription] = useState(club.description || '');
   const [coverColor, setCoverColor] = useState(club.coverColor || '#667eea');
+  const [isPublic, setIsPublic] = useState(club.isPublic ?? false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -49,6 +50,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
     setClubName(club.name || '');
     setDescription(club.description || '');
     setCoverColor(club.coverColor || '#667eea');
+    setIsPublic(club.isPublic ?? false);
     setBookSelectionMethod((club as any).rituals?.bookSelectionMethod || 'random');
     setEnableReflections((club as any).rituals?.progressTracking?.enableReflections || false);
     setEnableDiscussionQuestions((club as any).rituals?.progressTracking?.enableDiscussionQuestions || false);
@@ -101,6 +103,8 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
       if (coverColor) {
         updates.coverColor = coverColor;
       }
+
+      updates.isPublic = isPublic;
 
       await update(clubRef, updates);
       setMessage({ type: 'success', text: 'Settings saved successfully!' });
@@ -341,6 +345,81 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
           }}>
             This color is used for the club's header and branding
           </p>
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            padding: '1rem',
+            background: '#f8f9fa',
+            borderRadius: '8px',
+            border: '2px solid #e1e5e9'
+          }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '0.95rem', 
+                fontWeight: '600', 
+                color: '#333',
+                marginBottom: '0.25rem'
+              }}>
+                {isPublic ? 'Public Club' : 'Private Club'}
+              </label>
+              <p style={{ 
+                fontSize: '0.85rem', 
+                color: '#666',
+                margin: 0
+              }}>
+                {isPublic 
+                  ? 'This club is visible on the public clubs page. Anyone can see it.' 
+                  : 'This club is private. Only members can see it.'}
+              </p>
+            </div>
+            <label style={{
+              position: 'relative',
+              display: 'inline-block',
+              width: '52px',
+              height: '28px',
+              marginLeft: '1rem'
+            }}>
+              <input
+                type="checkbox"
+                checked={isPublic}
+                onChange={(e) => setIsPublic(e.target.checked)}
+                style={{
+                  opacity: 0,
+                  width: 0,
+                  height: 0
+                }}
+              />
+              <span style={{
+                position: 'absolute',
+                cursor: 'pointer',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: isPublic ? '#00356B' : '#ccc',
+                transition: '.4s',
+                borderRadius: '28px'
+              }}>
+                <span style={{
+                  position: 'absolute',
+                  content: '""',
+                  height: '22px',
+                  width: '22px',
+                  left: '3px',
+                  bottom: '3px',
+                  backgroundColor: 'white',
+                  transition: '.4s',
+                  borderRadius: '50%',
+                  transform: isPublic ? 'translateX(24px)' : 'translateX(0)'
+                }} />
+              </span>
+            </label>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>

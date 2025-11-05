@@ -531,26 +531,33 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                   <button
                     onClick={() => setShowChangeBook(true)}
                     style={{
-                      padding: '0.3rem 0.5rem',
+                      padding: '0.25rem 0.5rem',
                       fontSize: '0.7rem',
-                            fontWeight: '500',
-                      background: '#f0f0f0',
-                      color: '#666',
-                      border: '1px solid #e0e0e0',
+                      fontWeight: '400',
+                      background: 'transparent',
+                      color: '#999',
+                      border: '1px solid transparent',
                       borderRadius: '4px',
-                            cursor: 'pointer',
-                      transition: 'all 0.2s'
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      opacity: 0.7
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#e0e0e0';
+                      e.currentTarget.style.color = '#666';
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.borderColor = '#e0e0e0';
+                      e.currentTarget.style.background = '#f8f9fa';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#f0f0f0';
+                      e.currentTarget.style.color = '#999';
+                      e.currentTarget.style.opacity = '0.7';
+                      e.currentTarget.style.borderColor = 'transparent';
+                      e.currentTarget.style.background = 'transparent';
                     }}
                   >
                     Change Book
-                        </button>
-                  )}
+                  </button>
+                )}
                 </div>
             </div>
             <div style={{ display: 'flex', gap: '1.5rem' }}>
@@ -922,9 +929,18 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                     return; // No target set, can't mark as completed
                   }
                   
+                  // Check if this is the last meeting in the schedule
+                  const isLastMeeting = entryIndex === schedule.length - 1;
+                  
                   // Update progress to the target pages (or keep current if already higher)
+                  // If it's the last meeting, set to total to reach 100%
                   const currentPages = club.currentBook.progress?.currentPages ?? 0;
-                  const newCurrentPages = Math.max(currentPages, targetPages);
+                  let newCurrentPages = Math.max(currentPages, targetPages);
+                  
+                  // If this is the last meeting, ensure progress reaches the total
+                  if (isLastMeeting && newCurrentPages < totalPages) {
+                    newCurrentPages = totalPages;
+                  }
                   
                   // Calculate percentage
                   const percentage = totalPages > 0

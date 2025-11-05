@@ -186,6 +186,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
       >
         <a
           href="/clubs"
+          data-tour="clubs-nav"
           style={{
             color: isClubs ? "white" : "rgba(255, 255, 255, 0.85)",
             background: isClubs 
@@ -257,6 +258,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         {user ? (
           <a
             href="/profile"
+            data-tour="profile-link"
             style={{
               display: "flex",
               alignItems: "center",
@@ -273,21 +275,43 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
             }}
             title={user.displayName || user.email || "User"}
           >
-            <img
-              src={
-                member
-                  ? member.img
-                  : user.photoURL || "https://via.placeholder.com/40"
-              }
-              alt="Profile"
+            {user.photoURL || member?.img ? (
+              <img
+                src={user.photoURL || member?.img}
+                alt="Profile"
+                style={{
+                  width: "clamp(32px, 4vw, 40px)",
+                  height: "clamp(32px, 4vw, 40px)",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "2px solid white",
+                }}
+                onError={(e) => {
+                  // Hide image and show fallback initial if image fails
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = "flex";
+                }}
+              />
+            ) : null}
+            <div
               style={{
                 width: "clamp(32px, 4vw, 40px)",
                 height: "clamp(32px, 4vw, 40px)",
                 borderRadius: "50%",
-                objectFit: "cover",
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                display: user.photoURL || member?.img ? "none" : "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "clamp(14px, 2vw, 18px)",
+                color: "white",
+                fontWeight: "bold",
                 border: "2px solid white",
               }}
-            />
+            >
+              {user?.email?.charAt(0).toUpperCase() || "?"}
+            </div>
           </a>
         ) : (
           <a
@@ -417,6 +441,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         {user ? (
           <a
             href="/profile"
+            data-tour="profile-link"
             style={{
               color: location.pathname === "/profile" ? "white" : "rgba(255, 255, 255, 0.85)",
               background: location.pathname === "/profile" 
@@ -439,17 +464,41 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
             }}
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            <img
-              src={member ? member.img : user.photoURL || "https://via.placeholder.com/40"}
-              alt="Profile"
+            {user.photoURL || member?.img ? (
+              <img
+                src={user.photoURL || member?.img}
+                alt="Profile"
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                }}
+                onError={(e) => {
+                  // Hide image and show fallback initial if image fails
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = "flex";
+                }}
+              />
+            ) : null}
+            <div
               style={{
                 width: "24px",
                 height: "24px",
                 borderRadius: "50%",
-                objectFit: "cover",
-                border: "2px solid white",
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                display: user.photoURL || member?.img ? "none" : "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "12px",
+                color: "white",
+                fontWeight: "bold",
               }}
-            />
+            >
+              {user?.email?.charAt(0).toUpperCase() || "?"}
+            </div>
           </a>
         ) : (
               <a

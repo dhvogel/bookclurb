@@ -30,7 +30,7 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
   const [editingBookIndex, setEditingBookIndex] = useState<number | null>(null);
   const [savingBookReaders, setSavingBookReaders] = useState(false);
   const [savingRatings, setSavingRatings] = useState<Record<number, boolean>>({});
-  const [showSubmissions, setShowSubmissions] = useState(true);
+  const [showSubmissions, setShowSubmissions] = useState(false);
 
   // Check if current user is an admin
   const isAdmin = club.members?.some(
@@ -542,7 +542,7 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                       )}
                       
                       {/* Rating Section */}
-                      {((club as any).rituals?.bookCloseOut?.enableRating) && (hasUserReadBook(book) || (book.ratings && Object.keys(book.ratings).length > 0)) && (
+                      {((club as any).rituals?.bookCloseOut?.enableRating) && (
                         <div style={{ 
                           marginTop: '0.75rem',
                           padding: '0.75rem',
@@ -556,25 +556,23 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                             gap: '1rem',
                             flexWrap: 'wrap'
                           }}>
-                            {hasUserReadBook(book) && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#666' }}>
-                                  Your rating:
-                                </span>
-                                {savingRatings[index] ? (
-                                  <span style={{ fontSize: '0.8rem', color: '#666' }}>Saving...</span>
-                                ) : (
-                                  <StarRating
-                                    rating={getUserRating(book)}
-                                    onRatingChange={(rating) => handleRatingChange(index, rating)}
-                                    size="small"
-                                  />
-                                )}
-                              </div>
-                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#666' }}>
+                                Your rating:
+                              </span>
+                              {savingRatings[index] ? (
+                                <span style={{ fontSize: '0.8rem', color: '#666' }}>Saving...</span>
+                              ) : (
+                                <StarRating
+                                  rating={getUserRating(book)}
+                                  onRatingChange={(rating) => handleRatingChange(index, rating)}
+                                  size="small"
+                                />
+                              )}
+                            </div>
                             {book.ratings && Object.keys(book.ratings).length > 0 && (
                               <>
-                                {hasUserReadBook(book) && (
+                                {(getUserRating(book) > 0 || book.ratings) && (
                                   <div style={{ width: '1px', height: '20px', background: '#e9ecef' }} />
                                 )}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -875,7 +873,7 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                     )}
                     
                     {/* Rating Section */}
-                    {((club as any).rituals?.bookCloseOut?.enableRating) && (hasUserReadBook(book) || (book.ratings && Object.keys(book.ratings).length > 0)) && (
+                    {((club as any).rituals?.bookCloseOut?.enableRating) && (
                       <div style={{ 
                         marginTop: '0.75rem',
                         padding: '0.75rem',
@@ -889,25 +887,23 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                           gap: '1rem',
                           flexWrap: 'wrap'
                         }}>
-                          {hasUserReadBook(book) && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#666' }}>
-                                Your rating:
-                              </span>
-                              {savingRatings[index] ? (
-                                <span style={{ fontSize: '0.8rem', color: '#666' }}>Saving...</span>
-                              ) : (
-                                <StarRating
-                                  rating={getUserRating(book)}
-                                  onRatingChange={(rating) => handleRatingChange(index, rating)}
-                                  size="small"
-                                />
-                              )}
-                            </div>
-                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#666' }}>
+                              Your rating:
+                            </span>
+                            {savingRatings[index] ? (
+                              <span style={{ fontSize: '0.8rem', color: '#666' }}>Saving...</span>
+                            ) : (
+                              <StarRating
+                                rating={getUserRating(book)}
+                                onRatingChange={(rating) => handleRatingChange(index, rating)}
+                                size="small"
+                              />
+                            )}
+                          </div>
                           {book.ratings && Object.keys(book.ratings).length > 0 && (
                             <>
-                              {hasUserReadBook(book) && (
+                              {(getUserRating(book) > 0 || book.ratings) && (
                                 <div style={{ width: '1px', height: '20px', background: '#e9ecef' }} />
                               )}
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

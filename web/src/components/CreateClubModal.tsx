@@ -19,6 +19,7 @@ const CreateClubModal: React.FC<CreateClubModalProps> = ({ show, onClose, user, 
     coverColor: '#667eea',
     coverImage: '',
   });
+  const [isPublic, setIsPublic] = useState(false);
   const [creatingClub, setCreatingClub] = useState(false);
 
   const handleCreateClub = async () => {
@@ -44,6 +45,7 @@ const CreateClubModal: React.FC<CreateClubModalProps> = ({ show, onClose, user, 
         name: newClub.name,
         description: newClub.description || '',
         coverColor: newClub.coverColor,
+        isPublic: isPublic,
         memberCount: 1,
         members: [
           {
@@ -97,6 +99,7 @@ const CreateClubModal: React.FC<CreateClubModalProps> = ({ show, onClose, user, 
 
       // Reset form and close modal
       setNewClub({ name: '', description: '', coverColor: '#667eea', coverImage: '' });
+      setIsPublic(false);
       onClose();
 
       // Navigate to the new club
@@ -294,6 +297,81 @@ const CreateClubModal: React.FC<CreateClubModalProps> = ({ show, onClose, user, 
                   onFocus={(e) => e.target.style.borderColor = '#667eea'}
                   onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
                 />
+              </div>
+
+              <div>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  padding: '1rem',
+                  background: '#f8f9fa',
+                  borderRadius: '8px',
+                  border: '2px solid #e0e0e0'
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ 
+                      display: 'block', 
+                      fontSize: '0.95rem', 
+                      fontWeight: '600', 
+                      color: '#333',
+                      marginBottom: '0.25rem'
+                    }}>
+                      Make Club Public
+                    </label>
+                    <p style={{ 
+                      fontSize: '0.85rem', 
+                      color: '#666',
+                      margin: 0
+                    }}>
+                      {isPublic 
+                        ? 'This club will be visible on the public clubs page' 
+                        : 'This club will be private (only members can see it)'}
+                    </p>
+                  </div>
+                  <label style={{
+                    position: 'relative',
+                    display: 'inline-block',
+                    width: '52px',
+                    height: '28px',
+                    marginLeft: '1rem'
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={isPublic}
+                      onChange={(e) => setIsPublic(e.target.checked)}
+                      style={{
+                        opacity: 0,
+                        width: 0,
+                        height: 0
+                      }}
+                    />
+                    <span style={{
+                      position: 'absolute',
+                      cursor: 'pointer',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: isPublic ? '#00356B' : '#ccc',
+                      transition: '.4s',
+                      borderRadius: '28px'
+                    }}>
+                      <span style={{
+                        position: 'absolute',
+                        content: '""',
+                        height: '22px',
+                        width: '22px',
+                        left: '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '.4s',
+                        borderRadius: '50%',
+                        transform: isPublic ? 'translateX(24px)' : 'translateX(0)'
+                      }} />
+                    </span>
+                  </label>
+                </div>
               </div>
             </div>
 

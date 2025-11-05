@@ -57,6 +57,7 @@ export interface Club {
   coverImage?: string;
   coverColor?: string;
   description?: string;
+  isPublic?: boolean; // Whether the club is visible on the public clubs page
   nextMeeting?: {
     timestamp: string;
     timeZone: string;

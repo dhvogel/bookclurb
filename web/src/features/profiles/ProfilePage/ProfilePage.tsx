@@ -163,19 +163,42 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, db }) => {
             paddingBottom: "1.5rem",
             borderBottom: "1px solid #e9ecef"
           }}>
-            <div style={{
-              width: "80px",
-              height: "80px",
-              borderRadius: "50%",
-              backgroundColor: "#00356B",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: "1.5rem",
-              fontSize: "2rem",
-              color: "white",
-              fontWeight: "bold"
-            }}>
+            {user?.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt="Profile"
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  marginRight: "1.5rem",
+                  border: "3px solid #00356B",
+                }}
+                onError={(e) => {
+                  // Fallback to initials if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = "flex";
+                }}
+              />
+            ) : null}
+            <div 
+              style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                backgroundColor: "#00356B",
+                display: user?.photoURL ? "none" : "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: "1.5rem",
+                fontSize: "2rem",
+                color: "white",
+                fontWeight: "bold"
+              }}
+            >
               {user?.email?.charAt(0).toUpperCase() || "?"}
             </div>
             <div>

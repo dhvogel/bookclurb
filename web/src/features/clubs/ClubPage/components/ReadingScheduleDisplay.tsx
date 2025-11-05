@@ -48,21 +48,39 @@ const ReadingScheduleDisplay: React.FC<ReadingScheduleDisplayProps> = ({ club, i
           <button
             onClick={onOpenScheduleModal}
             style={{
-              padding: '0.3rem 0.5rem',
-              fontSize: '0.7rem',
-              fontWeight: '500',
-              background: '#f0f0f0',
-              color: '#666',
-              border: '1px solid #e0e0e0',
+              padding: hasSchedule ? '0.25rem 0.5rem' : '0.5rem 1rem',
+              fontSize: hasSchedule ? '0.7rem' : '0.85rem',
+              fontWeight: hasSchedule ? '400' : '500',
+              background: hasSchedule ? 'transparent' : '#667eea',
+              color: hasSchedule ? '#999' : 'white',
+              border: hasSchedule ? '1px solid transparent' : 'none',
               borderRadius: '4px',
               cursor: 'pointer',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              opacity: hasSchedule ? 0.7 : 1,
+              boxShadow: hasSchedule ? 'none' : '0 2px 4px rgba(102, 126, 234, 0.3)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#e0e0e0';
+              if (hasSchedule) {
+                e.currentTarget.style.color = '#666';
+                e.currentTarget.style.opacity = '1';
+                e.currentTarget.style.borderColor = '#e0e0e0';
+                e.currentTarget.style.background = '#f8f9fa';
+              } else {
+                e.currentTarget.style.background = '#5568d3';
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(102, 126, 234, 0.4)';
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#f0f0f0';
+              if (hasSchedule) {
+                e.currentTarget.style.color = '#999';
+                e.currentTarget.style.opacity = '0.7';
+                e.currentTarget.style.borderColor = 'transparent';
+                e.currentTarget.style.background = 'transparent';
+              } else {
+                e.currentTarget.style.background = '#667eea';
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.3)';
+              }
             }}
           >
             Set Reading Schedule
