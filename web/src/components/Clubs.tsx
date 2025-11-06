@@ -835,6 +835,26 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
   }, [clubs, user]);
 
   const handleClubClick = (clubId: string, isPrivate: boolean = false) => {
+    // Check if the club is public by looking in the clubs array (for non-logged-in users) or publicClubs array
+    const club = clubs.find(c => c.id === clubId) || publicClubs.find(c => c.id === clubId);
+    const isPublicClub = club?.isPublic === true;
+    
+    // If it's a public club, allow navigation even without login
+    if (isPublicClub) {
+      navigate(`/clubs/${clubId}`);
+      return;
+    }
+    
+    // If it's explicitly marked as private and user clicked on it, show message
+    if (isPrivate && user) {
+      const privateClub = privateClubs.find(c => c.id === clubId);
+      if (privateClub) {
+        alert('This is a private club. You need to be invited by a member to join.');
+        return;
+      }
+    }
+    
+    // For non-logged-in users trying to access non-public clubs, show login prompt
     if (!user) {
       // Show login prompt for non-logged-in users
       const shouldLogin = window.confirm(
@@ -846,15 +866,7 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
       return;
     }
     
-    // If it's a private club and user is not a member, show message
-    if (isPrivate) {
-      const club = privateClubs.find(c => c.id === clubId);
-      if (club) {
-        alert('This is a private club. You need to be invited by a member to join.');
-        return;
-      }
-    }
-    
+    // For logged-in users, navigate and let the club page handle access control
     navigate(`/clubs/${clubId}`);
   };
 

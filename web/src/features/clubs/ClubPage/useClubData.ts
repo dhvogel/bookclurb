@@ -21,7 +21,7 @@ export const useClubData = ({ db, user }: UseClubDataProps) => {
       return;
     }
 
-    if (!db || !user) {
+    if (!db) {
       setLoading(false);
       return;
     }
@@ -31,6 +31,28 @@ export const useClubData = ({ db, user }: UseClubDataProps) => {
     const unsubscribe = onValue(clubRef, (snapshot) => {
       const clubData = snapshot.val();
       if (clubData) {
+        // Check if club is public
+        const isPublicClub = clubData.isPublic === true;
+        
+        if (isPublicClub) {
+          // Public clubs can be viewed by anyone, even without login
+          setClub({
+            id: clubId,
+            ...clubData
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // For private clubs, require user authentication
+        if (!user) {
+          // Not logged in and club is private, redirect to clubs page
+          setClub(null);
+          navigate('/clubs');
+          setLoading(false);
+          return;
+        }
+        
         // Check if user is actually a member of this club
         const isMember = clubData.members && 
           Object.values(clubData.members).some((member: any) => member.id === user.uid);
