@@ -14,64 +14,37 @@ v1 is geared toward the *book club admin*. In the future, our plan is to make so
 
 ![Create club](images/create-club.png)
 
-Create and manage multiple book clubs:
-- Set club name and description
-- Manage member roles (admin/member)
-- View club statistics and activity
-- Customize club settings
+Create and manage multiple book clubs with customizable settings and member roles.
 
 ### Meeting Organization & Reflections
 
 ![Current book and meetings](images/current-book-and-meetings.png)
 
-Keep your book club meetings organized:
-- Schedule meetings with specific dates
-- Set reading assignments for each meeting
-- Collect weekly reflections from members before meetings
-- View all past and upcoming meetings in one place
-- Track which members have submitted reflections
+Schedule meetings with reading assignments and collect reflections from members.
 
 ### Book Selection & Voting
 
 ![Book voting](images/submitted-books.png)
 
-Book selection in a way that is fair:
-- Submit book suggestions for your club to consider
-- Multiple ways to choose a book: random (shown above) OR ranked choice voting
-- View live voting results and leaderboards
-- See which books are currently being voted on
-- Track reading progress for each book
+Submit book suggestions and vote using random selection or ranked choice voting with live results.
 
 ### Member Invitations
 
 ![Invite member](images/invite-new-member.png)
 
-Manage membership:
-- Send email-based invitations to join clubs
-- Manage member roles (admin/member)
-- View member profiles and participation
-- Track which members have read which books
+Send email invitations and manage member roles and participation.
 
 ### Reading Tracking
 
 ![Set reading schedule](images/set-reading-schedule.png)
 
-Communicate the reading schedule:
-- Set reading schedules with chapter or page assignments
-- Track progress with visual progress bars
-- Submit reading progress updates
-- View everyone's progress at a glance
-- See completion status for each book
+Set reading schedules and track progress with visual progress bars.
 
 ### Book Ratings & History
 
 ![Reviews and ratings](images/reviews-ratings.png)
 
-Maintain a record of your club's reading journey:
-- Rate books after completion (1-5 stars)
-- Maintain a reading history for each club
-- Track which members read each book
-- View book ratings and reviews from club members
+Rate books after completion and maintain a reading history for each club.
 
 ## How to Get Started
 
