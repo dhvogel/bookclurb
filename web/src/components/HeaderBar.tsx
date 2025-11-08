@@ -1,10 +1,11 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { User } from "firebase/auth";
 import { HeaderBarProps } from "../types";
 
 const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isClubs = location.pathname === "/clubs";
   const isBlog = location.pathname === "/blog" || location.pathname.startsWith("/blog/");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState<boolean>(false);
@@ -190,7 +191,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
       >
         <a
           href="/clubs"
-          data-tour="clubs-nav"
           style={{
             color: isClubs ? "white" : "rgba(255, 255, 255, 0.85)",
             background: isClubs 
@@ -290,7 +290,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         {user ? (
           <a
             href="/profile"
-            data-tour="profile-link"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/profile");
+            }}
             style={{
               display: "flex",
               alignItems: "center",
@@ -304,6 +307,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
               transition: "background 0.2s, border 0.2s",
               position: "relative",
               flexShrink: 0,
+              cursor: "pointer",
             }}
             title={user.displayName || user.email || "User"}
           >
@@ -319,11 +323,20 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
                   border: "2px solid white",
                 }}
                 onError={(e) => {
-                  // Hide image and show fallback initial if image fails
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = "none";
-                  const fallback = target.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = "flex";
+                  try {
+                    // Hide image and show fallback initial if image fails
+                    const target = e.target as HTMLImageElement;
+                    if (target) {
+                      target.style.display = "none";
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) {
+                        fallback.style.display = "flex";
+                      }
+                    }
+                  } catch (error) {
+                    // Silently handle any errors in error handler
+                    console.debug("Error handling image load failure:", error);
+                  }
                 }}
               />
             ) : null}
@@ -501,7 +514,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         {user ? (
           <a
             href="/profile"
-            data-tour="profile-link"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/profile");
+              setIsMobileMenuOpen(false);
+            }}
             style={{
               color: location.pathname === "/profile" ? "white" : "rgba(255, 255, 255, 0.85)",
               background: location.pathname === "/profile" 
@@ -521,8 +538,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
               boxShadow: location.pathname === "/profile"
                 ? "0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
                 : "none",
+              cursor: "pointer",
             }}
-            onClick={() => setIsMobileMenuOpen(false)}
           >
             {user.photoURL || member?.img ? (
               <img
@@ -535,11 +552,20 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
                   objectFit: "cover",
                 }}
                 onError={(e) => {
-                  // Hide image and show fallback initial if image fails
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = "none";
-                  const fallback = target.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = "flex";
+                  try {
+                    // Hide image and show fallback initial if image fails
+                    const target = e.target as HTMLImageElement;
+                    if (target) {
+                      target.style.display = "none";
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) {
+                        fallback.style.display = "flex";
+                      }
+                    }
+                  } catch (error) {
+                    // Silently handle any errors in error handler
+                    console.debug("Error handling image load failure:", error);
+                  }
                 }}
               />
             ) : null}

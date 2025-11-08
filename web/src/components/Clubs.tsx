@@ -1016,7 +1016,6 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
               </div>
               {user && (
                 <button
-                  data-tour="create-club-button"
                   onClick={() => setShowCreateModal(true)}
                   style={{
                     padding: '0.75rem 1.5rem',

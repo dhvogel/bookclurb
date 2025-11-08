@@ -14,6 +14,12 @@ cat > /etc/nginx/conf.d/nginx.conf <<EOF
 server {
   listen ${PORT};
 
+  # Allow Firebase popup authentication to work
+  # Note: Firebase Google sign-in uses cross-origin popups, so we need to allow them
+  # Setting COOP to unsafe-none allows cross-origin popups to work properly
+  add_header Cross-Origin-Opener-Policy "unsafe-none" always;
+  add_header Cross-Origin-Embedder-Policy "unsafe-none" always;
+
   location / {
     root   /usr/share/nginx/html;
     index  index.html index.htm;
