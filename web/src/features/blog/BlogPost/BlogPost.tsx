@@ -121,11 +121,16 @@ const BlogPost: React.FC<BlogPostProps> = ({ user, db }) => {
           </h1>
           <div style={{ color: '#666', fontSize: '0.95rem' }}>
             <time dateTime={post.date}>
-              {new Date(post.date).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
+              {(() => {
+                // Parse date as local date to avoid timezone issues
+                const [year, month, day] = post.date.split('-').map(Number);
+                const date = new Date(year, month - 1, day);
+                return date.toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                });
+              })()}
             </time>
             {post.author && (
               <span style={{ marginLeft: '1rem' }}>by {post.author}</span>

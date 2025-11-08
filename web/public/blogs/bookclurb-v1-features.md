@@ -6,13 +6,9 @@ author: Dan Vogel
 
 # BookClurb v1 Features & Feedback
 
-## We Want Your Feedback!
-
-**Please fill out the feedback form on the "Feedback" tab of the site!! Thank you!!** Or click this [link](https://docs.google.com/forms/d/e/1FAIpQLSfXl_-UCDy8lxtexUUN7IB7eJzTiRLX6cN3f88oqk73YmI8Lw/viewform)!
-
 ## What's Included in v1
 
-v1 is geared toward the *book club admin*. In the future,our plan is to make something that engages the whole book club. For now, the focus is just providing a set of tools to the book club admin to make their job easier. For example, using bookclurb instead of a home-cooked spreadsheet to track everything.
+v1 is geared toward the *book club admin*. In the future, our plan is to make something that engages the whole book club. For now, the focus is just providing a set of tools to the book club admin to make their job easier. For example, using bookclurb instead of a home-cooked spreadsheet to track everything.
 
 ### Club Management
 

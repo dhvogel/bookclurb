@@ -29,7 +29,14 @@ const BlogList: React.FC<BlogListProps> = ({ user, db }) => {
         if (response.ok) {
           const blogList: BlogMetadata[] = await response.json();
           // Sort by date, newest first
-          blogList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          // Parse dates as local dates to avoid timezone issues
+          blogList.sort((a, b) => {
+            const parseLocalDate = (dateStr: string) => {
+              const [year, month, day] = dateStr.split('-').map(Number);
+              return new Date(year, month - 1, day).getTime();
+            };
+            return parseLocalDate(b.date) - parseLocalDate(a.date);
+          });
           setBlogs(blogList);
         } else {
           console.error('Failed to load blog index');
@@ -89,11 +96,16 @@ const BlogList: React.FC<BlogListProps> = ({ user, db }) => {
                     {blog.title}
                   </h2>
                   <div style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                    <span>{new Date(blog.date).toLocaleDateString('en-US', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}</span>
+                    <span>{(() => {
+                      // Parse date as local date to avoid timezone issues
+                      const [year, month, day] = blog.date.split('-').map(Number);
+                      const date = new Date(year, month - 1, day);
+                      return date.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      });
+                    })()}</span>
                     {blog.author && (
                       <span style={{ marginLeft: '1rem' }}>by {blog.author}</span>
                     )}
