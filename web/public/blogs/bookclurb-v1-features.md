@@ -8,7 +8,15 @@ author: Dan Vogel
 
 ## What's Included in v1
 
-v1 is geared toward the *book club admin*. In the future, our plan is to make something that engages the whole book club. For now, the focus is just providing a set of tools to the book club admin to make their job easier. For example, using bookclurb instead of a home-cooked spreadsheet to track everything.
+v1 is geared toward the *book club admin*. There are challenges with being the admin. It requires managing the meeting schedule, selecting the next book in a way that is fair, communicating readings to members, and all of the other give and take that comes with leading a group.
+
+## We Want Your Feedback!
+
+Right now, the most important thing for us is to get feedback from book club admins on what they think about the site, and if they have any ideas for how to improve it. We've created a structured feedback form, and we would be very grateful to get input from book club admins. It helps to inform the path that we are going.
+
+The feedback form can be found [here](https://docs.google.com/forms/d/e/1FAIpQLSfXl_-UCDy8lxtexUUN7IB7eJzTiRLX6cN3f88oqk73YmI8Lw/viewform).
+
+## Features
 
 ### Club Management
 
@@ -55,24 +63,13 @@ Rate books after completion and maintain a reading history for each club.
 5. **Schedule meetings** - Set up your first meeting with reading assignments
 6. **Track progress** - Update your reading progress and submit reflections
 
-## We Want Your Feedback!
-
-**Please fill out the feedback form on the "Feedback" tab of the site!! Thank you!!** Or click this [link](https://docs.google.com/forms/d/e/1FAIpQLSfXl_-UCDy8lxtexUUN7IB7eJzTiRLX6cN3f88oqk73YmI8Lw/viewform)!
-
 ## What's Next?
 
 We want to understand the pain points of managing a book club first, anything that makes the book club admin's job easier. It could be reading in data from a spreadsheet, exporting data, figuring out the right onboarding flow.
 
-Then, make the site more enjoyable for the average book club member. This might take some more social features, such as a discussion board with emoji reactions, some new rituals, such as an end-of-book quiz, or features that introduce clubs to one another.
-
-In the future, we want to make it easier for book clubs to connect with the authors that they are reading. There are many talented authors out there that are looking for the readers. From the book clubs perspective, we believe that people want to read things that are real, from people who are real. Especially in this era of all this AI-garbage writing. Reading something that is clearly written by another human is refreshing. Connecting with other people is refreshing. And this project enables both.
+In the future, we want to make it easier for book clubs to connect with the authors that they are reading. There are many talented authors out there that are looking for the readers. From the book club's perspective, we believe that, especially in this day and age, people want to read things that are real, from people who are real. There's so much machine generated garbage out there. Reading something that is clearly written by another human is refreshing. Connecting with other people is refreshing. This project intends to enable this kind of connection.
 
 Your feedback helps us prioritize what to build next. Thank you for being part of the BookClurb community!
-
-### Report Issues
-
-Found a bug or have a suggestion? Please open an issue on our [GitHub repository](https://github.com/dhvogel/bookclurb).
-
 ---
 
 **Questions or need help?** Check out our [GitHub repository](https://github.com/dhvogel/bookclurb) or open an issue. We're here to help!
