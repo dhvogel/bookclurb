@@ -218,17 +218,30 @@ const BlogPost: React.FC<BlogPostProps> = ({ user, db }) => {
               a: ({ node, ...props }) => (
                 <a style={{ color: '#0066cc', textDecoration: 'none' }} target="_blank" rel="noopener noreferrer" {...props} />
               ),
-              img: ({ node, ...props }) => (
-                <img
-                  style={{
-                    maxWidth: '100%',
-                    height: 'auto',
-                    borderRadius: '5px',
-                    marginBottom: '1rem',
-                  }}
-                  {...props}
-                />
-              ),
+              img: ({ node, ...props }: any) => {
+                // Fix relative image paths - they should be relative to /blogs/ directory
+                let src = props.src || '';
+                if (src && !src.startsWith('http') && !src.startsWith('/')) {
+                  // Relative path - make it relative to /blogs/
+                  src = `/blogs/${src}`;
+                } else if (src && src.startsWith('./')) {
+                  // Remove leading ./ and make it relative to /blogs/
+                  src = `/blogs/${src.substring(2)}`;
+                }
+                return (
+                  <img
+                    src={src}
+                    alt={props.alt || ''}
+                    style={{
+                      maxWidth: '100%',
+                      height: 'auto',
+                      borderRadius: '5px',
+                      marginBottom: '1rem',
+                      marginTop: '1rem',
+                    }}
+                  />
+                );
+              },
             }}
           >
             {post.content}
