@@ -142,7 +142,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, db }) => {
       <HeaderBar user={user} db={db} />
       
       <div style={{ 
-        paddingTop: "100px", 
+        paddingTop: "calc(60px + var(--feedback-banner-height, 60px) + 40px)", 
         paddingBottom: "2rem",
         maxWidth: "1200px", 
         margin: "0 auto",

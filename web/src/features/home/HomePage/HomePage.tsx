@@ -48,7 +48,7 @@ const HomePage: React.FC<HomeProps> = ({ user, db }) => {
   return (
     <>
       <HeaderBar user={user} db={db} />
-      <div style={{ marginTop: "60px", backgroundColor: "#f8f9fa" }}>
+      <div style={{ marginTop: "calc(60px + var(--feedback-banner-height, 60px))", backgroundColor: "#f8f9fa" }}>
         {/* Hero Section */}
         <section
           style={{

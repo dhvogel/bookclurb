@@ -55,7 +55,7 @@ const BlogList: React.FC<BlogListProps> = ({ user, db }) => {
     return (
       <>
         <HeaderBar user={user} db={db} />
-        <div style={{ marginTop: '80px', padding: '2rem', textAlign: 'center' }}>
+        <div style={{ marginTop: 'calc(60px + var(--feedback-banner-height, 60px) + 20px)', padding: '2rem', textAlign: 'center' }}>
           <p>Loading blogs...</p>
         </div>
       </>
@@ -65,7 +65,7 @@ const BlogList: React.FC<BlogListProps> = ({ user, db }) => {
   return (
     <>
       <HeaderBar user={user} db={db} />
-      <div style={{ marginTop: '80px', padding: '2rem', maxWidth: '900px', margin: '80px auto 0', minHeight: 'calc(100vh - 80px)' }}>
+      <div style={{ marginTop: 'calc(60px + var(--feedback-banner-height, 60px) + 20px)', padding: '2rem', maxWidth: '900px', margin: 'calc(60px + var(--feedback-banner-height, 60px) + 20px) auto 0', minHeight: 'calc(100vh - 60px - var(--feedback-banner-height, 60px) - 20px)' }}>
         <h1 style={{ fontSize: '2.5rem', marginBottom: '2rem', color: '#333' }}>Blog</h1>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           {blogs.length === 0 ? (

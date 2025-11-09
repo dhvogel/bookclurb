@@ -78,7 +78,7 @@ const ClubPage: React.FC<ClubPageProps> = ({ user, db }) => {
   return (
     <>
       <HeaderBar user={user} db={db} />
-      <div style={{ marginTop: '60px', minHeight: 'calc(100vh - 60px)', background: '#f8f9fa' }}>
+      <div style={{ marginTop: 'calc(60px + var(--feedback-banner-height, 60px))', minHeight: 'calc(100vh - 60px - var(--feedback-banner-height, 60px))', background: '#f8f9fa' }}>
         <ClubHeader club={club} />
         
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }} className="club-page-container">

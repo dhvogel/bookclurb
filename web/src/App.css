@@ -136,7 +136,7 @@ html, body, #root {
     justify-content: center;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     padding: 2rem 1rem;
-    margin-top: 60px; /* Account for fixed header */
+    margin-top: calc(60px + var(--feedback-banner-height, 60px)); /* Account for fixed header and feedback banner */
 }
 
 .login-card {
@@ -399,7 +399,7 @@ html, body, #root {
 @media (max-width: 480px) {
     .login-container {
         padding: 1rem;
-        margin-top: 60px;
+        margin-top: calc(60px + var(--feedback-banner-height, 60px));
     }
     
     .login-card {

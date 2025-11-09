@@ -982,7 +982,7 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
     return (
       <>
         <HeaderBar user={user} db={db} />
-        <div style={{ marginTop: '80px', padding: '2rem', textAlign: 'center' }}>
+        <div style={{ marginTop: 'calc(60px + var(--feedback-banner-height, 60px) + 20px)', padding: '2rem', textAlign: 'center' }}>
           <div style={{ fontSize: '1.2rem', color: '#666' }}>
             {user ? 'Loading your clubs...' : 'Loading clubs...'}
           </div>
@@ -994,7 +994,7 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
   return (
     <>
       <HeaderBar user={user} db={db} />
-      <div style={{ marginTop: '80px', minHeight: 'calc(100vh - 80px)', background: '#f8f9fa' }}>
+      <div style={{ marginTop: 'calc(60px + var(--feedback-banner-height, 60px) + 20px)', minHeight: 'calc(100vh - 60px - var(--feedback-banner-height, 60px) - 20px)', background: '#f8f9fa' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
           <div style={{ marginBottom: '2rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>

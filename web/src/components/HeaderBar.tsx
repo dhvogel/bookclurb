@@ -2,6 +2,7 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { User } from "firebase/auth";
 import { HeaderBarProps } from "../types";
+import FeedbackBanner from "./FeedbackBanner";
 
 const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
   const location = useLocation();
@@ -77,6 +78,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
   const member = user && user.email ? emailToMember[user.email] : undefined;
 
   return (
+    <>
       <div
       style={{
         position: "fixed",
@@ -648,6 +650,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
         `}
       </style>
     </div>
+    <FeedbackBanner />
+    </>
   );
 };
 
