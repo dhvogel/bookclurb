@@ -10,6 +10,7 @@ interface ReadingScheduleDisplayProps {
 
 const ReadingScheduleDisplay: React.FC<ReadingScheduleDisplayProps> = ({ club, isAdmin, onMarkCompleted, onOpenScheduleModal }) => {
   const [markingIndices, setMarkingIndices] = React.useState<Set<number>>(new Set());
+  const [showTooltip, setShowTooltip] = React.useState(false);
 
   const hasSchedule = club.currentBook?.schedule && club.currentBook.schedule.length > 0;
 
@@ -45,46 +46,125 @@ const ReadingScheduleDisplay: React.FC<ReadingScheduleDisplayProps> = ({ club, i
           📅 Reading Schedule
         </h4>
         {isAdmin && onOpenScheduleModal && (
-          <button
-            onClick={onOpenScheduleModal}
-            style={{
-              padding: hasSchedule ? '0.25rem 0.5rem' : '0.5rem 1rem',
-              fontSize: hasSchedule ? '0.7rem' : '0.85rem',
-              fontWeight: hasSchedule ? '400' : '500',
-              background: hasSchedule ? 'transparent' : '#667eea',
-              color: hasSchedule ? '#999' : 'white',
-              border: hasSchedule ? '1px solid transparent' : 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              opacity: hasSchedule ? 0.7 : 1,
-              boxShadow: hasSchedule ? 'none' : '0 2px 4px rgba(102, 126, 234, 0.3)'
-            }}
-            onMouseEnter={(e) => {
-              if (hasSchedule) {
-                e.currentTarget.style.color = '#666';
-                e.currentTarget.style.opacity = '1';
-                e.currentTarget.style.borderColor = '#e0e0e0';
-                e.currentTarget.style.background = '#f8f9fa';
-              } else {
-                e.currentTarget.style.background = '#5568d3';
-                e.currentTarget.style.boxShadow = '0 4px 8px rgba(102, 126, 234, 0.4)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (hasSchedule) {
-                e.currentTarget.style.color = '#999';
-                e.currentTarget.style.opacity = '0.7';
-                e.currentTarget.style.borderColor = 'transparent';
-                e.currentTarget.style.background = 'transparent';
-              } else {
-                e.currentTarget.style.background = '#667eea';
-                e.currentTarget.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.3)';
-              }
-            }}
-          >
-            Set Reading Schedule
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', position: 'relative' }}>
+            <button
+              onClick={onOpenScheduleModal}
+              style={{
+                padding: hasSchedule ? '0.25rem 0.5rem' : '0.5rem 1rem',
+                fontSize: hasSchedule ? '0.7rem' : '0.85rem',
+                fontWeight: hasSchedule ? '400' : '500',
+                background: hasSchedule ? 'transparent' : '#667eea',
+                color: hasSchedule ? '#999' : 'white',
+                border: hasSchedule ? '1px solid transparent' : 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                opacity: hasSchedule ? 0.7 : 1,
+                boxShadow: hasSchedule ? 'none' : '0 2px 4px rgba(102, 126, 234, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                if (hasSchedule) {
+                  e.currentTarget.style.color = '#666';
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.borderColor = '#e0e0e0';
+                  e.currentTarget.style.background = '#f8f9fa';
+                } else {
+                  e.currentTarget.style.background = '#5568d3';
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(102, 126, 234, 0.4)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (hasSchedule) {
+                  e.currentTarget.style.color = '#999';
+                  e.currentTarget.style.opacity = '0.7';
+                  e.currentTarget.style.borderColor = 'transparent';
+                  e.currentTarget.style.background = 'transparent';
+                } else {
+                  e.currentTarget.style.background = '#667eea';
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.3)';
+                }
+              }}
+            >
+              Set Reading Schedule
+            </button>
+            <div
+              style={{
+                position: 'relative',
+                display: 'inline-block'
+              }}
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+            >
+              <button
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  border: '1px solid #667eea',
+                  background: '#f0f4ff',
+                  color: '#667eea',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  padding: 0,
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#667eea';
+                  e.currentTarget.style.color = 'white';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f0f4ff';
+                  e.currentTarget.style.color = '#667eea';
+                }}
+              >
+                i
+              </button>
+              {showTooltip && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '100%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    marginBottom: '0.5rem',
+                    width: '280px',
+                    background: '#f0f4ff',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    border: '1px solid #c7d2fe',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    zIndex: 1000,
+                    pointerEvents: 'none'
+                  }}
+                >
+                  <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#667eea', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>💡</span>
+                    <span>What is a reading schedule?</span>
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#374151', lineHeight: '1.5' }}>
+                    Set reading goals for each meeting to keep everyone on track. Members can see what to read by when, and you can track progress as meetings are completed.
+                  </div>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '-6px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: 0,
+                      height: 0,
+                      borderLeft: '6px solid transparent',
+                      borderRight: '6px solid transparent',
+                      borderTop: '6px solid #c7d2fe'
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
       {hasSchedule && club.currentBook?.schedule ? (

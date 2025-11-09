@@ -871,11 +871,10 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                     const progress = club.currentBook.progress as any;
                     setTotalValue(progress?.totalChapters);
                   }
-                        } else {
+                } else {
                   setScheduleEntries([]);
-                  // Default to pages, use pageCount if available
                   setTrackingMode('pages');
-                  setTotalValue(club.currentBook?.pageCount);
+                  setTotalValue(undefined);
                 }
               }}
               onMarkCompleted={async (entryIndex, pages, chapter, isUnmarking = false) => {
@@ -1013,9 +1012,23 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
               <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#333' }}>
                 Set Reading Schedule
               </h3>
-              <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                Create a reading schedule for "{club.currentBook?.title}". Add dates and targets to keep the club on track.
-              </p>
+              
+              {/* Explanation Box */}
+              <div style={{ 
+                background: '#f0f4ff', 
+                padding: '1rem', 
+                borderRadius: '8px', 
+                marginBottom: '1.5rem',
+                border: '1px solid #c7d2fe'
+              }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#667eea', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>💡</span>
+                  <span>What is a reading schedule?</span>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#374151', lineHeight: '1.5' }}>
+                  Set reading goals for each meeting to keep everyone on track. Members can see what to read by when, and you can track progress as meetings are completed.
+                </div>
+              </div>
 
               {/* Tracking Mode Selector */}
               <div style={{ marginBottom: '1.5rem' }}>
@@ -1069,7 +1082,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
               {/* Total Input */}
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
-                  Total {trackingMode === 'pages' ? 'Pages' : 'Chapters'}
+                  Total {trackingMode === 'pages' ? 'Pages in Book' : 'Chapters in Book'}
                 </label>
                 <input
                   type="number"
@@ -1142,7 +1155,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                       </div>
                       <div style={{ flex: '0 0 140px' }}>
                         <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
-                          Through {trackingMode === 'pages' ? 'Page' : 'Chapter'}
+                          Read up to {trackingMode === 'pages' ? 'Page' : 'Chapter'}
                         </label>
                         <input
                           type="number"
@@ -1229,8 +1242,20 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ club, user, db }) => {
                   </div>
                 ))}
                 {scheduleEntries.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
-                    No schedule entries yet. Click "Add Meeting" to create one.
+                  <div style={{ 
+                    textAlign: 'center', 
+                    padding: '2rem', 
+                    background: '#f9fafb',
+                    borderRadius: '8px',
+                    border: '2px dashed #d1d5db'
+                  }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📅</div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                      No meetings added yet
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '1rem' }}>
+                      Click "Add Meeting" below to create your first reading checkpoint
+                    </div>
                   </div>
                 )}
               </div>

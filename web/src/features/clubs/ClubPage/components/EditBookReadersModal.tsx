@@ -13,6 +13,7 @@ interface EditBookReadersModalProps {
   saving: boolean;
   onClose: () => void;
   onSave: (readBy: string[]) => void;
+  onDelete?: () => void;
 }
 
 const EditBookReadersModal: React.FC<EditBookReadersModalProps> = ({
@@ -22,6 +23,7 @@ const EditBookReadersModal: React.FC<EditBookReadersModalProps> = ({
   saving,
   onClose,
   onSave,
+  onDelete,
 }) => {
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
 
@@ -258,64 +260,103 @@ const EditBookReadersModal: React.FC<EditBookReadersModalProps> = ({
             <div style={{ 
               display: 'flex', 
               gap: '1rem', 
-              justifyContent: 'flex-end' 
+              justifyContent: 'space-between',
+              alignItems: 'center'
             }}>
-              <button
-                onClick={onClose}
-                disabled={saving}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  fontSize: '1rem',
-                  fontWeight: '500',
-                  background: '#f8f9fa',
-                  color: '#495057',
-                  border: '1px solid #dee2e6',
-                  borderRadius: '8px',
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  transition: 'background-color 0.2s ease',
-                  opacity: saving ? 0.6 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (!saving) {
-                    e.currentTarget.style.backgroundColor = '#e9ecef';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!saving) {
-                    e.currentTarget.style.backgroundColor = '#f8f9fa';
-                  }
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  fontSize: '1rem',
-                  fontWeight: '500',
-                  background: saving ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  transition: 'background-color 0.2s ease',
-                  opacity: saving ? 0.6 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (!saving) {
-                    e.currentTarget.style.backgroundColor = '#5568d3';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!saving) {
-                    e.currentTarget.style.backgroundColor = '';
-                  }
-                }}
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
+              {onDelete && (
+                <button
+                  onClick={onDelete}
+                  disabled={saving}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    background: saving ? '#ccc' : 'transparent',
+                    color: saving ? '#999' : '#dc3545',
+                    border: '1px solid #dc3545',
+                    borderRadius: '8px',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease',
+                    opacity: saving ? 0.6 : 1,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = '#dc3545';
+                      e.currentTarget.style.color = 'white';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#dc3545';
+                    }
+                  }}
+                >
+                  Delete Book
+                </button>
+              )}
+              <div style={{ 
+                display: 'flex', 
+                gap: '1rem', 
+                marginLeft: onDelete ? 'auto' : '0'
+              }}>
+                <button
+                  onClick={onClose}
+                  disabled={saving}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    background: '#f8f9fa',
+                    color: '#495057',
+                    border: '1px solid #dee2e6',
+                    borderRadius: '8px',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    transition: 'background-color 0.2s ease',
+                    opacity: saving ? 0.6 : 1,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = '#e9ecef';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = '#f8f9fa';
+                    }
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    background: saving ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    transition: 'background-color 0.2s ease',
+                    opacity: saving ? 0.6 : 1,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = '#5568d3';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = '';
+                    }
+                  }}
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
             </div>
           </motion.div>
         </motion.div>

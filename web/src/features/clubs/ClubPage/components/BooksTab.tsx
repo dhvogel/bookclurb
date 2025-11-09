@@ -209,6 +209,39 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
     }
   };
 
+  // Function to handle deleting a book from history
+  const handleDeleteBook = async (bookIndex: number) => {
+    if (!club.booksRead || bookIndex < 0 || bookIndex >= club.booksRead.length) {
+      return;
+    }
+
+    const book = club.booksRead[bookIndex];
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${book.title}" from the book history? This action cannot be undone.`
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    setSavingBookReaders(true);
+    try {
+      const clubRef = ref(db, `clubs/${club.id}`);
+      const updatedBooksRead = club.booksRead.filter((_, index) => index !== bookIndex);
+      
+      await update(clubRef, {
+        booksRead: updatedBooksRead
+      });
+      
+      setEditingBookIndex(null);
+    } catch (error) {
+      console.error('Failed to delete book:', error);
+      alert('Failed to delete book. Please try again.');
+    } finally {
+      setSavingBookReaders(false);
+    }
+  };
+
   // Function to calculate average rating for a book
   const calculateAverageRating = (ratings?: Record<string, number>): number => {
     if (!ratings || Object.keys(ratings).length === 0) {
@@ -1597,6 +1630,7 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
           saving={savingBookReaders}
           onClose={() => setEditingBookIndex(null)}
           onSave={(readBy) => handleUpdateBookReaders(editingBookIndex, readBy)}
+          onDelete={() => handleDeleteBook(editingBookIndex)}
         />
       )}
     </div>
