@@ -985,20 +985,41 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                     
                     {/* Rating Section */}
                     {((club as any).rituals?.bookCloseOut?.enableRating) && (
-                      <div style={{ 
+                      <div className="rating-section-container" style={{ 
                         marginTop: '0.75rem',
                         padding: '0.75rem',
                         background: '#ffffff',
                         borderRadius: '6px',
                         border: '1px solid #e9ecef'
                       }}>
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '1rem',
-                          flexWrap: 'wrap'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <style>{`
+                          .rating-section-container .rating-content {
+                            display: flex;
+                            align-items: center;
+                            gap: 1rem;
+                            flex-wrap: wrap;
+                          }
+                          .rating-section-container .rating-divider {
+                            width: 1px;
+                            height: 20px;
+                            background: #e9ecef;
+                          }
+                          @media (max-width: 768px) {
+                            .rating-section-container .rating-content {
+                              flex-direction: column;
+                              align-items: flex-start;
+                              gap: 0.75rem;
+                            }
+                            .rating-section-container .rating-divider {
+                              display: none;
+                            }
+                            .rating-section-container .rating-item {
+                              width: 100%;
+                            }
+                          }
+                        `}</style>
+                        <div className="rating-content">
+                          <div className="rating-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                             <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#666' }}>
                               Your rating:
                             </span>
@@ -1015,9 +1036,9 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                           {book.ratings && Object.keys(book.ratings).length > 0 && (
                             <>
                               {(getUserRating(book) > 0 || book.ratings) && (
-                                <div style={{ width: '1px', height: '20px', background: '#e9ecef' }} />
+                                <div className="rating-divider" />
                               )}
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <div className="rating-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#666' }}>
                                   Average:
                                 </span>
@@ -1048,24 +1069,52 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                     )}
                     
                     {/* Reviews Section */}
-                    <div style={{ 
+                    <div className="reviews-section-container" style={{ 
                       marginTop: '0.75rem',
                       padding: '0.75rem',
                       background: '#ffffff',
                       borderRadius: '6px',
                       border: '1px solid #e9ecef'
                     }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        marginBottom: '0.5rem'
-                      }}>
+                      <style>{`
+                        .reviews-section-container .reviews-header {
+                          display: flex;
+                          justify-content: space-between;
+                          align-items: center;
+                          margin-bottom: 0.5rem;
+                        }
+                        .reviews-section-container .reviews-header-buttons {
+                          display: flex;
+                          gap: 0.5rem;
+                          align-items: center;
+                        }
+                        @media (max-width: 768px) {
+                          .reviews-section-container {
+                            padding: 0.5rem;
+                          }
+                          .reviews-section-container .reviews-header {
+                            flex-direction: column;
+                            align-items: flex-start;
+                            gap: 0.75rem;
+                          }
+                          .reviews-section-container .reviews-header-buttons {
+                            width: 100%;
+                            flex-direction: column;
+                            gap: 0.5rem;
+                          }
+                          .reviews-section-container .reviews-header-buttons button {
+                            width: 100%;
+                            padding: 0.5rem 0.75rem !important;
+                            font-size: 0.8rem !important;
+                          }
+                        }
+                      `}</style>
+                      <div className="reviews-header">
                         <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#333' }}>
                           Reviews
                         </span>
                         {editingReviewIndex !== index && (
-                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <div className="reviews-header-buttons">
                             {book.reviews?.[userId] && (
                               <button
                                 onClick={() => handleDeleteReview(index)}
@@ -1128,7 +1177,38 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                       
                       {/* User's own review editing */}
                       {editingReviewIndex === index && (
-                        <div style={{ marginBottom: '0.75rem', marginLeft: '0.5rem', marginRight: '0.5rem' }}>
+                        <div className="review-edit-container" style={{ marginBottom: '0.75rem', marginLeft: '0.5rem', marginRight: '0.5rem' }}>
+                          <style>{`
+                            .review-edit-container .review-edit-buttons {
+                              display: flex;
+                              gap: 0.5rem;
+                              justify-content: space-between;
+                              align-items: center;
+                              margin-top: 0.5rem;
+                            }
+                            .review-edit-container .review-edit-buttons-right {
+                              display: flex;
+                              gap: 0.5rem;
+                            }
+                            @media (max-width: 768px) {
+                              .review-edit-container {
+                                margin-left: 0 !important;
+                                margin-right: 0 !important;
+                              }
+                              .review-edit-container .review-edit-buttons {
+                                flex-direction: column;
+                                gap: 0.5rem;
+                              }
+                              .review-edit-container .review-edit-buttons-right {
+                                width: 100%;
+                                flex-direction: column;
+                                gap: 0.5rem;
+                              }
+                              .review-edit-container .review-edit-buttons button {
+                                width: 100%;
+                              }
+                            }
+                          `}</style>
                           <textarea
                             value={reviewText}
                             onChange={(e) => setReviewText(e.target.value)}
@@ -1149,13 +1229,7 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                             onFocus={(e) => e.target.style.borderColor = '#667eea'}
                             onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                           />
-                          <div style={{ 
-                            display: 'flex', 
-                            gap: '0.5rem', 
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginTop: '0.5rem'
-                          }}>
+                          <div className="review-edit-buttons">
                             <button
                               onClick={() => handleDeleteReview(index)}
                               disabled={savingReviews[index]}
@@ -1186,7 +1260,7 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                             >
                               {savingReviews[index] ? 'Deleting...' : 'Delete Review'}
                             </button>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <div className="review-edit-buttons-right">
                               <button
                                 onClick={() => {
                                   setEditingReviewIndex(null);
@@ -1233,12 +1307,29 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                       
                       {/* Display existing reviews */}
                       {book.reviews && Object.keys(book.reviews).length > 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <div className="reviews-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          <style>{`
+                            .reviews-list .review-item {
+                              padding: 0.75rem;
+                              border-radius: 6px;
+                            }
+                            @media (max-width: 768px) {
+                              .reviews-list .review-item {
+                                padding: 0.625rem;
+                              }
+                              .reviews-list .review-item .review-text {
+                                font-size: 0.85rem;
+                                word-wrap: break-word;
+                                overflow-wrap: break-word;
+                              }
+                            }
+                          `}</style>
                           {Object.entries(book.reviews)
                             .filter(([reviewerId]) => editingReviewIndex !== index || reviewerId !== userId)
                             .map(([reviewerId, reviewText]) => (
                             <div 
                               key={reviewerId}
+                              className="review-item"
                               style={{
                                 padding: '0.75rem',
                                 background: reviewerId === userId ? '#f0f4ff' : '#f8f9fa',
@@ -1254,11 +1345,13 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                               }}>
                                 {reviewerId === userId ? 'Your Review' : getUserName(reviewerId)}
                               </div>
-                              <div style={{ 
+                              <div className="review-text" style={{ 
                                 fontSize: '0.9rem', 
                                 color: '#333',
                                 lineHeight: '1.5',
-                                whiteSpace: 'pre-wrap'
+                                whiteSpace: 'pre-wrap',
+                                wordWrap: 'break-word',
+                                overflowWrap: 'break-word'
                               }}>
                                 {reviewText}
                               </div>
