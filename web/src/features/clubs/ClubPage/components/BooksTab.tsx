@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Database, ref, update } from 'firebase/database';
+import React, { useState, useEffect } from 'react';
+import { Database, ref, update, get } from 'firebase/database';
 import { BookSubmission, Club } from '../../../../types';
 import BookSubmissionCard from './BookSubmissionCard';
 import CreatePollCard from './CreatePollCard';
@@ -7,6 +7,7 @@ import RandomDrawWheel from './RandomDrawWheel';
 import EditBookReadersModal from './EditBookReadersModal';
 import StarRating from './StarRating';
 import { useBookVoting } from '../useBookVoting';
+import { syncRatingToHardcover, syncReviewToHardcover } from '../../../../utils/hardcoverApi';
 
 interface BooksTabProps {
   club: Club;
@@ -34,11 +35,38 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
   const [editingReviewIndex, setEditingReviewIndex] = useState<number | null>(null);
   const [reviewText, setReviewText] = useState<string>('');
   const [savingReviews, setSavingReviews] = useState<Record<number, boolean>>({});
+  const [hardcoverToken, setHardcoverToken] = useState<string | null>(null);
+  const [syncingToHardcover, setSyncingToHardcover] = useState<Record<number, boolean>>({});
+  const [hardcoverSyncSuccess, setHardcoverSyncSuccess] = useState<Record<number, boolean>>({});
+  const [syncingReviewToHardcover, setSyncingReviewToHardcover] = useState<Record<number, boolean>>({});
+  const [hardcoverReviewSyncSuccess, setHardcoverReviewSyncSuccess] = useState<Record<number, boolean>>({});
+  const [showHardcoverTooltip, setShowHardcoverTooltip] = useState<Record<number, boolean>>({});
 
   // Check if current user is an admin
   const isAdmin = club.members?.some(
     member => member.id === userId && member.role === 'admin'
   );
+
+  // Load Hardcover token on mount
+  useEffect(() => {
+    const loadHardcoverToken = async () => {
+      if (!userId || !db) return;
+      
+      try {
+        const userRef = ref(db, `users/${userId}`);
+        const snapshot = await get(userRef);
+        const userData = snapshot.val();
+        
+        if (userData?.hardcoverApiToken) {
+          setHardcoverToken(userData.hardcoverApiToken);
+        }
+      } catch (error) {
+        console.error('Error loading Hardcover token:', error);
+      }
+    };
+
+    loadHardcoverToken();
+  }, [userId, db]);
 
   // Helper function to map user IDs to member names
   const getUserName = (userId: string): string => {
@@ -263,6 +291,7 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
       const clubRef = ref(db, `clubs/${club.id}`);
       const updatedBooksRead = [...club.booksRead];
       const currentRatings = updatedBooksRead[bookIndex].ratings || {};
+      const book = updatedBooksRead[bookIndex];
       
       updatedBooksRead[bookIndex] = {
         ...updatedBooksRead[bookIndex],
@@ -275,6 +304,31 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
       await update(clubRef, {
         booksRead: updatedBooksRead
       });
+
+      // Always sync to Hardcover if token exists and book has ISBN
+      if (hardcoverToken && book.isbn) {
+        setSyncingToHardcover(prev => ({ ...prev, [bookIndex]: true }));
+        setHardcoverSyncSuccess(prev => ({ ...prev, [bookIndex]: false }));
+        try {
+          // Get current review for this user to include in sync
+          const currentReview = book.reviews?.[userId] || '';
+          const syncResult = await syncRatingToHardcover(hardcoverToken, book.isbn, rating, currentReview);
+          if (syncResult.success) {
+            setHardcoverSyncSuccess(prev => ({ ...prev, [bookIndex]: true }));
+            // Clear success message after 2 seconds
+            setTimeout(() => {
+              setHardcoverSyncSuccess(prev => ({ ...prev, [bookIndex]: false }));
+            }, 2000);
+          } else {
+            console.error('Failed to sync rating to Hardcover:', syncResult.error);
+            // Don't show error to user, just log it
+          }
+        } catch (error) {
+          console.error('Error syncing to Hardcover:', error);
+        } finally {
+          setSyncingToHardcover(prev => ({ ...prev, [bookIndex]: false }));
+        }
+      }
     } catch (error) {
       console.error('Failed to save rating:', error);
       alert('Failed to save rating. Please try again.');
@@ -323,6 +377,32 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
       await update(clubRef, {
         booksRead: updatedBooksRead
       });
+      
+      // Always sync review to Hardcover if token exists and book has ISBN
+      const book = updatedBooksRead[bookIndex];
+      if (hardcoverToken && book.isbn && reviewText.trim() !== '') {
+        setSyncingReviewToHardcover(prev => ({ ...prev, [bookIndex]: true }));
+        setHardcoverReviewSyncSuccess(prev => ({ ...prev, [bookIndex]: false }));
+        try {
+          // Get current rating for this user
+          const currentRating = book.ratings?.[userId] || 0;
+          const syncResult = await syncReviewToHardcover(hardcoverToken, book.isbn, reviewText.trim(), currentRating);
+          if (syncResult.success) {
+            setHardcoverReviewSyncSuccess(prev => ({ ...prev, [bookIndex]: true }));
+            // Clear success message after 2 seconds
+            setTimeout(() => {
+              setHardcoverReviewSyncSuccess(prev => ({ ...prev, [bookIndex]: false }));
+            }, 2000);
+          } else {
+            console.error('Failed to sync review to Hardcover:', syncResult.error);
+            // Don't show error to user, just log it
+          }
+        } catch (error) {
+          console.error('Error syncing review to Hardcover:', error);
+        } finally {
+          setSyncingReviewToHardcover(prev => ({ ...prev, [bookIndex]: false }));
+        }
+      }
       
       setEditingReviewIndex(null);
       setReviewText('');
@@ -704,14 +784,99 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                               <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#666' }}>
                                 Your rating:
                               </span>
-                              {savingRatings[index] ? (
-                                <span style={{ fontSize: '0.8rem', color: '#666' }}>Saving...</span>
+                              {savingRatings[index] || syncingToHardcover[index] || hardcoverSyncSuccess[index] ? (
+                                <span style={{ fontSize: '0.8rem', color: syncingToHardcover[index] ? '#666' : hardcoverSyncSuccess[index] ? '#28a745' : '#666' }}>
+                                  {syncingToHardcover[index] ? 'Syncing to Hardcover...' : hardcoverSyncSuccess[index] ? 'Syncing to Hardcover... Success!' : 'Saving...'}
+                                </span>
                               ) : (
-                                <StarRating
-                                  rating={getUserRating(book)}
-                                  onRatingChange={(rating) => handleRatingChange(index, rating)}
-                                  size="small"
-                                />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <StarRating
+                                    rating={getUserRating(book)}
+                                    onRatingChange={(rating) => handleRatingChange(index, rating)}
+                                    size="small"
+                                    color={hardcoverToken && book.isbn ? '#6466F1' : undefined}
+                                  />
+                                  {hardcoverToken && book.isbn && (
+                                    <div
+                                      style={{
+                                        position: 'relative',
+                                        display: 'inline-block'
+                                      }}
+                                      onMouseEnter={() => setShowHardcoverTooltip(prev => ({ ...prev, [index]: true }))}
+                                      onMouseLeave={() => setShowHardcoverTooltip(prev => ({ ...prev, [index]: false }))}
+                                    >
+                                      <button
+                                        style={{
+                                          background: 'none',
+                                          border: 'none',
+                                          cursor: 'help',
+                                          padding: 0,
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center'
+                                        }}
+                                      >
+                                        <img
+                                          src="/hardcover_icon.png"
+                                          alt="Hardcover"
+                                          style={{
+                                            width: '16px',
+                                            height: '16px',
+                                            objectFit: 'contain'
+                                          }}
+                                        />
+                                      </button>
+                                      {showHardcoverTooltip[index] && (
+                                        <div
+                                          style={{
+                                            position: 'absolute',
+                                            bottom: '100%',
+                                            left: '50%',
+                                            transform: 'translateX(-50%)',
+                                            marginBottom: '0.5rem',
+                                            width: '280px',
+                                            background: '#f0f4ff',
+                                            padding: '1rem',
+                                            borderRadius: '8px',
+                                            border: '1px solid #c7d2fe',
+                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                            zIndex: 1000,
+                                            pointerEvents: 'none'
+                                          }}
+                                        >
+                                          <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#667eea', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <img
+                                              src="/hardcover_icon.png"
+                                              alt="Hardcover"
+                                              style={{
+                                                width: '16px',
+                                                height: '16px',
+                                                objectFit: 'contain'
+                                              }}
+                                            />
+                                            <span>Hardcover Sync</span>
+                                          </div>
+                                          <div style={{ fontSize: '0.85rem', color: '#374151', lineHeight: '1.5' }}>
+                                            Ratings are automatically synced to your Hardcover account. To disable syncing, unlink your account in Profile settings.
+                                          </div>
+                                          <div
+                                            style={{
+                                              position: 'absolute',
+                                              bottom: '-6px',
+                                              left: '50%',
+                                              transform: 'translateX(-50%)',
+                                              width: 0,
+                                              height: 0,
+                                              borderLeft: '6px solid transparent',
+                                              borderRight: '6px solid transparent',
+                                              borderTop: '6px solid #c7d2fe'
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               )}
                             </div>
                             {book.ratings && Object.keys(book.ratings).length > 0 && (
@@ -1056,14 +1221,99 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                             <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#666' }}>
                               Your rating:
                             </span>
-                            {savingRatings[index] ? (
-                              <span style={{ fontSize: '0.8rem', color: '#666' }}>Saving...</span>
+                            {savingRatings[index] || syncingToHardcover[index] || hardcoverSyncSuccess[index] ? (
+                              <span style={{ fontSize: '0.8rem', color: syncingToHardcover[index] ? '#666' : hardcoverSyncSuccess[index] ? '#28a745' : '#666' }}>
+                                {syncingToHardcover[index] ? 'Syncing to Hardcover...' : hardcoverSyncSuccess[index] ? 'Syncing to Hardcover... Success!' : 'Saving...'}
+                              </span>
                             ) : (
-                              <StarRating
-                                rating={getUserRating(book)}
-                                onRatingChange={(rating) => handleRatingChange(index, rating)}
-                                size="small"
-                              />
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <StarRating
+                                  rating={getUserRating(book)}
+                                  onRatingChange={(rating) => handleRatingChange(index, rating)}
+                                  size="small"
+                                  color={hardcoverToken && book.isbn ? '#9333EA' : undefined}
+                                />
+                                {hardcoverToken && book.isbn && (
+                                  <div
+                                    style={{
+                                      position: 'relative',
+                                      display: 'inline-block'
+                                    }}
+                                    onMouseEnter={() => setShowHardcoverTooltip(prev => ({ ...prev, [index]: true }))}
+                                    onMouseLeave={() => setShowHardcoverTooltip(prev => ({ ...prev, [index]: false }))}
+                                  >
+                                    <button
+                                      style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'help',
+                                        padding: 0,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                      }}
+                                    >
+                                      <img
+                                        src="/hardcover_icon.png"
+                                        alt="Hardcover"
+                                        style={{
+                                          width: '16px',
+                                          height: '16px',
+                                          objectFit: 'contain'
+                                        }}
+                                      />
+                                    </button>
+                                    {showHardcoverTooltip[index] && (
+                                      <div
+                                        style={{
+                                          position: 'absolute',
+                                          bottom: '100%',
+                                          left: '50%',
+                                          transform: 'translateX(-50%)',
+                                          marginBottom: '0.5rem',
+                                          width: '280px',
+                                          background: '#f0f4ff',
+                                          padding: '1rem',
+                                          borderRadius: '8px',
+                                          border: '1px solid #c7d2fe',
+                                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                          zIndex: 1000,
+                                          pointerEvents: 'none'
+                                        }}
+                                      >
+                                        <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#667eea', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                          <img
+                                            src="/hardcover_icon.png"
+                                            alt="Hardcover"
+                                            style={{
+                                              width: '16px',
+                                              height: '16px',
+                                              objectFit: 'contain'
+                                            }}
+                                          />
+                                          <span>Hardcover Sync</span>
+                                        </div>
+                                        <div style={{ fontSize: '0.85rem', color: '#374151', lineHeight: '1.5' }}>
+                                          Ratings are automatically synced to your Hardcover account. To disable syncing, unlink your account in Profile settings.
+                                        </div>
+                                        <div
+                                          style={{
+                                            position: 'absolute',
+                                            bottom: '-6px',
+                                            left: '50%',
+                                            transform: 'translateX(-50%)',
+                                            width: 0,
+                                            height: 0,
+                                            borderLeft: '6px solid transparent',
+                                            borderRight: '6px solid transparent',
+                                            borderTop: '6px solid #c7d2fe'
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
                           {book.ratings && Object.keys(book.ratings).length > 0 && (
@@ -1317,21 +1567,31 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
                               </button>
                               <button
                                 onClick={() => handleReviewSave(index)}
-                                disabled={savingReviews[index]}
+                                disabled={savingReviews[index] || syncingReviewToHardcover[index]}
                                 style={{
                                   padding: '0.5rem 1rem',
                                   fontSize: '0.85rem',
                                   fontWeight: '500',
-                                  background: savingReviews[index] ? '#ccc' : '#667eea',
+                                  background: savingReviews[index] || syncingReviewToHardcover[index] 
+                                    ? '#ccc' 
+                                    : hardcoverReviewSyncSuccess[index]
+                                    ? '#28a745'
+                                    : '#667eea',
                                   color: 'white',
                                   border: 'none',
                                   borderRadius: '6px',
-                                  cursor: savingReviews[index] ? 'not-allowed' : 'pointer',
+                                  cursor: savingReviews[index] || syncingReviewToHardcover[index] ? 'not-allowed' : 'pointer',
                                   transition: 'opacity 0.2s',
-                                  opacity: savingReviews[index] ? 0.7 : 1
+                                  opacity: savingReviews[index] || syncingReviewToHardcover[index] ? 0.7 : 1
                                 }}
                               >
-                                {savingReviews[index] ? 'Saving...' : 'Save Review'}
+                                {savingReviews[index] 
+                                  ? 'Saving...' 
+                                  : syncingReviewToHardcover[index]
+                                  ? 'Syncing to Hardcover...'
+                                  : hardcoverReviewSyncSuccess[index]
+                                  ? 'Syncing to Hardcover... Success!'
+                                  : 'Save Review'}
                               </button>
                             </div>
                           </div>

@@ -5,13 +5,15 @@ interface StarRatingProps {
   onRatingChange?: (rating: number) => void; // Callback when rating changes
   readOnly?: boolean; // If true, only display stars without interaction
   size?: 'small' | 'medium' | 'large';
+  color?: string; // Color for filled stars (default: #ffc107)
 }
 
 const StarRating: React.FC<StarRatingProps> = ({ 
   rating, 
   onRatingChange, 
   readOnly = false,
-  size = 'medium'
+  size = 'medium',
+  color = '#ffc107'
 }) => {
   const [hoveredRating, setHoveredRating] = useState<number>(0);
 
@@ -66,7 +68,7 @@ const StarRating: React.FC<StarRatingProps> = ({
             onMouseEnter={() => handleStarHover(starValue)}
             style={{
               fontSize: starSize,
-              color: isFilled ? '#ffc107' : '#e0e0e0',
+              color: isFilled ? color : '#e0e0e0',
               transition: 'color 0.2s ease',
               cursor: readOnly ? 'default' : 'pointer',
               userSelect: 'none'

@@ -223,7 +223,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, db }) => {
 
           {user ? (
             <div>
-              <AccountInfo user={user} />
+              <AccountInfo user={user} db={db} />
               
               <MyClubs
                 clubs={clubs}

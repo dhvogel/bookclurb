@@ -8,7 +8,9 @@
     "add-books-to-club": "ts-node add_books_to_club/addBooksToClub.ts",
     "add-overview-data": "ts-node add_overview_data/addOverviewData.ts",
     "add-club-basic-info": "ts-node add_club_basic_info/addClubBasicInfo.ts",
-    "seed-clubs": "ts-node seed_clubs/seedClubsWithData.ts"
+    "seed-clubs": "ts-node seed_clubs/seedClubsWithData.ts",
+    "test-hardcover-token": "ts-node test_hardcover_token/testHardcoverToken.ts",
+    "test-hardcover-rating": "ts-node test_hardcover_rating/testHardcoverRating.ts"
   },
   "keywords": [],
   "author": "",
