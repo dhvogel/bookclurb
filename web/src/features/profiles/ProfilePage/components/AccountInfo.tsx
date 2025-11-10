@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
 import { Database } from 'firebase/database';
 import { ref, get, update } from 'firebase/database';
-import { testHardcoverToken } from '../../../../utils/hardcoverApi';
+import { getInviteServiceURL } from '../../../../config/runtimeConfig';
 
 interface AccountInfoProps {
   user: User;
@@ -33,9 +33,27 @@ const AccountInfo: React.FC<AccountInfoProps> = ({ user, db }) => {
           
           // Load Hardcover user info if token exists
           if (userData.hardcoverApiToken) {
-            const testResult = await testHardcoverToken(userData.hardcoverApiToken);
-            if (testResult.valid && testResult.user) {
-              setHardcoverUser(testResult.user);
+            try {
+              const inviteServiceURL = getInviteServiceURL();
+              
+              const response = await fetch(`${inviteServiceURL}/TestHardcoverToken`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  token: userData.hardcoverApiToken
+                })
+              });
+
+              if (response.ok) {
+                const testResult = await response.json();
+                if (testResult.valid && testResult.user) {
+                  setHardcoverUser(testResult.user);
+                }
+              }
+            } catch (error) {
+              console.error('Error testing Hardcover token:', error);
             }
           }
         }
@@ -63,7 +81,18 @@ const AccountInfo: React.FC<AccountInfoProps> = ({ user, db }) => {
     setIsSaving(true);
     try {
       // Test the token before saving
-      const testResult = await testHardcoverToken(token);
+      const inviteServiceURL = getInviteServiceURL();
+      const response = await fetch(`${inviteServiceURL}/TestHardcoverToken`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: token
+        })
+      });
+
+      const testResult = await response.json();
       
       if (!testResult.valid) {
         const errorMsg = testResult.error 
@@ -289,10 +318,30 @@ const AccountInfo: React.FC<AccountInfoProps> = ({ user, db }) => {
                         
                         // Reload user info if token exists
                         if (token) {
-                          const testResult = await testHardcoverToken(token);
-                          if (testResult.valid && testResult.user) {
-                            setHardcoverUser(testResult.user);
-                          } else {
+                          try {
+                            const inviteServiceURL = getInviteServiceURL();
+                            const response = await fetch(`${inviteServiceURL}/TestHardcoverToken`, {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                token: token
+                              })
+                            });
+
+                            if (response.ok) {
+                              const testResult = await response.json();
+                              if (testResult.valid && testResult.user) {
+                                setHardcoverUser(testResult.user);
+                              } else {
+                                setHardcoverUser(null);
+                              }
+                            } else {
+                              setHardcoverUser(null);
+                            }
+                          } catch (error) {
+                            console.error('Error reloading token:', error);
                             setHardcoverUser(null);
                           }
                         } else {

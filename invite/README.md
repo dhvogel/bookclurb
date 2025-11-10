@@ -59,3 +59,11 @@ curl -X POST https://SERVICE_URL/SendClubInvite \
   -H "Authorization: Bearer YOUR_FIREBASE_TOKEN" \
   -d '{"email":"test@example.com","clubId":"club-id","clubName":"Club Name","inviterName":"Admin"}'
 ```
+
+## Future Improvements
+
+- **TODO**: Move Hardcover integration (`/TestHardcoverToken`, `/SyncRatingToHardcover`, `/SyncReviewToHardcover`) to its own dedicated service with API gateway. This will:
+  - Improve separation of concerns (invite service vs. integration service)
+  - Allow independent scaling of Hardcover API calls
+  - Enable better rate limiting and monitoring
+  - Provide centralized API gateway for all external integrations

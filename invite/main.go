@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -26,6 +28,10 @@ var (
 	mailer       *gomail.Dialer
 	baseURL      string
 	emailUser    string
+)
+
+const (
+	hardcoverAPIURL = "https://api.hardcover.app/v1/graphql"
 )
 
 func init() {
@@ -132,6 +138,41 @@ type Member struct {
 // Club represents club data from Firebase
 type Club struct {
 	Members []Member `json:"members"`
+}
+
+// Hardcover API types
+type HardcoverGraphQLRequest struct {
+	Query     string                 `json:"query"`
+	Variables map[string]interface{} `json:"variables,omitempty"`
+}
+
+type HardcoverGraphQLResponse struct {
+	Data   map[string]interface{} `json:"data"`
+	Errors []struct {
+		Message string `json:"message"`
+	} `json:"errors,omitempty"`
+}
+
+type HardcoverMeData struct {
+	Me interface{} `json:"me"`
+}
+
+type HardcoverUser struct {
+	ID            interface{} `json:"id"`
+	Username      string      `json:"username"`
+	CachedImage   interface{} `json:"cached_image"`
+	CachedImageURL string     `json:"cachedImageUrl,omitempty"`
+}
+
+type HardcoverEdition struct {
+	ID   int `json:"id"`
+	Book struct {
+		ID int `json:"id"`
+	} `json:"book"`
+}
+
+type UserData struct {
+	HardcoverApiToken string `json:"hardcoverApiToken"`
 }
 
 // corsHandler handles CORS for browser requests (minimal, Cloud Run IAM handles auth)
@@ -443,6 +484,542 @@ type ValidateInviteResponse struct {
 	Email     string `json:"email,omitempty"`
 }
 
+// Helper function to extract Firebase token from Authorization header
+func extractFirebaseToken(r *http.Request) (string, error) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return "", fmt.Errorf("missing Authorization header")
+	}
+
+	token := authHeader
+	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		token = authHeader[7:]
+	}
+
+	if token == "" || token == authHeader {
+		return "", fmt.Errorf("invalid Authorization header format")
+	}
+
+	return token, nil
+}
+
+// Helper function to verify Firebase token and get user ID
+func verifyFirebaseToken(ctx context.Context, token string) (string, error) {
+	verifiedToken, err := firebaseAuth.VerifyIDToken(ctx, token)
+	if err != nil {
+		return "", fmt.Errorf("token verification failed: %v", err)
+	}
+	return verifiedToken.UID, nil
+}
+
+// Helper function to get Hardcover token from Firebase for a user
+func getHardcoverToken(ctx context.Context, userID string) (string, error) {
+	userRef := firebaseDB.NewRef(fmt.Sprintf("users/%s", userID))
+	var userData UserData
+	if err := userRef.Get(ctx, &userData); err != nil {
+		return "", fmt.Errorf("failed to get user data: %v", err)
+	}
+	if userData.HardcoverApiToken == "" {
+		return "", fmt.Errorf("hardcover token not found for user")
+	}
+	return userData.HardcoverApiToken, nil
+}
+
+// Helper function to clean a token by removing "Bearer " prefix if present
+func cleanHardcoverToken(token string) string {
+	return strings.TrimPrefix(strings.TrimSpace(token), "Bearer ")
+}
+
+// Make a GraphQL request to the Hardcover API
+func makeHardcoverRequest(ctx context.Context, token string, query string, variables map[string]interface{}) (*HardcoverGraphQLResponse, error) {
+	cleanToken := cleanHardcoverToken(token)
+
+	reqBody := HardcoverGraphQLRequest{
+		Query:     query,
+		Variables: variables,
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %v", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", hardcoverAPIURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", cleanToken))
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
+	}
+
+	var result HardcoverGraphQLResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %v", err)
+	}
+
+	if len(result.Errors) > 0 {
+		errorMessages := make([]string, len(result.Errors))
+		for i, e := range result.Errors {
+			errorMessages[i] = e.Message
+		}
+		return nil, fmt.Errorf("graphql errors: %s", strings.Join(errorMessages, ", "))
+	}
+
+	return &result, nil
+}
+
+// Test if a Hardcover API token is valid and get user info
+func testHardcoverToken(ctx context.Context, token string) (map[string]interface{}, error) {
+	query := `
+		query {
+			me {
+				id
+				username
+				cached_image
+			}
+		}
+	`
+
+	result, err := makeHardcoverRequest(ctx, token, query, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	meData, ok := result.Data["me"]
+	if !ok {
+		return nil, fmt.Errorf("unexpected response format: no 'me' field")
+	}
+
+	// Handle both array and object formats
+	var userInfo map[string]interface{}
+	if meArray, ok := meData.([]interface{}); ok && len(meArray) > 0 {
+		if userMap, ok := meArray[0].(map[string]interface{}); ok {
+			userInfo = userMap
+		}
+	} else if userMap, ok := meData.(map[string]interface{}); ok {
+		userInfo = userMap
+	}
+
+	if userInfo == nil {
+		return nil, fmt.Errorf("unexpected response format")
+	}
+
+	// Extract cached_image URL if present
+	cachedImageURL := ""
+	if cachedImage, ok := userInfo["cached_image"]; ok {
+		if imgMap, ok := cachedImage.(map[string]interface{}); ok {
+			if url, ok := imgMap["url"].(string); ok {
+				cachedImageURL = url
+			}
+		}
+	}
+
+	response := map[string]interface{}{
+		"valid": true,
+		"user": map[string]interface{}{
+			"id":            fmt.Sprintf("%v", userInfo["id"]),
+			"username":      userInfo["username"],
+			"cachedImageUrl": cachedImageURL,
+		},
+	}
+
+	return response, nil
+}
+
+// Lookup book by ISBN to get Hardcover book ID
+func lookupBookByIsbn(ctx context.Context, token string, isbn string) (int, error) {
+	// Normalize ISBN: remove hyphens and spaces
+	normalizedIsbn := regexp.MustCompile(`[-\s]`).ReplaceAllString(isbn, "")
+	isbnLength := len(normalizedIsbn)
+
+	// Determine which field(s) to try based on ISBN length
+	var isbnFields []string
+	if isbnLength == 10 {
+		isbnFields = []string{"isbn_10"}
+	} else if isbnLength == 13 {
+		isbnFields = []string{"isbn_13"}
+	} else {
+		isbnFields = []string{"isbn_13", "isbn_10"}
+	}
+
+	// Try the appropriate ISBN field(s)
+	for _, isbnField := range isbnFields {
+		query := fmt.Sprintf(`
+			query LookupBook($isbn: String!) {
+				editions(where: {%s: {_eq: $isbn}}) {
+					id
+					book {
+						id
+					}
+				}
+			}
+		`, isbnField)
+
+		result, err := makeHardcoverRequest(ctx, token, query, map[string]interface{}{
+			"isbn": normalizedIsbn,
+		})
+
+		if err != nil {
+			log.Printf("Error with %s field: %v", isbnField, err)
+			continue
+		}
+
+		editionsData, ok := result.Data["editions"]
+		if !ok {
+			continue
+		}
+
+		var editions []HardcoverEdition
+		if editionsArray, ok := editionsData.([]interface{}); ok {
+			for _, ed := range editionsArray {
+				if edMap, ok := ed.(map[string]interface{}); ok {
+					var edition HardcoverEdition
+					if id, ok := edMap["id"].(float64); ok {
+						edition.ID = int(id)
+					}
+					if book, ok := edMap["book"].(map[string]interface{}); ok {
+						if bookID, ok := book["id"].(float64); ok {
+							edition.Book.ID = int(bookID)
+						}
+					}
+					if edition.Book.ID > 0 {
+						editions = append(editions, edition)
+					}
+				}
+			}
+		}
+
+		if len(editions) > 0 && editions[0].Book.ID > 0 {
+			return editions[0].Book.ID, nil
+		}
+	}
+
+	// Try _or query as fallback
+	query := `
+		query LookupBook($isbn: String!) {
+			editions(where: {_or: [{isbn_13: {_eq: $isbn}}, {isbn_10: {_eq: $isbn}}]}) {
+				id
+				book {
+					id
+				}
+			}
+		}
+	`
+
+	result, err := makeHardcoverRequest(ctx, token, query, map[string]interface{}{
+		"isbn": normalizedIsbn,
+	})
+
+	if err == nil {
+		if editionsData, ok := result.Data["editions"]; ok {
+			if editionsArray, ok := editionsData.([]interface{}); ok && len(editionsArray) > 0 {
+				if edMap, ok := editionsArray[0].(map[string]interface{}); ok {
+					if book, ok := edMap["book"].(map[string]interface{}); ok {
+						if bookID, ok := book["id"].(float64); ok {
+							return int(bookID), nil
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return 0, fmt.Errorf("book not found in Hardcover by ISBN")
+}
+
+// Sync rating and review to Hardcover
+func syncRatingToHardcover(ctx context.Context, token string, isbn string, rating float64, reviewText string) error {
+	// Step 1: Lookup book by ISBN
+	bookID, err := lookupBookByIsbn(ctx, token, isbn)
+	if err != nil {
+		return fmt.Errorf("book lookup failed: %v", err)
+	}
+
+	// Step 2: Create user_book relationship with rating, review (if provided), status_id: 3, and read_count: 1
+	var query string
+	var variables map[string]interface{}
+
+	if reviewText != "" {
+		query = `
+			mutation CreateUserBook($bookId: Int!, $rating: numeric!, $review: String!) {
+				insert_user_book(object: {book_id: $bookId, rating: $rating, review: $review, status_id: 3, read_count: 1}) {
+					id
+				}
+			}
+		`
+		variables = map[string]interface{}{
+			"bookId": bookID,
+			"rating": rating,
+			"review": reviewText,
+		}
+	} else {
+		query = `
+			mutation CreateUserBook($bookId: Int!, $rating: numeric!) {
+				insert_user_book(object: {book_id: $bookId, rating: $rating, status_id: 3, read_count: 1}) {
+					id
+				}
+			}
+		`
+		variables = map[string]interface{}{
+			"bookId": bookID,
+			"rating": rating,
+		}
+	}
+
+	result, err := makeHardcoverRequest(ctx, token, query, variables)
+	if err != nil {
+		// If error is about duplicate/unique constraint, that's okay
+		errStr := err.Error()
+		if strings.Contains(errStr, "already exists") || strings.Contains(errStr, "duplicate") || strings.Contains(errStr, "unique") {
+			return nil
+		}
+		return err
+	}
+
+	// Check if creation was successful
+	if insertData, ok := result.Data["insert_user_book"]; ok {
+		var userBookID interface{}
+		if insertArray, ok := insertData.([]interface{}); ok && len(insertArray) > 0 {
+			if userBookMap, ok := insertArray[0].(map[string]interface{}); ok {
+				userBookID = userBookMap["id"]
+			}
+		} else if userBookMap, ok := insertData.(map[string]interface{}); ok {
+			userBookID = userBookMap["id"]
+		}
+
+		if userBookID != nil {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("failed to create user_book relationship")
+}
+
+// TestHardcoverTokenRequest represents the request to test a Hardcover token
+type TestHardcoverTokenRequest struct {
+	Token string `json:"token"`
+}
+
+// TestHardcoverTokenResponse represents the response from testing a token
+type TestHardcoverTokenResponse struct {
+	Valid bool                   `json:"valid"`
+	User  map[string]interface{} `json:"user,omitempty"`
+	Error string                 `json:"error,omitempty"`
+}
+
+// testHardcoverTokenHandler handles the HTTP request to test a Hardcover token
+func testHardcoverTokenHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req TestHardcoverTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	if req.Token == "" {
+		http.Error(w, "Token is required", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+	result, err := testHardcoverToken(ctx, req.Token)
+	if err != nil {
+		response := TestHardcoverTokenResponse{
+			Valid: false,
+			Error: err.Error(),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(result)
+}
+
+// SyncRatingRequest represents the request to sync a rating to Hardcover
+type SyncRatingRequest struct {
+	ISBN      string  `json:"isbn"`
+	Rating    float64 `json:"rating"`
+	ReviewText string `json:"reviewText,omitempty"`
+}
+
+// SyncRatingResponse represents the response from syncing a rating
+type SyncRatingResponse struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error,omitempty"`
+}
+
+// syncRatingToHardcoverHandler handles the HTTP request to sync a rating to Hardcover
+func syncRatingToHardcoverHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ctx := r.Context()
+
+	// Verify Firebase token
+	firebaseToken, err := extractFirebaseToken(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := verifyFirebaseToken(ctx, firebaseToken)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	// Get Hardcover token from Firebase
+	hardcoverToken, err := getHardcoverToken(ctx, userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Hardcover token not found: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	var req SyncRatingRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	if req.ISBN == "" {
+		http.Error(w, "ISBN is required", http.StatusBadRequest)
+		return
+	}
+
+	if req.Rating < 0 || req.Rating > 5 {
+		http.Error(w, "Rating must be between 0 and 5", http.StatusBadRequest)
+		return
+	}
+
+	err = syncRatingToHardcover(ctx, hardcoverToken, req.ISBN, req.Rating, req.ReviewText)
+	if err != nil {
+		response := SyncRatingResponse{
+			Success: false,
+			Error:   err.Error(),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	response := SyncRatingResponse{
+		Success: true,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+// SyncReviewRequest represents the request to sync a review to Hardcover
+type SyncReviewRequest struct {
+	ISBN      string  `json:"isbn"`
+	ReviewText string `json:"reviewText"`
+	Rating    float64 `json:"rating"`
+}
+
+// SyncReviewResponse represents the response from syncing a review
+type SyncReviewResponse struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error,omitempty"`
+}
+
+// syncReviewToHardcoverHandler handles the HTTP request to sync a review to Hardcover
+func syncReviewToHardcoverHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ctx := r.Context()
+
+	// Verify Firebase token
+	firebaseToken, err := extractFirebaseToken(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := verifyFirebaseToken(ctx, firebaseToken)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	// Get Hardcover token from Firebase
+	hardcoverToken, err := getHardcoverToken(ctx, userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Hardcover token not found: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	var req SyncReviewRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	if req.ISBN == "" {
+		http.Error(w, "ISBN is required", http.StatusBadRequest)
+		return
+	}
+
+	if req.ReviewText == "" {
+		http.Error(w, "Review text is required", http.StatusBadRequest)
+		return
+	}
+
+	if req.Rating < 0 || req.Rating > 5 {
+		http.Error(w, "Rating must be between 0 and 5", http.StatusBadRequest)
+		return
+	}
+
+	err = syncRatingToHardcover(ctx, hardcoverToken, req.ISBN, req.Rating, req.ReviewText)
+	if err != nil {
+		response := SyncReviewResponse{
+			Success: false,
+			Error:   err.Error(),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	response := SyncReviewResponse{
+		Success: true,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
 // validateInvite handles the HTTP request to validate an invite ID
 func validateInvite(w http.ResponseWriter, r *http.Request) {
 	// Only allow POST requests
@@ -518,6 +1095,13 @@ func main() {
 	// Setup HTTP routes with CORS protection
 	http.HandleFunc("/SendClubInvite", corsHandler(sendClubInvite))
 	http.HandleFunc("/ValidateInvite", corsHandler(validateInvite))
+	
+	// TODO: Move Hardcover integration to its own dedicated service with API gateway
+	// This will improve separation of concerns, allow independent scaling, and provide
+	// better rate limiting and monitoring capabilities for the Hardcover API integration.
+	http.HandleFunc("/TestHardcoverToken", corsHandler(testHardcoverTokenHandler))
+	http.HandleFunc("/SyncRatingToHardcover", corsHandler(syncRatingToHardcoverHandler))
+	http.HandleFunc("/SyncReviewToHardcover", corsHandler(syncReviewToHardcoverHandler))
 	
 	// Health check endpoint for Cloud Run
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

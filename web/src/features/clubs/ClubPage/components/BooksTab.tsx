@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Database, ref, update, get } from 'firebase/database';
+import { getAuth } from 'firebase/auth';
 import { BookSubmission, Club } from '../../../../types';
 import BookSubmissionCard from './BookSubmissionCard';
 import CreatePollCard from './CreatePollCard';
@@ -7,7 +8,7 @@ import RandomDrawWheel from './RandomDrawWheel';
 import EditBookReadersModal from './EditBookReadersModal';
 import StarRating from './StarRating';
 import { useBookVoting } from '../useBookVoting';
-import { syncRatingToHardcover, syncReviewToHardcover } from '../../../../utils/hardcoverApi';
+import { getInviteServiceURL } from '../../../../config/runtimeConfig';
 
 interface BooksTabProps {
   club: Club;
@@ -312,16 +313,44 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
         try {
           // Get current review for this user to include in sync
           const currentReview = book.reviews?.[userId] || '';
-          const syncResult = await syncRatingToHardcover(hardcoverToken, book.isbn, rating, currentReview);
-          if (syncResult.success) {
-            setHardcoverSyncSuccess(prev => ({ ...prev, [bookIndex]: true }));
-            // Clear success message after 2 seconds
-            setTimeout(() => {
-              setHardcoverSyncSuccess(prev => ({ ...prev, [bookIndex]: false }));
-            }, 2000);
+          
+          // Get Firebase ID token for authentication
+          const auth = getAuth();
+          const currentUser = auth.currentUser;
+          if (!currentUser) {
+            throw new Error('User not authenticated');
+          }
+          const idToken = await currentUser.getIdToken();
+          
+          const inviteServiceURL = getInviteServiceURL();
+          const response = await fetch(`${inviteServiceURL}/SyncRatingToHardcover`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+              isbn: book.isbn,
+              rating: rating,
+              reviewText: currentReview || undefined
+            })
+          });
+
+          if (response.ok) {
+            const syncResult = await response.json();
+            if (syncResult.success) {
+              setHardcoverSyncSuccess(prev => ({ ...prev, [bookIndex]: true }));
+              // Clear success message after 2 seconds
+              setTimeout(() => {
+                setHardcoverSyncSuccess(prev => ({ ...prev, [bookIndex]: false }));
+              }, 2000);
+            } else {
+              console.error('Failed to sync rating to Hardcover:', syncResult.error);
+              // Don't show error to user, just log it
+            }
           } else {
-            console.error('Failed to sync rating to Hardcover:', syncResult.error);
-            // Don't show error to user, just log it
+            const errorText = await response.text();
+            console.error('Failed to sync rating to Hardcover:', errorText);
           }
         } catch (error) {
           console.error('Error syncing to Hardcover:', error);
@@ -386,16 +415,44 @@ const BooksTab: React.FC<BooksTabProps> = ({ club, userId, db }) => {
         try {
           // Get current rating for this user
           const currentRating = book.ratings?.[userId] || 0;
-          const syncResult = await syncReviewToHardcover(hardcoverToken, book.isbn, reviewText.trim(), currentRating);
-          if (syncResult.success) {
-            setHardcoverReviewSyncSuccess(prev => ({ ...prev, [bookIndex]: true }));
-            // Clear success message after 2 seconds
-            setTimeout(() => {
-              setHardcoverReviewSyncSuccess(prev => ({ ...prev, [bookIndex]: false }));
-            }, 2000);
+          
+          // Get Firebase ID token for authentication
+          const auth = getAuth();
+          const currentUser = auth.currentUser;
+          if (!currentUser) {
+            throw new Error('User not authenticated');
+          }
+          const idToken = await currentUser.getIdToken();
+          
+          const inviteServiceURL = getInviteServiceURL();
+          const response = await fetch(`${inviteServiceURL}/SyncReviewToHardcover`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+              isbn: book.isbn,
+              reviewText: reviewText.trim(),
+              rating: currentRating
+            })
+          });
+
+          if (response.ok) {
+            const syncResult = await response.json();
+            if (syncResult.success) {
+              setHardcoverReviewSyncSuccess(prev => ({ ...prev, [bookIndex]: true }));
+              // Clear success message after 2 seconds
+              setTimeout(() => {
+                setHardcoverReviewSyncSuccess(prev => ({ ...prev, [bookIndex]: false }));
+              }, 2000);
+            } else {
+              console.error('Failed to sync review to Hardcover:', syncResult.error);
+              // Don't show error to user, just log it
+            }
           } else {
-            console.error('Failed to sync review to Hardcover:', syncResult.error);
-            // Don't show error to user, just log it
+            const errorText = await response.text();
+            console.error('Failed to sync review to Hardcover:', errorText);
           }
         } catch (error) {
           console.error('Error syncing review to Hardcover:', error);
