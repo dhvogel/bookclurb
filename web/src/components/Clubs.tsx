@@ -996,10 +996,40 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
       <HeaderBar user={user} db={db} />
       <div style={{ marginTop: 'calc(60px + var(--feedback-banner-height, 60px) + 20px)', minHeight: 'calc(100vh - 60px - var(--feedback-banner-height, 60px) - 20px)', background: '#f8f9fa' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+          <style>{`
+            @media (min-width: 768px) {
+              .clubs-header-container {
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: flex-start !important;
+              }
+              .create-club-button {
+                width: auto !important;
+                max-width: none !important;
+                flex-shrink: 0 !important;
+              }
+            }
+            @media (max-width: 767px) {
+              .clubs-header-title {
+                font-size: 2rem !important;
+              }
+            }
+          `}</style>
           <div style={{ marginBottom: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-              <div>
-                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#333', marginBottom: '0.5rem' }}>
+            <div className="clubs-header-container" style={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              gap: '1rem',
+              marginBottom: '0.5rem'
+            }}>
+              <div style={{ flex: 1 }}>
+                <h1 className="clubs-header-title" style={{ 
+                  fontSize: '2.5rem', 
+                  fontWeight: 'bold', 
+                  color: '#333', 
+                  marginBottom: '0.5rem',
+                  lineHeight: '1.2'
+                }}>
                   {user ? 'My Clubs' : 'Explore Clubs'}
                 </h1>
                 <p style={{ color: '#666', fontSize: '1.1rem' }}>
@@ -1016,9 +1046,10 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
               </div>
               {user && (
                 <button
+                  className="create-club-button"
                   onClick={() => setShowCreateModal(true)}
                   style={{
-                    padding: '0.75rem 1.5rem',
+                    padding: '1rem 1.5rem',
                     fontSize: '1rem',
                     fontWeight: 'bold',
                     background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
@@ -1026,13 +1057,18 @@ const Clubs: React.FC<ClubsProps> = ({ user, db }) => {
                     border: 'none',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    transition: 'transform 0.2s ease',
+                    transition: 'transform 0.2s ease, opacity 0.2s ease',
+                    width: '100%',
+                    maxWidth: '300px',
+                    boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.opacity = '0.95';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.opacity = '1';
                   }}
                 >
                   + Create Club
