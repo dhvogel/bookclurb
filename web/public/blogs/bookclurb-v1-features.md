@@ -24,17 +24,17 @@ The feedback form can be found [here](https://docs.google.com/forms/d/e/1FAIpQLS
 
 Create and manage multiple book clubs with customizable settings and member roles.
 
+### Reading Tracking
+
+![Set reading schedule](images/set-reading-schedule.png)
+
+Set reading schedules and track progress with visual progress bars.
+
 ### Meeting Organization & Reflections
 
 ![Current book and meetings](images/current-book-and-meetings.png)
 
 Schedule meetings with reading assignments and collect reflections from members.
-
-### Book Selection & Voting
-
-![Book voting](images/submitted-books.png)
-
-Submit book suggestions and vote using random selection or ranked choice voting with live results.
 
 ### Member Invitations
 
@@ -42,11 +42,7 @@ Submit book suggestions and vote using random selection or ranked choice voting 
 
 Send email invitations and manage member roles and participation.
 
-### Reading Tracking
 
-![Set reading schedule](images/set-reading-schedule.png)
-
-Set reading schedules and track progress with visual progress bars.
 
 ### Book Ratings & History
 
@@ -54,14 +50,20 @@ Set reading schedules and track progress with visual progress bars.
 
 Rate books after completion and maintain a reading history for each club.
 
+### Hardcover Integration
+
+![Hardcover link](images/hardcover-link.png)
+![Hardcover sync](images/hardcover-sync.png)
+
+Sync your book ratings automatically to your [Hardcover](https://hardcover.app) account. Link your Hardcover account in your profile settings, and whenever you rate or review a book in BookClurb, it will automatically appear in your Hardcover library.
+
 ## How to Get Started
 
 1. **Sign up** - Create an account using email/password or Google Sign-In
 2. **Create a club** - Click "Create Club" and set up your book club
 3. **Invite members** - Send email invitations to friends
-4. **Add books** - Submit book suggestions for your club to vote on
-5. **Schedule meetings** - Set up your first meeting with reading assignments
-6. **Track progress** - Update your reading progress and submit reflections
+4. **Schedule meetings** - Set up your first meeting with reading assignments
+5. **Track progress** - Update your reading progress and submit reflections
 
 ## What's Next?
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User } from 'firebase/auth';
-import { Database, ref, update } from 'firebase/database';
+import { Database, ref, update, remove, get } from 'firebase/database';
 import { Club } from '../../../../types';
 
 interface SettingsTabProps {
@@ -10,6 +11,8 @@ interface SettingsTabProps {
 }
 
 const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
+  const navigate = useNavigate();
+  
   // Check if current user is an admin
   const isAdmin = user && club.members?.some(
     member => member.id === user.uid && member.role === 'admin'
@@ -25,25 +28,10 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
 
   // Member role management state
   const [changingRoles, setChangingRoles] = useState<Record<string, boolean>>({});
-
-  // Rituals state
-  const [bookSelectionMethod, setBookSelectionMethod] = useState<'random' | 'ranked-choice'>(
-    (club as any).rituals?.bookSelectionMethod || 'random'
-  );
-  const [enableReflections, setEnableReflections] = useState(
-    (club as any).rituals?.progressTracking?.enableReflections || false
-  );
-  const [enableDiscussionQuestions, setEnableDiscussionQuestions] = useState(
-    (club as any).rituals?.progressTracking?.enableDiscussionQuestions || false
-  );
-  const [enableRating, setEnableRating] = useState(
-    (club as any).rituals?.bookCloseOut?.enableRating || false
-  );
-  const [enableCloseOutReflection, setEnableCloseOutReflection] = useState(
-    (club as any).rituals?.bookCloseOut?.enableReflection || false
-  );
-  const [savingRituals, setSavingRituals] = useState(false);
-  const [savedRituals, setSavedRituals] = useState(false);
+  
+  // Delete club state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingClub, setDeletingClub] = useState(false);
 
   // Reset form when club data changes
   useEffect(() => {
@@ -51,11 +39,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
     setDescription(club.description || '');
     setCoverColor(club.coverColor || '#667eea');
     setIsPublic(club.isPublic ?? false);
-    setBookSelectionMethod((club as any).rituals?.bookSelectionMethod || 'random');
-    setEnableReflections((club as any).rituals?.progressTracking?.enableReflections || false);
-    setEnableDiscussionQuestions((club as any).rituals?.progressTracking?.enableDiscussionQuestions || false);
-    setEnableRating((club as any).rituals?.bookCloseOut?.enableRating || false);
-    setEnableCloseOutReflection((club as any).rituals?.bookCloseOut?.enableReflection || false);
   }, [club]);
 
   // If not admin, show access denied message
@@ -119,41 +102,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
     }
   };
 
-  const handleSaveRituals = async () => {
-    setSavingRituals(true);
-    setSavedRituals(false);
-    setMessage(null);
-
-    try {
-      const clubRef = ref(db, `clubs/${club.id}`);
-      const rituals: any = {
-        bookSelectionMethod,
-        progressTracking: {
-          enableReflections,
-          enableDiscussionQuestions
-        },
-        bookCloseOut: {
-          enableRating,
-          enableReflection: enableCloseOutReflection
-        }
-      };
-
-      await update(clubRef, { rituals });
-      setSavingRituals(false);
-      setSavedRituals(true);
-      setMessage({ type: 'success', text: 'Rituals saved successfully!' });
-      setTimeout(() => {
-        setMessage(null);
-        setSavedRituals(false);
-      }, 3000);
-    } catch (error) {
-      console.error('Failed to save rituals:', error);
-      setSavingRituals(false);
-      setSavedRituals(false);
-      setMessage({ type: 'error', text: 'Failed to save rituals. Please try again.' });
-      setTimeout(() => setMessage(null), 3000);
-    }
-  };
 
   const handleRoleChange = async (memberId: string, newRole: 'admin' | 'member') => {
     if (!club.members) return;
@@ -188,6 +136,42 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
       setTimeout(() => setMessage(null), 3000);
     } finally {
       setChangingRoles(prev => ({ ...prev, [memberId]: false }));
+    }
+  };
+
+  const handleDeleteClub = async () => {
+    if (!user || !club.members) return;
+
+    setDeletingClub(true);
+    setMessage(null);
+
+    try {
+      // Remove club ID from all members' clubs arrays
+      const memberPromises = club.members.map(async (member) => {
+        if (!member.id) return;
+        
+        const userRef = ref(db, `users/${member.id}`);
+        const userSnapshot = await get(userRef);
+        const userData = userSnapshot.val() || {};
+        const userClubs = userData.clubs || [];
+        
+        const updatedClubs = userClubs.filter((id: string) => id !== club.id);
+        await update(userRef, { clubs: updatedClubs });
+      });
+
+      await Promise.all(memberPromises);
+
+      // Delete the club itself
+      const clubRef = ref(db, `clubs/${club.id}`);
+      await remove(clubRef);
+
+      // Navigate back to clubs list
+      navigate('/clubs');
+    } catch (error) {
+      console.error('Failed to delete club:', error);
+      setMessage({ type: 'error', text: 'Failed to delete club. Please try again.' });
+      setDeletingClub(false);
+      setTimeout(() => setMessage(null), 3000);
     }
   };
 
@@ -454,239 +438,12 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
         </div>
       </div>
 
-      {/* Rituals Section */}
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        padding: '2rem',
-        marginBottom: '2rem',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-      }}>
-        <h3 style={{ 
-          fontSize: '1.5rem', 
-          fontWeight: 'bold', 
-          marginBottom: '1.5rem', 
-          color: '#333',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem'
-        }}>
-          <span>🕯️</span>
-          <span>Rituals</span>
-        </h3>
-        <p style={{ 
-          color: '#666', 
-          marginBottom: '2rem',
-          fontSize: '0.95rem'
-        }}>
-          Configure how your book club selects books, structures meetings, and closes out completed books.
-        </p>
-
-        {/* New Book Selection */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h4 style={{ 
-            fontSize: '1.1rem', 
-            fontWeight: '600', 
-            marginBottom: '1rem', 
-            color: '#333'
-          }}>
-            New Book Selection
-          </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              cursor: 'pointer',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s',
-              backgroundColor: bookSelectionMethod === 'random' ? '#f0f4ff' : 'transparent'
-            }}
-            onMouseEnter={(e) => {
-              if (bookSelectionMethod !== 'random') {
-                e.currentTarget.style.backgroundColor = '#f8f9fa';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (bookSelectionMethod !== 'random') {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }
-            }}
-            >
-              <input
-                type="radio"
-                name="bookSelectionMethod"
-                value="random"
-                checked={bookSelectionMethod === 'random'}
-                onChange={(e) => setBookSelectionMethod(e.target.value as 'random' | 'ranked-choice')}
-                style={{
-                  width: '18px',
-                  height: '18px',
-                  cursor: 'pointer'
-                }}
-              />
-              <span style={{ fontSize: '0.95rem', color: '#333' }}>Random</span>
-            </label>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              cursor: 'pointer',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s',
-              backgroundColor: bookSelectionMethod === 'ranked-choice' ? '#f0f4ff' : 'transparent'
-            }}
-            onMouseEnter={(e) => {
-              if (bookSelectionMethod !== 'ranked-choice') {
-                e.currentTarget.style.backgroundColor = '#f8f9fa';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (bookSelectionMethod !== 'ranked-choice') {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }
-            }}
-            >
-              <input
-                type="radio"
-                name="bookSelectionMethod"
-                value="ranked-choice"
-                checked={bookSelectionMethod === 'ranked-choice'}
-                onChange={(e) => setBookSelectionMethod(e.target.value as 'random' | 'ranked-choice')}
-                style={{
-                  width: '18px',
-                  height: '18px',
-                  cursor: 'pointer'
-                }}
-              />
-              <span style={{ fontSize: '0.95rem', color: '#333' }}>Ranked choice voting</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Meeting Structure / Progress Tracking */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h4 style={{ 
-            fontSize: '1.1rem', 
-            fontWeight: '600', 
-            marginBottom: '1rem', 
-            color: '#333'
-          }}>
-            Meeting Structure / Progress Tracking
-          </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              cursor: 'pointer',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f8f9fa';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-            >
-              <input
-                type="checkbox"
-                checked={enableDiscussionQuestions}
-                onChange={(e) => setEnableDiscussionQuestions(e.target.checked)}
-                style={{
-                  width: '18px',
-                  height: '18px',
-                  cursor: 'pointer'
-                }}
-              />
-              <span style={{ fontSize: '0.95rem', color: '#333' }}>Discussion questions for the reading</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Book Close-out */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h4 style={{ 
-            fontSize: '1.1rem', 
-            fontWeight: '600', 
-            marginBottom: '1rem', 
-            color: '#333'
-          }}>
-            Book Close-out
-          </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              cursor: 'pointer',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f8f9fa';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-            >
-              <input
-                type="checkbox"
-                checked={enableRating}
-                onChange={(e) => setEnableRating(e.target.checked)}
-                style={{
-                  width: '18px',
-                  height: '18px',
-                  cursor: 'pointer'
-                }}
-              />
-              <span style={{ fontSize: '0.95rem', color: '#333' }}>Rating</span>
-            </label>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-          <button
-            onClick={handleSaveRituals}
-            disabled={savingRituals}
-            style={{
-              padding: '0.75rem 2rem',
-              background: savingRituals ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              fontWeight: '600',
-              cursor: savingRituals ? 'not-allowed' : 'pointer',
-              transition: 'opacity 0.2s',
-              opacity: savingRituals ? 0.7 : 1
-            }}
-            onMouseEnter={(e) => {
-              if (!savingRituals) {
-                e.currentTarget.style.opacity = '0.9';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!savingRituals) {
-                e.currentTarget.style.opacity = '1';
-              }
-            }}
-          >
-            {savingRituals ? 'Saving...' : savedRituals ? 'Saved!' : 'Save Rituals'}
-          </button>
-        </div>
-      </div>
-
       {/* Member Role Management */}
       <div style={{
         background: 'white',
         borderRadius: '12px',
         padding: '2rem',
+        marginBottom: '2rem',
         boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
       }}>
         <h3 style={{ 
@@ -837,6 +594,152 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ club, user, db }) => {
           </div>
         )}
       </div>
+
+      {/* Delete Club */}
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '2rem',
+        marginBottom: '2rem',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+      }}>
+        <h3 style={{ 
+          fontSize: '1.5rem', 
+          fontWeight: 'bold', 
+          marginBottom: '1rem', 
+          color: '#333',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <span>🗑️</span>
+          <span>Delete Club</span>
+        </h3>
+        <p style={{ 
+          color: '#666', 
+          marginBottom: '1.5rem',
+          fontSize: '0.95rem'
+        }}>
+          Permanently delete this club and all its data. This action cannot be undone.
+        </p>
+
+        <button
+          onClick={() => setShowDeleteConfirm(true)}
+          style={{
+            padding: '0.75rem 2rem',
+            background: '#dc2626',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '1rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'opacity 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = '0.9';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = '1';
+          }}
+        >
+          Delete Club
+        </button>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}
+        onClick={() => !deletingClub && setShowDeleteConfirm(false)}
+        >
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '100%',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+          }}
+          onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ 
+              fontSize: '1.5rem', 
+              fontWeight: 'bold', 
+              marginBottom: '1rem', 
+              color: '#333'
+            }}>
+              Delete Club?
+            </h3>
+            <p style={{ 
+              color: '#666', 
+              marginBottom: '2rem',
+              fontSize: '0.95rem',
+              lineHeight: '1.6'
+            }}>
+              Are you sure you want to delete <strong>"{club.name}"</strong>? This will permanently remove the club and all its data. This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deletingClub}
+                style={{
+                  padding: '0.75rem 2rem',
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: deletingClub ? 'not-allowed' : 'pointer',
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  if (!deletingClub) {
+                    e.currentTarget.style.opacity = '0.9';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!deletingClub) {
+                    e.currentTarget.style.opacity = '1';
+                  }
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteClub}
+                disabled={deletingClub}
+                style={{
+                  padding: '0.75rem 2rem',
+                  background: deletingClub ? '#ccc' : '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: deletingClub ? 'not-allowed' : 'pointer',
+                  transition: 'opacity 0.2s',
+                  opacity: deletingClub ? 0.7 : 1
+                }}
+              >
+                {deletingClub ? 'Deleting...' : 'Delete Club'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
