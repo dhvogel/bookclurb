@@ -54,3 +54,4 @@ ts-node test_hardcover_token/testHardcoverToken.ts your-api-token-here
 
 The script makes a GraphQL query to the `me` endpoint, which retrieves your user information. If the token is valid, it will return your user ID and username.
 
+

@@ -238,7 +238,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({ user, db }) => {
                 marginBottom: "0.75rem"
               }}>
                 <a 
-                  href="https://hardcover.app/settings/api" 
+                  href="https://docs.hardcover.app/api/getting-started/" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   style={{ color: "#00356B", textDecoration: "underline" }}
@@ -471,7 +471,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({ user, db }) => {
                   marginTop: "0.5rem"
                 }}>
                   <a 
-                    href="https://hardcover.app/settings/api" 
+                    href="https://docs.hardcover.app/api/getting-started/" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     style={{ color: "#00356B", textDecoration: "underline" }}

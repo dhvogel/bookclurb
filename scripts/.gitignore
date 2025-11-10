@@ -1,0 +1,15 @@
+# Data files containing real member names and personal information
+# These files should not be committed to version control
+
+# User club memberships with real names
+add_user_clubs/user-clubs.yaml
+
+# Club members with real names
+add_members_to_club/members.yaml
+
+# Books data with member references
+add_books_to_club/books.yaml
+
+# Overview data with member names
+add_overview_data/overview.yaml
+

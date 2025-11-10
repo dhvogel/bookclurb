@@ -29,54 +29,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
     };
   }, [isMobileMenuOpen]);
 
-
-
-  // Map emails to member info
-  const emailToMember: Record<string, { name: string; img: string }> = {
-    "dhvogel2468@gmail.com": {
-      name: "Dan",
-      img: "https://api.dicebear.com/7.x/bottts/png?seed=Dan&backgroundColor=ffffff",
-    },
-    "alden@sombookclub.com": {
-      name: "Alden",
-      img: "https://api.dicebear.com/7.x/bottts/png?seed=Alden&backgroundColor=ffffff",
-    },
-    "charles@sombookclub.com": {
-      name: "Charles",
-      img: "https://api.dicebear.com/7.x/bottts/png?seed=Charles&backgroundColor=ffffff",
-    },
-    "david@sombookclub.com": {
-      name: "David",
-      img: "https://api.dicebear.com/7.x/bottts/png?seed=David&backgroundColor=ffffff",
-    },
-    "dhru@sombookclub.com": {
-      name: "Dhru",
-      img: "https://api.dicebear.com/7.x/bottts/png?seed=Dhru&backgroundColor=ffffff",
-    },
-    "grant@sombookclub.com": {
-      name: "Grant",
-      img: "https://api.dicebear.com/7.x/bottts/png?seed=Grant&backgroundColor=ffffff",
-    },
-    "margaret@sombookclub.com": {
-      name: "Margaret",
-      img: "https://api.dicebear.com/7.x/bottts/png?seed=Margaret&backgroundColor=ffffff",
-    },
-    "sam@sombookclub.com": {
-      name: "Sam",
-      img: "https://api.dicebear.com/7.x/bottts/png?seed=Sam&backgroundColor=ffffff",
-    },
-    "paul@sombookclub.com": {
-      name: "Paul",
-      img: "https://api.dicebear.com/7.x/bottts/png?seed=Paul&backgroundColor=ffffff",
-    },
-    "dan@sombookclub.com": {
-      name: "Dan",
-      img: "https://api.dicebear.com/7.x/bottts/png?seed=Dan&backgroundColor=ffffff",
-    },
-  };
-  // Determine member info based on user email
-  const member = user && user.email ? emailToMember[user.email] : undefined;
-
   return (
     <>
       <div
@@ -313,9 +265,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
             }}
             title={user.displayName || user.email || "User"}
           >
-            {user.photoURL || member?.img ? (
+            {user.photoURL ? (
               <img
-                src={user.photoURL || member?.img}
+                src={user.photoURL}
                 alt="Profile"
                 style={{
                   width: "clamp(32px, 4vw, 40px)",
@@ -348,7 +300,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
                 height: "clamp(32px, 4vw, 40px)",
                 borderRadius: "50%",
                 backgroundColor: "rgba(255, 255, 255, 0.2)",
-                display: user.photoURL || member?.img ? "none" : "flex",
+                display: user.photoURL ? "none" : "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: "clamp(14px, 2vw, 18px)",
@@ -543,9 +495,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
               cursor: "pointer",
             }}
           >
-            {user.photoURL || member?.img ? (
+            {user.photoURL ? (
               <img
-                src={user.photoURL || member?.img}
+                src={user.photoURL}
                 alt="Profile"
                 style={{
                   width: "24px",
@@ -577,7 +529,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ user, db }) => {
                 height: "24px",
                 borderRadius: "50%",
                 backgroundColor: "rgba(255, 255, 255, 0.2)",
-                display: user.photoURL || member?.img ? "none" : "flex",
+                display: user.photoURL ? "none" : "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: "12px",
