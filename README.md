@@ -1,30 +1,26 @@
-# 📚 Book Clurb
+# 📚 BookClurb
 
 [![React](https://img.shields.io/badge/React-19.1.1-blue.svg)](https://reactjs.org/)
 [![Firebase](https://img.shields.io/badge/Firebase-12.2.1-orange.svg)](https://firebase.google.com/)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-blue.svg)](https://www.docker.com/)
 [![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Cloud%20Run-green.svg)](https://cloud.google.com/run)
 
-> Book Clurb is an open-source management platform for modern book clubs
+> BookClurb is an open-source management platform for book clubs
 
 ## 🌟 Features
 
-- **Club Management**: Create, view, and manage multiple book clubs with customizable settings
-- **Meeting Organization & Reflections**: Track scheduled meetings with reading assignments and submit weekly reflections
-- **Book Selection & Voting**: Submit book suggestions, vote using instant-runoff voting, and view live leaderboards with reading progress tracking
-- **Member Invitations**: Email-based invitations to join clubs, member role management (admin/member), and member profiles
-- **User Profiles**: Secure authentication, personal profiles, and management of all your club memberships
+- **Club Management**: Create and manage multiple book clubs with customizable settings and member roles
+- **Reading Tracking**: Set reading schedules and track progress with visual progress bars
+- **Meeting Organization & Reflections**: Schedule meetings with reading assignments and collect reflections from members
+- **Member Invitations**: Send email invitations and manage member roles and participation
+- **Book Ratings & History**: Rate books after completion and maintain a reading history for each club
+- **Hardcover Integration**: Sync your book ratings automatically to your [Hardcover](https://hardcover.app) account. Link your Hardcover account in your profile settings, and whenever you rate or review a book in BookClurb, it will automatically appear in your Hardcover library
 
 ## 🚀 Live Demo
 
 **Production Environment**: [Live Demo URL](https://bookclurb-web-z726b2uvfa-uc.a.run.app)
 
-## 🛠️ Tech Stack
 
-- **Frontend**: React 19.1.1 with React Router DOM
-- **Backend**: Firebase (Authentication & Database)
-- **Styling**: CSS3 with Framer Motion animations
-- **Testing**: Jest & React Testing Library
 
 ## 📁 Project Structure
 
