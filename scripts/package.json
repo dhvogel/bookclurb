@@ -9,6 +9,7 @@
     "add-overview-data": "ts-node add_overview_data/addOverviewData.ts",
     "add-club-basic-info": "ts-node add_club_basic_info/addClubBasicInfo.ts",
     "seed-clubs": "ts-node seed_clubs/seedClubsWithData.ts",
+    "seed-private-clubs": "ts-node seed_clubs/seedPrivateClubs.ts",
     "test-hardcover-token": "ts-node test_hardcover_token/testHardcoverToken.ts",
     "test-hardcover-rating": "ts-node test_hardcover_rating/testHardcoverRating.ts"
   },

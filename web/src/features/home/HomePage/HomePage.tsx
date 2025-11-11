@@ -48,7 +48,7 @@ const HomePage: React.FC<HomeProps> = ({ user, db }) => {
   return (
     <>
       <HeaderBar user={user} db={db} />
-      <div style={{ marginTop: "calc(60px + var(--feedback-banner-height, 60px))", backgroundColor: "#f8f9fa" }}>
+      <div style={{ marginTop: "60px", backgroundColor: "#f8f9fa" }}>
         {/* Hero Section */}
         <section
           style={{
@@ -88,7 +88,7 @@ const HomePage: React.FC<HomeProps> = ({ user, db }) => {
                 marginRight: "auto",
               }}
             >
-              A set of open-source tools that make it easier to administer a book club
+              Open-source management platform for book clubs
             </p>
             <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "2rem" }}>
               {!user && (

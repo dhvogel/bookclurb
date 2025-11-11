@@ -77,7 +77,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ user, db }) => {
     return (
       <>
         <HeaderBar user={user} db={db} />
-        <div style={{ marginTop: 'calc(60px + var(--feedback-banner-height, 60px) + 20px)', padding: '2rem', textAlign: 'center' }}>
+        <div style={{ marginTop: '80px', padding: '2rem', textAlign: 'center' }}>
           <p>Loading blog post...</p>
         </div>
       </>
@@ -88,7 +88,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ user, db }) => {
     return (
       <>
         <HeaderBar user={user} db={db} />
-        <div style={{ marginTop: 'calc(60px + var(--feedback-banner-height, 60px) + 20px)', padding: '2rem', textAlign: 'center' }}>
+        <div style={{ marginTop: '80px', padding: '2rem', textAlign: 'center' }}>
           <p style={{ color: '#d32f2f' }}>{error || 'Blog post not found'}</p>
           <Link to="/blog" style={{ color: '#0066cc', marginTop: '1rem', display: 'inline-block' }}>
             ← Back to Blog
@@ -101,7 +101,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ user, db }) => {
   return (
     <>
       <HeaderBar user={user} db={db} />
-      <article style={{ marginTop: 'calc(60px + var(--feedback-banner-height, 60px) + 20px)', padding: '2rem', maxWidth: '800px', margin: 'calc(60px + var(--feedback-banner-height, 60px) + 20px) auto 0', minHeight: 'calc(100vh - 60px - var(--feedback-banner-height, 60px) - 20px)' }}>
+      <article style={{ marginTop: '80px', padding: '2rem', maxWidth: '800px', margin: '80px auto 0', minHeight: 'calc(100vh - 80px)' }}>
         <Link 
           to="/blog" 
           style={{ 

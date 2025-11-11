@@ -5,7 +5,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Enabled-blue.svg)](https://www.docker.com/)
 [![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Cloud%20Run-green.svg)](https://cloud.google.com/run)
 
-> BookClurb is an open-source management platform for book clubs
+> Open-source management platform for book clubs
 
 ## 🌟 Features
 
@@ -18,7 +18,7 @@
 
 ## 🚀 Live Demo
 
-**Production Environment**: [Live Demo URL](https://bookclurb-web-z726b2uvfa-uc.a.run.app)
+**Production Environment**: [https://bookclurb.net](https://bookclurb.net)
 
 
 
