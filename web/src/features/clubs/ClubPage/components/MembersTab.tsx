@@ -146,6 +146,27 @@ const MembersTab: React.FC<MembersTabProps> = ({ club, user, db }) => {
     }));
   };
 
+  // START OF NEW SORTING LOGIC 
+  // DK edits on sorting members based on books read
+  // Define a helper function to count read books for a member
+  const countReadBooks = (memberId: string, allBooks: Club['booksRead']) => {
+    return allBooks?.filter(book => book.readBy && book.readBy.includes(memberId)).length || 0;
+  };
+
+  const members = club.members || [];
+  const allBooks = club.booksRead || [];
+
+  // 2. & 3. Decorate members with their read count and then sort them in descending order
+  const sortedMembers = members
+    .map(member => ({
+      ...member,
+      // Add the calculated read count
+      readCount: countReadBooks(member.id, allBooks),
+    }))
+    // Sort by readCount (b - a for descending: most books read first)
+    .sort((a, b) => b.readCount - a.readCount);
+  // --- END OF NEW SORTING LOGIC ---
+  
   return (
     <div style={{
       background: 'white',
@@ -158,7 +179,7 @@ const MembersTab: React.FC<MembersTabProps> = ({ club, user, db }) => {
       </h3>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-        {club.members?.map((member) => (
+        {sortedMembers.map((member) => (
           <div key={member.id} style={{
             padding: '1rem',
             background: '#f8f9fa',
